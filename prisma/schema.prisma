@@ -1,0 +1,874 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// User accounts with role-based access control
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      UserRole @default(BUSINESS_USER)
+  phone     String?
+  avatar    String?
+  companyId String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  mailbox   String?
+  address   String?
+  ruc_id    String?
+
+  // 2FA
+  twoFactorEnabled Boolean  @default(false)
+  twoFactorSecret  String?
+
+  company   Company? @relation(fields: [companyId], references: [id])
+
+  @@index([email])
+  @@index([companyId])
+  @@map("users")
+}
+
+/// Business entities (logistics companies)
+model Company {
+  id           String        @id @default(cuid())
+  name         String
+  ruc          String        @unique
+  dv           String
+  address      String
+  phone        String
+  email        String
+  website      String?
+  industry     String?
+  employees    String?
+  established  String?
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  company_id        String?           @unique
+  cargos            Cargo[]
+  fclShipments      FclShipment[]
+  lclShipments      LclShipment[]
+  containerShipments ContainerShipment[]
+  users             User[]
+
+  @@index([company_id])
+  @@index([ruc])
+  @@index([isActive])
+  @@map("companies")
+}
+
+/// Maritime shipping containers
+model Container {
+  id            String    @id @default(cuid())
+  bl            String    @unique
+  eta           DateTime
+  arrivalDate   DateTime?
+  departureDate DateTime?
+  shippingLine  String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([bl])
+  @@index([eta])
+  @@index([shippingLine])
+  @@map("containers")
+}
+
+/// Individual cargo shipments
+model Cargo {
+  id        String      @id @default(cuid())
+  tracking  String      @unique
+  status    CargoStatus @default(IN_TRANSIT)
+  type      CargoType   @default(MARITIME)
+  companyId String?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  company   Company?    @relation(fields: [companyId], references: [id])
+
+  @@index([tracking])
+  @@index([status])
+  @@index([type])
+  @@index([companyId])
+  @@map("cargos")
+}
+
+/// Container management workflow (extended tracking)
+model CargoManagement {
+  id              String          @id @default(cuid())
+  containerNumber String
+  eta             DateTime?
+  location        String
+  status          ContainerStatus @default(RECEIVED_IN_WAREHOUSE)
+  shippingLine    String?
+  departureDate   DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  referenceNo     String?         @unique
+  statusHistory   StatusHistory[]
+
+  @@index([referenceNo])
+  @@index([containerNumber])
+  @@index([status])
+  @@index([eta])
+  @@map("cargo_management")
+}
+
+/// Status history for cargo management tracking
+model StatusHistory {
+  id                String          @id @default(cuid())
+  cargoManagementId String
+  status            ContainerStatus
+  changedAt         DateTime        @default(now())
+  cargoManagement   CargoManagement @relation(fields: [cargoManagementId], references: [id], onDelete: Cascade)
+
+  @@index([cargoManagementId])
+  @@index([changedAt])
+  @@map("status_history")
+}
+
+/// FCL (Full Container Load) shipments
+model FclShipment {
+  id                  String        @id @default(cuid())
+  trackingWarehouse   String
+  forwarder           String?
+  mailbox             String
+  transportType       TransportType @default(MAR)
+  containerNumber     String
+  approximateDate     DateTime?
+  misidentified       Boolean       @default(false)
+  dangerousGoods      Boolean       @default(false)
+  refrigeratedProduct Boolean       @default(false)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  companyId           String?
+  company             Company?      @relation(fields: [companyId], references: [id])
+  itemType            String?       // 'company' or 'user' to distinguish selected type
+  userId              String?       // ID of the user if itemType is 'user'
+  totalCbm            Float?
+  totalWeight         Float?
+  comments            String?
+  additionalCode      String?
+  pieces              FclShipmentPiece[]
+
+  @@index([trackingWarehouse])
+  @@index([containerNumber])
+  @@index([mailbox])
+  @@index([transportType])
+  @@index([companyId])
+  @@map("fcl_shipments")
+}
+
+/// Individual pieces/packages for FCL shipments
+model FclShipmentPiece {
+  id            String      @id @default(cuid())
+  fclShipmentId String
+  fclShipment   FclShipment @relation(fields: [fclShipmentId], references: [id], onDelete: Cascade)
+  quantity      Int         @default(1)
+  length        Float?      // largo en cm
+  width         Float?      // ancho en cm
+  height        Float?      // alto en cm
+  weight        Float?      // peso en kg
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([fclShipmentId])
+  @@map("fcl_shipment_pieces")
+}
+
+/// LCL (Less than Container Load) shipments
+model LclShipment {
+  id            String   @id @default(cuid())
+  blNumber      String   @unique
+  eta           DateTime
+  notes         String?
+  departureDate DateTime
+  cargoAmount   Float    @default(0)
+  totalCbm      Float    @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  companyId     String?
+  company       Company? @relation(fields: [companyId], references: [id])
+  itemType      String?  // 'company' or 'user' to distinguish selected type
+  userId        String?  // ID of the user if itemType is 'user'
+
+  @@index([blNumber])
+  @@index([eta])
+  @@index([companyId])
+  @@map("lcl_shipments")
+}
+
+/// Container shipments
+model ContainerShipment {
+  id            String   @id @default(cuid())
+  blNumber      String   @unique
+  eta           DateTime
+  notes         String?
+  departureDate DateTime
+  cargoAmount   Float    @default(0)
+  totalCbm      Float    @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  companyId     String?
+  company       Company? @relation(fields: [companyId], references: [id])
+  itemType      String?  // 'company' or 'user' to distinguish selected type
+  userId        String?  // ID of the user if itemType is 'user'
+
+  @@index([blNumber])
+  @@index([eta])
+  @@index([companyId])
+  @@map("container_shipments")
+}
+
+enum UserRole {
+  ADMIN
+  WORKER
+  BUSINESS_USER
+  CUSTOMER_USER
+  MBE_MANAGER
+}
+
+enum CargoStatus {
+  IN_TRANSIT
+  ARRIVED_AT_DESTINATION
+  READY_FOR_DELIVERY
+  DELIVERED
+}
+
+enum CargoType {
+  MARITIME
+  AIR
+}
+
+enum ContainerStatus {
+  RECEIVED_IN_WAREHOUSE
+  IN_TRANSIT
+  ARRIVED_PANAMA
+  READY_FOR_DELIVERY
+}
+
+enum TransportType {
+  AIR
+  MAR
+}
+
+/// Logistics quotes (FCL / LCL)
+model Quote {
+  id            String      @id @default(cuid())
+  quoteNumber   String      @unique
+  quoteType     QuoteType   @default(FCL)
+  status        QuoteStatus @default(DRAFT)
+
+  // Quote header
+  tipoServicio       String   @default("Maritimo")
+  validoDesde        DateTime
+  validoHasta        DateTime
+  frecuencia         String?
+  tiempoTransito     String?
+  lineaNaviera       String?
+  ruta               String?
+
+  // Shipment info
+  cliente                String
+  referenciasAdicionales String?
+  pesoBruto              Float?
+  volumen                String?
+  pesoCargable           Float?
+  terminoNegociacion     String?
+  mercaderia             String?
+  valorMercancia         Float?
+  valorSeguro            Float?
+  piezas                 Float?
+  tipoEmbalaje           String?
+  dimensiones            String?
+  tipoContenedor         String?
+  direccionRecogida      String?
+  direccionEntrega       String?
+
+  // Service lines: [{service, package, price, qty, amount}]
+  servicios    Json     @default("[]")
+  comentarios  String?
+  total        Float    @default(0)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  createdById     String?
+  assignedToId    String?
+  rejectionReason String?
+
+  @@index([quoteNumber])
+  @@index([status])
+  @@index([quoteType])
+  @@index([createdAt])
+  @@index([assignedToId])
+  @@map("quotes")
+}
+
+enum QuoteType {
+  LCL
+  FCL
+}
+
+/// Extra Manejos — surcharges linked to quotes
+model ExtraManejo {
+  id             String            @id @default(cuid())
+  monto          Float
+  motivo         String
+  estado         ExtraManejoEstado @default(PENDIENTE)
+  fechaCobro     DateTime?
+  cobradoPor     String?
+
+  // Denormalized for fast search/display
+  clienteNombre  String
+  quoteNumber    String
+  quoteType      String            @default("FAST_QUOTE") // FAST_QUOTE or QUOTE
+
+  // Soft FK — works for both Quote and FastQuote
+  fastQuoteId    String?
+  quoteId        String?
+
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([estado])
+  @@index([clienteNombre])
+  @@index([quoteNumber])
+  @@index([createdAt])
+  @@map("extra_manejos")
+}
+
+/// Weekly container bulletin sent to clients
+model BoletinEnvio {
+  id              String   @id @default(cuid())
+  lclContainerId  String
+  containerNumber String?
+  mblNumber       String
+  clienteNombre   String
+  clienteEmail    String
+  enviadoPor      String
+  enviadoAt       DateTime @default(now())
+
+  @@index([lclContainerId])
+  @@index([enviadoAt])
+  @@map("boletin_envios")
+}
+
+enum ExtraManejoEstado {
+  PENDIENTE
+  COBRADO
+}
+
+/// Generic key-value settings for the application
+model AppSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@map("app_settings")
+}
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum WarehouseStatus {
+  IN_WAREHOUSE
+  IN_TRANSIT
+  ARRIVED
+  DELIVERED
+}
+
+/// Warehouse entries for Freight Forwarder module
+model WarehouseEntry {
+  id              String          @id @default(cuid())
+  wrNumber        String          @unique
+
+  clientId        String?
+  clientType      String?         // "user" | "company"
+  clientName      String
+
+  consigneeName   String?
+
+  description     String?
+  pieces          Int             @default(1)
+  pieceType       String          @default("Cajas")
+  weight          Float?
+  largo           Float?
+  ancho           Float?
+  alto            Float?
+  unidadMedida    String          @default("cm")
+
+  originWarehouse String          @default("CHINA")
+  destWarehouse   String?
+
+  status          WarehouseStatus @default(IN_WAREHOUSE)
+
+  coordinatorId   String?
+  coordinatorName String?
+
+  notes           String?
+
+  lclBookingId    String?         @unique
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([wrNumber])
+  @@index([status])
+  @@index([clientId])
+  @@index([createdAt])
+  @@map("warehouse_entries")
+}
+
+enum LclBookingStatus {
+  PENDING
+  IN_WAREHOUSE
+  ASSIGNED
+  SHIPPED
+  ARRIVED
+  DELIVERED
+}
+
+enum LclContainerStatus {
+  OPEN
+  LOADING
+  CLOSED
+  IN_TRANSIT
+  ARRIVED
+  COMPLETED
+}
+
+/// LCL Booking — House Bill of Lading
+model LclBooking {
+  id               String           @id @default(cuid())
+  hblNumber        String           @unique
+
+  warehouseEntryId String?          @unique
+
+  // Shipper
+  shipperName      String
+  shipperAddress   String?
+
+  // Consignee
+  clientId         String?
+  clientType       String?
+  clientName       String
+  clientAddress    String?
+
+  // Notify Party
+  notifyParty      String?
+  notifyPhone      String?
+
+  // Routing
+  portOfLoading    String           @default("QINGDAO")
+  portOfDischarge  String           @default("BALBOA")
+  placeOfReceipt   String?
+  placeOfDelivery  String?
+  preCarriageBy    String?
+  vessel           String?
+  voyage           String?
+
+  // Cargo
+  description      String?
+  marks            String?
+  packages         Int              @default(1)
+  packageType      String           @default("CTNS")
+  grossWeightKg    Float?
+  cbm              Float?
+  hsCode           String?
+
+  // Freight
+  freightTerms     String           @default("PREPAID")
+  freightAmount    Float?
+  freightCurrency  String           @default("USD")
+  freightDesc      String?
+
+  // Refs
+  exportReference  String?
+  documentNumber   String?
+
+  status           LclBookingStatus @default(PENDING)
+  readyForPickup   Boolean          @default(false)
+  pickupWarehouse  String?          // "PWEST" | "PCENT" | "ZLC"
+
+  lclContainerId   String?
+  lclContainer     LclContainer?    @relation(fields: [lclContainerId], references: [id])
+
+  coordinatorId    String?
+  coordinatorName  String?
+  notes            String?
+  blDate           DateTime?
+
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([hblNumber])
+  @@index([status])
+  @@index([clientId])
+  @@index([lclContainerId])
+  @@index([createdAt])
+  @@map("lcl_bookings")
+}
+
+/// LCL Container — groups multiple bookings
+model LclContainer {
+  id              String             @id @default(cuid())
+  mblNumber       String             @unique
+
+  containerNumber String?
+  containerType   String?
+  seal            String?
+  vessel          String?
+  voyage          String?
+
+  portOfLoading   String             @default("QINGDAO")
+  portOfDischarge String             @default("BALBOA")
+
+  etd             DateTime?
+  eta             DateTime?
+  closingDate     DateTime?
+
+  status          LclContainerStatus @default(OPEN)
+  bookings        LclBooking[]
+
+  notes           String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@index([mblNumber])
+  @@index([status])
+  @@index([createdAt])
+  @@map("lcl_containers")
+}
+
+/// Fast quote for casillero (maritime/air)
+model FastQuote {
+  id             String      @id @default(cuid())
+  quoteNumber    String      @unique
+  status         QuoteStatus @default(DRAFT)
+
+  // Datos del cliente
+  cliente        String
+  direccion      String?
+
+  // Medidas de la carga
+  medidaLargo    Float?
+  medidaAncho    Float?
+  medidaAlto     Float?
+  tipoCarga      String?
+  tipoEnvio      String      @default("MARITIMO")
+
+  // Volumen (manual)
+  cbmFt3         Float?
+  unidadVolumen  String      @default("CBM")
+
+  // Tiempos
+  tiempoTransito Int         @default(45)
+  validezTarifa  Int         @default(10)
+  peso           Float?
+
+  // Servicios (campos fijos)
+  flete          Float       @default(0)
+  extraManejo    Float?
+  entregaPanama  Float?
+  descuento      Float?
+
+  comentarios    String?
+  items          Json?
+  total          Float       @default(0)
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  createdById     String?
+  assignedToId    String?
+  rejectionReason String?
+
+  @@index([quoteNumber])
+  @@index([status])
+  @@index([createdAt])
+  @@index([assignedToId])
+  @@map("fast_quotes")
+}
+
+// ── Supplier Directory ──────────────────────────────────────────────────────
+
+enum SupplierPlatform {
+  ALIBABA
+  P1688
+  MADE_IN_CHINA
+  TAOBAO
+  DIRECTO
+  OTRO
+}
+
+model Supplier {
+  id            String           @id @default(cuid())
+  name          String
+  city          String?
+  platform      SupplierPlatform @default(OTRO)
+  contactWeChat String?
+  contactEmail  String?
+  contactPhone  String?
+  products      String?
+  rating        Int              @default(3)
+  notes         String?
+  linkedCargos  String?
+  userId        String
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("suppliers")
+}
+
+// ── Import Checklist ────────────────────────────────────────────────────────
+
+enum ChecklistStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum StepStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+model ImportChecklist {
+  id          String          @id @default(cuid())
+  title       String
+  productType String?
+  status      ChecklistStatus @default(ACTIVE)
+  userId      String
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  steps       ChecklistStep[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("import_checklists")
+}
+
+model ChecklistStep {
+  id          String          @id @default(cuid())
+  checklistId String
+  checklist   ImportChecklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+  name        String
+  order       Int
+  status      StepStatus      @default(PENDING)
+  notes       String?
+  completedAt DateTime?
+
+  @@index([checklistId])
+  @@map("checklist_steps")
+}
+
+// ── Contabilidad / Accounting ────────────────────────────────────────────────
+
+enum OperationCountry {
+  CHINA
+  PANAMA
+  COSTA_RICA
+  USA
+  OTHER
+}
+
+enum ItemTipo {
+  ORIGEN
+  DESTINO
+  INDIRECTO
+}
+
+enum ItemMedida {
+  GLOBAL
+  EVENTO
+  KG
+  CBM
+  TON
+  METRO
+  HORA
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+enum AccountType {
+  REVENUE
+  COGS
+  OPERATING_EXPENSE
+  OTHER_INCOME
+  OTHER_EXPENSE
+}
+
+enum TransactionCategory {
+  FLETE_MARITIMO
+  FLETE_AEREO
+  TRAMITES_ADUANEROS
+  HONORARIOS_AGENTE
+  SERVICIOS_PORTUARIOS
+  TRANSPORTE_LOCAL
+  SEGURO_CARGA
+  BANCARIOS
+  IMPUESTOS
+  ALMACENAJE
+  OTROS_LOGISTICA
+  INGRESOS_SERVICIO
+  OTROS
+}
+
+model ShipmentOperation {
+  id             String                  @id @default(cuid())
+  title          String
+  clientName     String
+  clientCountry  OperationCountry        @default(PANAMA)
+  clientPhone    String?
+  shipmentRef    String?
+  shipmentType   String                  @default("FCL")
+  pol            String?
+  pod            String?
+  polDate        DateTime?
+  podDate        DateTime?
+  cbm            Float?
+  ingresoTotal   Float                   @default(0)
+  notes          String?
+  userId         String
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+  items          ShipmentOperationItem[]
+  transactions   AccountingTransaction[]
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("shipment_operations")
+}
+
+model ShipmentOperationItem {
+  id          String             @id @default(cuid())
+  operationId String
+  operation   ShipmentOperation  @relation(fields: [operationId], references: [id], onDelete: Cascade)
+  tipo        ItemTipo           @default(ORIGEN)
+  descripcion String
+  medida      ItemMedida         @default(EVENTO)
+  cantidad    Float              @default(1)
+  costoUnit   Float              @default(0)
+  costoTotal  Float              @default(0)
+  isHighlighted Boolean          @default(false)
+  order       Int                @default(0)
+  notes       String?
+
+  @@index([operationId])
+  @@map("shipment_operation_items")
+}
+
+model AccountingTransaction {
+  id          String              @id @default(cuid())
+  type        TransactionType
+  category    TransactionCategory @default(OTROS)
+  accountType AccountType         @default(OPERATING_EXPENSE)
+  origin      OperationCountry    @default(PANAMA)
+  description String
+  amount      Float
+  currency    String              @default("USD")
+  date        DateTime            @default(now())
+  reference   String?
+  operationId String?
+  operation   ShipmentOperation?  @relation(fields: [operationId], references: [id], onDelete: SetNull)
+  userId      String
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([type])
+  @@index([date])
+  @@index([operationId])
+  @@map("accounting_transactions")
+}
+
+// ── Appointment Scheduling ──────────────────────────────────────────────────
+
+enum AppointmentServiceType {
+  ENTREGA_CARGA
+  RETIRO_CARGA
+}
+
+enum AppointmentStatus {
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+/// Physical warehouse locations with configurable schedule
+model Warehouse {
+  id             String   @id @default(cuid())
+  name           String
+  code           String   @unique
+  address        String?
+  phone          String?
+  isActive       Boolean  @default(true)
+  scheduleConfig Json?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  appointments   Appointment[]
+
+  @@index([code])
+  @@index([isActive])
+  @@map("warehouses")
+}
+
+/// Scheduled warehouse appointments
+model Appointment {
+  id              String                  @id @default(cuid())
+  apptNumber      String                  @unique
+
+  warehouseId     String
+  warehouse       Warehouse               @relation(fields: [warehouseId], references: [id])
+
+  serviceType     AppointmentServiceType
+
+  appointmentDate DateTime
+  appointmentTime String
+
+  clientName      String
+  clientEmail     String
+  clientPhone     String
+  clientRuc       String?
+  companyName     String?
+
+  description     String?
+  pieces          Int?
+  weight          Float?
+
+  paymentProofUrl String?
+
+  status          AppointmentStatus       @default(CONFIRMED)
+  notes           String?
+  cancelReason    String?
+
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+
+  @@index([apptNumber])
+  @@index([warehouseId])
+  @@index([appointmentDate])
+  @@index([status])
+  @@index([clientEmail])
+  @@map("appointments")
+}

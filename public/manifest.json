@@ -1,0 +1,22 @@
+{
+  "name": "TP Logistics",
+  "short_name": "TP",
+  "description": "Plataforma de logística internacional — TP Logistics",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#FACC15",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/images/TP-Logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/TP-Logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

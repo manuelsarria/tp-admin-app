@@ -2839,7 +2839,7 @@ export default function AdminCargaPage() {
               Descargar Plantilla
             </Button>
             <Button variant="contained" component="label" startIcon={<UploadFile />}
-              sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' }, textTransform: 'none' }}>
+              sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' }, textTransform: 'none' }}>
               Seleccionar Excel
               <input type="file" hidden accept=".xlsx,.xls" onChange={e => {
                 const file = e.target.files?.[0]
@@ -2903,7 +2903,7 @@ export default function AdminCargaPage() {
           <Button onClick={() => setXlsxOpen(false)} sx={{ textTransform: 'none' }}>Cancelar</Button>
           {xlsxRows.filter(r => r._errors.length === 0).length > 0 && (
             <Button onClick={handleXlsxImport} variant="contained" disabled={xlsxUploading}
-              sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' }, textTransform: 'none', fontWeight: 700, borderRadius: 2 }}>
+              sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' }, textTransform: 'none', fontWeight: 700, borderRadius: 2 }}>
               {xlsxUploading ? 'Importando...' : `Importar ${xlsxRows.filter(r => r._errors.length === 0).length} envío(s)`}
             </Button>
           )}

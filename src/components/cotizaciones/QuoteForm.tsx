@@ -234,7 +234,7 @@ export function QuoteForm({ initial }: Props) {
               exclusive
               onChange={(_, v) => v && setQuoteType(v)}
               size="small"
-              sx={{ '& .MuiToggleButton-root.Mui-selected': { bgcolor: '#FACC15', color: 'white', '&:hover': { bgcolor: '#C00510' } } }}
+              sx={{ '& .MuiToggleButton-root.Mui-selected': { bgcolor: '#FACC15', color: 'white', '&:hover': { bgcolor: '#EAB308' } } }}
             >
               <ToggleButton value="FCL" sx={{ fontWeight: 700, px: 3 }}>FCL — Full Container</ToggleButton>
               <ToggleButton value="LCL" sx={{ fontWeight: 700, px: 3 }}>LCL — Carga Suelta</ToggleButton>
@@ -464,7 +464,7 @@ export function QuoteForm({ initial }: Props) {
               Guardar
             </Button>
             <Button variant="contained" startIcon={<PictureAsPdf />} onClick={handleSaveAndPDF} disabled={loading}
-              sx={{ borderRadius: 2, px: 3, textTransform: 'none', bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' }, fontWeight: 700 }}>
+              sx={{ borderRadius: 2, px: 3, textTransform: 'none', bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' }, fontWeight: 700 }}>
               {loading ? 'Generando...' : 'Guardar y Generar PDF'}
             </Button>
           </Box>

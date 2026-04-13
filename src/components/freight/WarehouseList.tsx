@@ -317,7 +317,7 @@ export function WarehouseList() {
           variant="contained"
           startIcon={<Add />}
           onClick={() => router.push('/dashboard/freight/bodega/nueva')}
-          sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' } }}
+          sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' } }}
         >
           Nueva Entrada
         </Button>
@@ -587,7 +587,7 @@ export function WarehouseList() {
             onClick={handleStatusChange}
             variant="contained"
             disabled={statusChanging}
-            sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' } }}
+            sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' } }}
           >
             {statusChanging ? <CircularProgress size={16} color="inherit" /> : 'Guardar'}
           </Button>

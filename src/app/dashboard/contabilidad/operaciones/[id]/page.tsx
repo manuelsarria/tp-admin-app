@@ -410,7 +410,7 @@ export default function OperacionDetailPage() {
         <DialogActions sx={{ px: 3, pb: 2.5 }}>
           <Button onClick={() => setAddOpen(false)} sx={{ textTransform: 'none' }}>Cancelar</Button>
           <Button onClick={addItem} variant="contained" disabled={addingItem || !newItem.descripcion.trim()}
-            sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' }, textTransform: 'none', fontWeight: 700, borderRadius: 2 }}>
+            sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' }, textTransform: 'none', fontWeight: 700, borderRadius: 2 }}>
             {addingItem ? 'Guardando...' : 'Agregar'}
           </Button>
         </DialogActions>

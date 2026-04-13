@@ -114,7 +114,7 @@ export default function TransaccionesPage() {
           <Typography variant="body2" sx={{ color: '#6B7280' }}>Ingresos y gastos generales del negocio</Typography>
         </Box>
         <Button variant="contained" startIcon={<Add />} onClick={openNew}
-          sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' }, borderRadius: 2, fontWeight: 700, textTransform: 'none' }}>
+          sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' }, borderRadius: 2, fontWeight: 700, textTransform: 'none' }}>
           Nueva Transacción
         </Button>
       </Box>
@@ -263,7 +263,7 @@ export default function TransaccionesPage() {
         <DialogActions sx={{ px: 3, pb: 2.5 }}>
           <Button onClick={() => setDialogOpen(false)} sx={{ textTransform: 'none' }}>Cancelar</Button>
           <Button onClick={handleSave} variant="contained" disabled={saving}
-            sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' }, textTransform: 'none', fontWeight: 700, borderRadius: 2 }}>
+            sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' }, textTransform: 'none', fontWeight: 700, borderRadius: 2 }}>
             {saving ? 'Guardando...' : editing ? 'Actualizar' : 'Crear'}
           </Button>
         </DialogActions>

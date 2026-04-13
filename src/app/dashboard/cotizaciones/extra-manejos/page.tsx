@@ -101,7 +101,7 @@ export default function ExtraManejosPage() {
       <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
         {[
           { label: 'Pendientes', value: stats.pendientesCount, color: '#F59E0B', icon: <Warning sx={{ color: '#fff', fontSize: 22 }} />, bg: 'linear-gradient(135deg, #F59E0B, #D97706)' },
-          { label: 'Monto por Cobrar', value: fmtMoney(stats.pendientesMonto), color: '#FACC15', icon: <AttachMoney sx={{ color: '#fff', fontSize: 22 }} />, bg: 'linear-gradient(135deg, #FACC15, #C00510)' },
+          { label: 'Monto por Cobrar', value: fmtMoney(stats.pendientesMonto), color: '#FACC15', icon: <AttachMoney sx={{ color: '#fff', fontSize: 22 }} />, bg: 'linear-gradient(135deg, #FACC15, #EAB308)' },
           { label: 'Cobrado este Mes', value: fmtMoney(stats.cobradosMesActual), color: '#10B981', icon: <CheckCircle sx={{ color: '#fff', fontSize: 22 }} />, bg: 'linear-gradient(135deg, #10B981, #059669)' },
         ].map((s, i) => (
           <Card key={i} sx={{ flex: 1, minWidth: 200, borderRadius: 3, border: '1px solid #E5E7EB', boxShadow: 'none' }}>

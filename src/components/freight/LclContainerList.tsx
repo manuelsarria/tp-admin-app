@@ -223,7 +223,7 @@ export function LclContainerList() {
               variant="contained"
               startIcon={<Add />}
               onClick={() => router.push('/dashboard/freight/lcl/containers/nueva')}
-              sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' } }}
+              sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' } }}
             >
               Nuevo Contenedor
             </Button>
@@ -340,7 +340,7 @@ export function LclContainerList() {
         <DialogActions>
           <Button onClick={() => setCloseDialog(false)}>Cancelar</Button>
           <Button variant="contained" onClick={handleClose} disabled={actionLoading}
-            sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' } }}>
+            sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' } }}>
             {actionLoading ? <CircularProgress size={18} /> : 'Cerrar Contenedor'}
           </Button>
         </DialogActions>

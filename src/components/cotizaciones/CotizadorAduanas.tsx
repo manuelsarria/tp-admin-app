@@ -292,7 +292,7 @@ export function CotizadorAduanas() {
                       color: selected ? 'white' : '#374151',
                       borderColor: selected ? '#FACC15' : '#D1D5DB',
                       border: '1px solid',
-                      '&:hover': { bgcolor: selected ? '#C00510' : '#F3F4F6' },
+                      '&:hover': { bgcolor: selected ? '#EAB308' : '#F3F4F6' },
                     }}
                   />
                 )
@@ -320,7 +320,7 @@ export function CotizadorAduanas() {
               startIcon={<Calculate />}
               sx={{
                 bgcolor: '#FACC15',
-                '&:hover': { bgcolor: '#C00510' },
+                '&:hover': { bgcolor: '#EAB308' },
                 '&.Mui-disabled': { bgcolor: '#F3F4F6', color: '#9CA3AF' },
                 borderRadius: 2,
                 py: 1.5,

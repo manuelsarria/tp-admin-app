@@ -98,7 +98,7 @@ export default function NuevoChecklistPage() {
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             <Button variant="contained" fullWidth disabled={saving} startIcon={<Save />} onClick={handleSubmit}
-              sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' }, borderRadius: 2, fontWeight: 700, textTransform: 'none', py: 1.25 }}>
+              sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' }, borderRadius: 2, fontWeight: 700, textTransform: 'none', py: 1.25 }}>
               {saving ? 'Creando...' : 'Crear Checklist'}
             </Button>
             <Button variant="outlined" fullWidth onClick={() => router.push('/dashboard/checklist-importacion')}

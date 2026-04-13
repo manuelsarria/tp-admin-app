@@ -212,7 +212,7 @@ function AppointmentDetail({ appointment, open, onClose, onUpdate }: {
       <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button onClick={onClose} sx={{ textTransform: 'none', color: '#A8A29E' }}>Cancelar</Button>
         <Button onClick={handleSave} variant="contained" disabled={saving}
-          sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' }, textTransform: 'none', fontWeight: 700, borderRadius: 2 }}>
+          sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' }, textTransform: 'none', fontWeight: 700, borderRadius: 2 }}>
           {saving ? 'Guardando...' : 'Guardar'}
         </Button>
       </DialogActions>
@@ -322,7 +322,7 @@ function WarehouseScheduleModal({ warehouses, open, onClose, onSave }: {
       <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button onClick={onClose} sx={{ textTransform: 'none', color: '#A8A29E' }}>Cancelar</Button>
         <Button onClick={handleSave} variant="contained" disabled={saving}
-          sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' }, textTransform: 'none', fontWeight: 700, borderRadius: 2 }}>
+          sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' }, textTransform: 'none', fontWeight: 700, borderRadius: 2 }}>
           {saving ? 'Guardando...' : 'Guardar Horarios'}
         </Button>
       </DialogActions>

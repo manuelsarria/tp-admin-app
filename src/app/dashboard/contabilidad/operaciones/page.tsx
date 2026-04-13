@@ -65,7 +65,7 @@ export default function OperacionesPage() {
         </Box>
         <Button variant="contained" startIcon={<Add />}
           onClick={() => router.push('/dashboard/contabilidad/operaciones/nueva')}
-          sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' }, borderRadius: 2, fontWeight: 700, textTransform: 'none' }}>
+          sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' }, borderRadius: 2, fontWeight: 700, textTransform: 'none' }}>
           Nueva Operación
         </Button>
       </Box>

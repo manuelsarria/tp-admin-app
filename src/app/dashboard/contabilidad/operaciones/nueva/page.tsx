@@ -414,7 +414,7 @@ export default function NuevaOperacionPage() {
         <Button variant="contained"
           startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <Save />}
           onClick={handleSave} disabled={saving}
-          sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' }, textTransform: 'none', fontWeight: 700, borderRadius: 2, px: 3 }}>
+          sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' }, textTransform: 'none', fontWeight: 700, borderRadius: 2, px: 3 }}>
           {saving ? 'Guardando...' : 'Guardar Operación'}
         </Button>
       </Box>

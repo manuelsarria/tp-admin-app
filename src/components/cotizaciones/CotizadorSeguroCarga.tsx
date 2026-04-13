@@ -154,7 +154,7 @@ export function CotizadorSeguroCarga() {
                   '& .MuiToggleButton-root.Mui-selected': {
                     bgcolor: '#FACC15',
                     color: 'white',
-                    '&:hover': { bgcolor: '#C00510' },
+                    '&:hover': { bgcolor: '#EAB308' },
                   },
                 }}
               >
@@ -274,7 +274,7 @@ export function CotizadorSeguroCarga() {
               startIcon={<Calculate />}
               sx={{
                 bgcolor: '#FACC15',
-                '&:hover': { bgcolor: '#C00510' },
+                '&:hover': { bgcolor: '#EAB308' },
                 '&.Mui-disabled': { bgcolor: '#F3F4F6', color: '#9CA3AF' },
                 borderRadius: 2,
                 py: 1.5,

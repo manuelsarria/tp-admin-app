@@ -421,7 +421,7 @@ export function WarehouseForm({ id, initial }: Props) {
                 disabled={saving}
                 sx={{
                   bgcolor: '#FACC15',
-                  '&:hover': { bgcolor: '#C00510' },
+                  '&:hover': { bgcolor: '#EAB308' },
                 }}
               >
                 {saving ? 'Guardando...' : isEditing ? 'Actualizar' : 'Crear Entrada'}

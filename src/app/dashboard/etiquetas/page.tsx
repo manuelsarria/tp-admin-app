@@ -313,7 +313,7 @@ export default function EtiquetasPage() {
                   sx={{ flex: 1 }} />
                 <Button size="small" variant="contained"
                   onClick={() => { saveLastCode(lastCodeInput); setEditingLast(false) }}
-                  sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' }, minWidth: 0, px: 2, fontWeight: 700, textTransform: 'none', borderRadius: 2 }}>
+                  sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' }, minWidth: 0, px: 2, fontWeight: 700, textTransform: 'none', borderRadius: 2 }}>
                   OK
                 </Button>
               </Box>
@@ -381,7 +381,7 @@ export default function EtiquetasPage() {
                     startIcon={downloading ? <CircularProgress size={16} color="inherit" /> : <Download />}
                     disabled={!code.trim() || downloading}
                     onClick={() => handleDownload(code, clientName)}
-                    sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' }, borderRadius: 2, fontWeight: 700, textTransform: 'none', py: 1.25 }}
+                    sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' }, borderRadius: 2, fontWeight: 700, textTransform: 'none', py: 1.25 }}
                   >
                     {downloading ? 'Generando PDF...' : 'Descargar Etiqueta PDF'}
                   </Button>

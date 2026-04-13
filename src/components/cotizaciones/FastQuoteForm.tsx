@@ -356,7 +356,7 @@ export function FastQuoteForm({ id, initial }: Props) {
             variant="outlined"
             startIcon={<Add />}
             onClick={addItem}
-            sx={{ mb: 3, borderRadius: 2, textTransform: 'none', fontWeight: 600, borderColor: '#FACC15', color: '#FACC15', '&:hover': { borderColor: '#C00510', bgcolor: '#FFF8F8' } }}
+            sx={{ mb: 3, borderRadius: 2, textTransform: 'none', fontWeight: 600, borderColor: '#FACC15', color: '#FACC15', '&:hover': { borderColor: '#EAB308', bgcolor: '#FFF8F8' } }}
           >
             Agregar ítem
           </Button>
@@ -495,7 +495,7 @@ export function FastQuoteForm({ id, initial }: Props) {
               fullWidth
               disabled={saving}
               startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <Save />}
-              sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' }, borderRadius: 2, fontWeight: 700, textTransform: 'none', py: 1.25 }}
+              sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' }, borderRadius: 2, fontWeight: 700, textTransform: 'none', py: 1.25 }}
             >
               {saving ? 'Guardando…' : id ? 'Actualizar Fast Quote' : 'Crear Fast Quote'}
             </Button>

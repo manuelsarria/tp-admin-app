@@ -532,7 +532,7 @@ ${address.note || ''}`
                   </Box>
                 ) : (
                   <Button variant="contained" size="medium"
-                    sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' } }}
+                    sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' } }}
                     onClick={async () => {
                       setTwoFALoading(true)
                       setTwoFAError('')
@@ -1156,7 +1156,7 @@ ${address.note || ''}`
           <Button
             variant="contained"
             disabled={twoFACode.length !== 6 || twoFALoading}
-            sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' } }}
+            sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' } }}
             startIcon={twoFALoading ? <CircularProgress size={16} color="inherit" /> : <Security />}
             onClick={async () => {
               setTwoFALoading(true)

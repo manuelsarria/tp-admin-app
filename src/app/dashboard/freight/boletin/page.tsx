@@ -221,7 +221,7 @@ export default function BoletinPage() {
                       startIcon={<Send />}
                       onClick={() => openSendDialog(c)}
                       disabled={recipientCount === 0}
-                      sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' }, textTransform: 'none', fontWeight: 700, borderRadius: 2 }}
+                      sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' }, textTransform: 'none', fontWeight: 700, borderRadius: 2 }}
                     >
                       Enviar Boletín ({recipientCount})
                     </Button>
@@ -343,7 +343,7 @@ export default function BoletinPage() {
             onClick={handleSend}
             disabled={sending}
             startIcon={sending ? <CircularProgress size={16} color="inherit" /> : <Send />}
-            sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' } }}
+            sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' } }}
           >
             {sending ? 'Enviando...' : 'Enviar Boletín'}
           </Button>

@@ -78,7 +78,7 @@ export default function ChecklistImportacionPage() {
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
         <Button variant="contained" startIcon={<Add />}
           onClick={() => router.push('/dashboard/checklist-importacion/nuevo')}
-          sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' }, borderRadius: 2, fontWeight: 700, textTransform: 'none' }}>
+          sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' }, borderRadius: 2, fontWeight: 700, textTransform: 'none' }}>
           Nuevo Checklist
         </Button>
       </Box>

@@ -244,7 +244,7 @@ export function LclContainerDetail({ id }: Props) {
         )}
         {canClose && (
           <Button startIcon={<Lock />} variant="contained" size="small" onClick={() => setCloseDialog(true)}
-            sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' } }}>
+            sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' } }}>
             Cerrar Contenedor
           </Button>
         )}
@@ -358,7 +358,7 @@ export function LclContainerDetail({ id }: Props) {
           </Typography>
           {canClose && (
             <Button size="small" variant="contained" startIcon={<Add />} onClick={openAssignDialog}
-              sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' } }}>
+              sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' } }}>
               Asignar Bookings
             </Button>
           )}
@@ -441,7 +441,7 @@ export function LclContainerDetail({ id }: Props) {
         <DialogActions>
           <Button onClick={() => setCloseDialog(false)}>Cancelar</Button>
           <Button variant="contained" onClick={handleClose} disabled={actionLoading}
-            sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' } }}>
+            sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' } }}>
             {actionLoading ? <CircularProgress size={18} /> : 'Cerrar Contenedor'}
           </Button>
         </DialogActions>
@@ -505,7 +505,7 @@ export function LclContainerDetail({ id }: Props) {
         <DialogActions>
           <Button onClick={() => setAssignDialog(false)}>Cancelar</Button>
           <Button variant="contained" onClick={handleAssign} disabled={!selectedBookings.length || actionLoading}
-            sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' } }}>
+            sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' } }}>
             {actionLoading ? <CircularProgress size={18} /> : `Asignar (${selectedBookings.length})`}
           </Button>
         </DialogActions>

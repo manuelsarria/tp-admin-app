@@ -165,7 +165,7 @@ export function FastQuoteList() {
           variant="contained"
           startIcon={<Add />}
           onClick={() => router.push('/dashboard/cotizaciones/nueva-fast-quote')}
-          sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' }, borderRadius: 2, fontWeight: 700, textTransform: 'none', ml: 'auto' }}
+          sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' }, borderRadius: 2, fontWeight: 700, textTransform: 'none', ml: 'auto' }}
         >
           Nueva Fast Quote
         </Button>

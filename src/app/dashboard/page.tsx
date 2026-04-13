@@ -208,9 +208,9 @@ function AddressChangeBanner({ mailbox, name }: { mailbox?: string | null; name?
       px: 3,
       py: 2,
       borderRadius: '14px',
-      background: 'linear-gradient(135deg, #7f0000 0%, #FACC15 100%)',
-      boxShadow: '0 4px 20px -4px rgba(227,6,19,0.5)',
-      border: '1.5px solid rgba(255,255,255,0.15)',
+      background: 'linear-gradient(135deg, #0A0A0A 0%, #292524 100%)',
+      boxShadow: '0 12px 28px -8px rgba(10,10,10,0.22)',
+      border: '1px solid rgba(250,204,21,0.25)',
     }}>
       <Warning sx={{ color: 'white', fontSize: '1.6rem', flexShrink: 0, mt: 0.25 }} />
       <Box sx={{ flex: 1 }}>
@@ -306,8 +306,8 @@ function ContainerDateBanner({ isAdmin }: { isAdmin: boolean }) {
         px: 3,
         py: 2,
         borderRadius: '14px',
-        background: 'linear-gradient(135deg, #FAFAF9 0%, #F5F5F4 100%)',
-        boxShadow: '0 4px 16px -4px rgba(15, 23, 42, 0.35)',
+        background: 'linear-gradient(135deg, #0A0A0A 0%, #171717 100%)',
+        boxShadow: '0 12px 30px -10px rgba(10,10,10,0.25)',
         flexWrap: 'wrap',
       }}>
         <DirectionsBoatOutlined sx={{ color: '#FACC15', fontSize: '1.5rem', flexShrink: 0 }} />
@@ -376,7 +376,7 @@ function StatCard({ title, value, icon, color, trend, subtitle }: StatCardProps)
       transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
       '&:hover': {
         transform: 'translateY(-3px)',
-        boxShadow: '0 12px 30px -8px rgba(0, 0, 0, 0.3)',
+        boxShadow: '0 14px 30px -10px rgba(10, 10, 10, 0.12)',
         borderColor: 'rgba(10, 10, 10, 0.12)',
       },
     }}>
@@ -432,7 +432,7 @@ function StatCard({ title, value, icon, color, trend, subtitle }: StatCardProps)
             p: 2,
             borderRadius: '16px',
             background: color,
-            boxShadow: '0 8px 16px -4px rgba(0, 0, 0, 0.1)',
+            boxShadow: '0 6px 14px -4px rgba(10, 10, 10, 0.08)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -462,9 +462,9 @@ interface SentQuoteAlert {
 }
 
 const LEVEL_CONFIG = {
-  critical:  { label: 'OBLIGATORIO llamar al cliente', color: '#F87171', bg: 'rgba(239, 68, 68, 0.08)', border: 'rgba(239, 68, 68, 0.2)' },
-  attention: { label: 'Requiere seguimiento urgente', color: '#FBBF24', bg: 'rgba(245, 158, 11, 0.08)', border: 'rgba(245, 158, 11, 0.2)' },
-  warning:   { label: 'Pendiente de seguimiento', color: '#60A5FA', bg: 'rgba(59, 130, 246, 0.08)', border: 'rgba(59, 130, 246, 0.2)' },
+  critical:  { label: 'OBLIGATORIO llamar al cliente', color: '#B91C1C', bg: '#FEF2F2', border: '#FECACA' },
+  attention: { label: 'Requiere seguimiento urgente', color: '#B45309', bg: '#FFFBEB', border: '#FDE68A' },
+  warning:   { label: 'Pendiente de seguimiento', color: '#1D4ED8', bg: '#EFF6FF', border: '#BFDBFE' },
 }
 
 function getLevelIcon(level: string) {
@@ -502,15 +502,15 @@ function AlertCountBadges({ alerts }: { alerts: SentQuoteAlert[] }) {
     <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
       {critical > 0 && (
         <Chip label={`${critical}`} size="small" icon={<PhoneCallback sx={{ fontSize: 13 }} />}
-          sx={{ fontWeight: 800, fontSize: '0.72rem', bgcolor: 'rgba(239,68,68,0.1)', color: '#F87171', border: '1px solid rgba(239,68,68,0.25)', '& .MuiChip-icon': { color: '#F87171' } }} />
+          sx={{ fontWeight: 800, fontSize: '0.72rem', bgcolor: '#FEF2F2', color: '#B91C1C', border: '1px solid #FECACA', '& .MuiChip-icon': { color: '#B91C1C' } }} />
       )}
       {attention > 0 && (
         <Chip label={`${attention}`} size="small" icon={<NotificationsActive sx={{ fontSize: 13 }} />}
-          sx={{ fontWeight: 800, fontSize: '0.72rem', bgcolor: 'rgba(245,158,11,0.1)', color: '#FBBF24', border: '1px solid rgba(245,158,11,0.25)', '& .MuiChip-icon': { color: '#FBBF24' } }} />
+          sx={{ fontWeight: 800, fontSize: '0.72rem', bgcolor: '#FFFBEB', color: '#B45309', border: '1px solid #FDE68A', '& .MuiChip-icon': { color: '#B45309' } }} />
       )}
       {warning > 0 && (
         <Chip label={`${warning}`} size="small" icon={<WarningAmber sx={{ fontSize: 13 }} />}
-          sx={{ fontWeight: 800, fontSize: '0.72rem', bgcolor: 'rgba(59,130,246,0.1)', color: '#60A5FA', border: '1px solid rgba(59,130,246,0.25)', '& .MuiChip-icon': { color: '#60A5FA' } }} />
+          sx={{ fontWeight: 800, fontSize: '0.72rem', bgcolor: '#EFF6FF', color: '#1D4ED8', border: '1px solid #BFDBFE', '& .MuiChip-icon': { color: '#1D4ED8' } }} />
       )}
     </Box>
   )
@@ -538,7 +538,7 @@ function AlertItem({ q, onClick }: { q: SentQuoteAlert; onClick: () => void }) {
           {q.quoteType && (
             <Chip label={q.quoteType} size="small"
               sx={{ height: 18, fontWeight: 700, fontSize: '0.6rem',
-                bgcolor: q.quoteType === 'FCL' ? 'rgba(59,130,246,0.15)' : 'rgba(16,185,129,0.15)',
+                bgcolor: q.quoteType === 'FCL' ? '#DBEAFE' : '#D1FAE5',
                 color: q.quoteType === 'FCL' ? '#60A5FA' : '#34D399' }} />
           )}
           <Typography variant="caption" sx={{ color: '#78716C' }}>—</Typography>
@@ -571,7 +571,7 @@ function FollowUpCard({ title, icon, alerts, editPath }: {
   return (
     <Card sx={{
       borderRadius: '16px',
-      border: hasCritical ? '1px solid rgba(239,68,68,0.25)' : '1px solid rgba(10, 10, 10, 0.06)',
+      border: hasCritical ? '1px solid #FECACA' : '1px solid rgba(10, 10, 10, 0.06)',
       background: '#FFFFFF',
       overflow: 'hidden',
       flex: 1,
@@ -875,7 +875,7 @@ function AdsSection({ isAdmin }: { isAdmin: boolean }) {
           <Button onClick={() => setEditOpen(false)} sx={{ textTransform: 'none' }}>Cancelar</Button>
           <Button onClick={handleSave} variant="contained" disabled={saving}
             startIcon={saving ? <CircularProgress size={16} sx={{ color: 'white' }} /> : <CloudUpload />}
-            sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' }, textTransform: 'none', fontWeight: 700, borderRadius: 2 }}>
+            sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' }, textTransform: 'none', fontWeight: 700, borderRadius: 2 }}>
             {saving ? 'Guardando…' : 'Guardar cambios'}
           </Button>
         </DialogActions>
@@ -1193,7 +1193,7 @@ function AdminWorkerDashboard({ isAdmin }: { isAdmin: boolean }) {
                         BL: {shipment.blNumber}
                       </Typography>
                       <Typography variant="caption" sx={{
-                        color: '#60A5FA',
+                        color: '#1D4ED8',
                         fontWeight: 600,
                         backgroundColor: 'rgba(59, 130, 246, 0.1)',
                         px: 1.5,
@@ -1297,10 +1297,10 @@ function BusinessUserDashboard() {
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
       {/* Header */}
       <Box sx={{
-        background: 'linear-gradient(135deg, #FACC15 0%, #0A0A0A 100%)',
+        background: 'linear-gradient(135deg, #0A0A0A 0%, #171717 100%)',
         borderRadius: '16px',
         p: { xs: 2.5, sm: 3, md: 4 },
-        boxShadow: '0 8px 24px -8px rgba(227, 6, 19, 0.25)'
+        boxShadow: '0 12px 30px -8px rgba(10, 10, 10, 0.22)'
       }}>
         <Typography variant="h4" sx={{
           fontWeight: 700,

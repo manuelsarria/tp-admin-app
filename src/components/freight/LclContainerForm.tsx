@@ -240,7 +240,7 @@ export function LclContainerForm({ id, initial }: Props) {
           variant="contained"
           startIcon={saving ? <CircularProgress size={18} color="inherit" /> : <Save />}
           disabled={saving}
-          sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' }, px: 4 }}
+          sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' }, px: 4 }}
         >
           {saving ? 'Guardando...' : id ? 'Actualizar Contenedor' : 'Crear Contenedor LCL'}
         </Button>

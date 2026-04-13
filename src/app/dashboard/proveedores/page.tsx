@@ -145,7 +145,7 @@ export default function ProveedoresPage() {
           </Select>
         </FormControl>
         <Button variant="contained" startIcon={<Add />} onClick={openNew}
-          sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' }, borderRadius: 2, fontWeight: 700, textTransform: 'none', ml: 'auto' }}>
+          sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' }, borderRadius: 2, fontWeight: 700, textTransform: 'none', ml: 'auto' }}>
           Nuevo Proveedor
         </Button>
       </Box>
@@ -251,7 +251,7 @@ export default function ProveedoresPage() {
         <DialogActions sx={{ px: 3, pb: 2.5 }}>
           <Button onClick={() => setDialogOpen(false)} sx={{ textTransform: 'none' }}>Cancelar</Button>
           <Button onClick={handleSave} variant="contained" disabled={saving}
-            sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' }, textTransform: 'none', fontWeight: 700, borderRadius: 2 }}>
+            sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' }, textTransform: 'none', fontWeight: 700, borderRadius: 2 }}>
             {saving ? 'Guardando...' : editing ? 'Actualizar' : 'Crear Proveedor'}
           </Button>
         </DialogActions>

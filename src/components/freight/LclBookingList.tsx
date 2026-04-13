@@ -271,7 +271,7 @@ export function LclBookingList() {
               fullWidth variant={unassignedOnly ? 'contained' : 'outlined'}
               size="small"
               onClick={() => setUnassignedOnly(p => !p)}
-              sx={unassignedOnly ? { bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' } } : {}}
+              sx={unassignedOnly ? { bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' } } : {}}
             >
               Sin Contenedor
             </Button>
@@ -281,7 +281,7 @@ export function LclBookingList() {
               variant="contained"
               startIcon={<Add />}
               onClick={() => router.push('/dashboard/freight/lcl/bookings/nueva')}
-              sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' } }}
+              sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' } }}
             >
               Nuevo HBL
             </Button>
@@ -438,7 +438,7 @@ export function LclBookingList() {
         <DialogActions>
           <Button onClick={() => setStatusDialog(false)}>Cancelar</Button>
           <Button variant="contained" onClick={handleStatusChange} disabled={actionLoading}
-            sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' } }}>
+            sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' } }}>
             {actionLoading ? <CircularProgress size={18} /> : 'Guardar'}
           </Button>
         </DialogActions>

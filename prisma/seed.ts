@@ -20,7 +20,7 @@ async function main() {
     data: [
       {
         id: 'company-1',
-        name: 'LOGÍSTICA PANAMÁ S.A.',
+        name: 'TP LOGISTICS S.A.',
         ruc: '155123456-2-2023',
         dv: '7',
         address: 'Avenida Balboa, Edificio Torre Global Bank, Piso 15, Ciudad de Panamá',
@@ -120,7 +120,7 @@ async function main() {
       // ORIGINAL USERS
       // ========================================
       {
-        email: 'admin@cnclogistics.com',
+        email: 'admin@tplogist.com',
         password: hashedPassword,
         name: 'Administrator',
         role: UserRole.ADMIN,
@@ -324,7 +324,7 @@ async function main() {
   console.log(`   - Cargos: ${cargos.count}`)
   console.log(`   - Cargo Management: ${cargoManagement.count}`)
   console.log('\n🔐 Test credentials:')
-  console.log('   Email: admin@cnclogistics.com')
+  console.log('   Email: admin@tplogist.com')
   console.log('   Password: password123')
 }
 

@@ -107,7 +107,7 @@ function TrackingStepper({ status }: { status: string }) {
               background: done ? 'linear-gradient(135deg, #FACC15, #ff4444)' : active ? '#fff' : '#F9FAFB',
               border: `3px solid ${done || active ? '#FACC15' : '#E5E7EB'}`,
               color: done ? '#fff' : '#6B7280',
-              boxShadow: active ? '0 0 0 6px rgba(227,6,19,0.15)' : done ? '0 4px 12px rgba(227,6,19,0.25)' : 'none',
+              boxShadow: active ? '0 0 0 6px rgba(250,204,21,0.18)' : done ? '0 4px 12px rgba(250,204,21,0.28)' : 'none',
             }}>
               {done ? '✓' : s.icon}
             </Box>
@@ -190,7 +190,7 @@ export default function RastreoPage() {
       {/* Search */}
       <Box component="form" onSubmit={handleSearch} sx={{
         display: 'flex', gap: 0, maxWidth: 700, mb: 3, borderRadius: 3, overflow: 'hidden',
-        border: '2px solid #E5E7EB', '&:focus-within': { borderColor: '#FACC15', boxShadow: '0 0 0 3px rgba(227,6,19,0.1)' },
+        border: '2px solid #E5E7EB', '&:focus-within': { borderColor: '#FACC15', boxShadow: '0 0 0 3px rgba(250,204,21,0.12)' },
         transition: 'all 0.2s',
       }}>
         <TextField
@@ -205,7 +205,7 @@ export default function RastreoPage() {
           }}
         />
         <Button type="submit" variant="contained" disabled={loading} sx={{
-          bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' }, borderRadius: 0, px: 4, fontWeight: 700,
+          bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' }, borderRadius: 0, px: 4, fontWeight: 700,
           textTransform: 'none', whiteSpace: 'nowrap', flexShrink: 0,
         }}>
           {loading ? 'Buscando...' : 'Rastrear'}

@@ -106,7 +106,7 @@ export default function ProveedoresPage() {
       <Box sx={{ mb: 4 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
           <Contacts sx={{ color: '#FACC15', fontSize: 30 }} />
-          <Typography variant="h5" sx={{ fontWeight: 700, color: '#0F172A' }}>Directorio de Proveedores</Typography>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: '#FAFAF9' }}>Directorio de Proveedores</Typography>
         </Box>
         <Typography variant="body2" sx={{ color: '#6B7280' }}>
           Gestiona tus proveedores de China con contactos, calificaciones y notas.
@@ -173,7 +173,7 @@ export default function ProveedoresPage() {
                 const p = PLATFORMS[s.platform] || PLATFORMS.OTRO
                 const contact = [s.contactWeChat, s.contactEmail, s.contactPhone].filter(Boolean).join(' | ')
                 return (
-                  <TableRow key={s.id} sx={{ '&:hover': { bgcolor: 'rgba(148, 163, 184, 0.06)' } }}>
+                  <TableRow key={s.id} sx={{ '&:hover': { bgcolor: 'rgba(10, 10, 10, 0.05)' } }}>
                     <TableCell sx={{ fontWeight: 600, fontSize: '0.85rem' }}>{s.name}</TableCell>
                     <TableCell sx={{ fontSize: '0.82rem', color: '#6B7280' }}>{s.city || '—'}</TableCell>
                     <TableCell>

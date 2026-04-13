@@ -331,7 +331,7 @@ export function LclContainerDetail({ id }: Props) {
               sx={{
                 height: 16,
                 borderRadius: 8,
-                bgcolor: '#F1F5F9',
+                bgcolor: '#0A0A0A',
                 '& .MuiLinearProgress-bar': {
                   bgcolor: cbmPercent > 90 ? '#FACC15' : cbmPercent > 70 ? '#F59E0B' : '#10B981',
                   borderRadius: 8,

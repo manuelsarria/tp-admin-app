@@ -171,7 +171,7 @@ export function LclContainerList() {
   })
 
   const statCards = [
-    { key: 'OPEN', label: 'Abierto', color: '#64748B' },
+    { key: 'OPEN', label: 'Abierto', color: '#78716C' },
     { key: 'LOADING', label: 'En Carga', color: '#F59E0B' },
     { key: 'CLOSED', label: 'Cerrado', color: '#3B82F6' },
     { key: 'IN_TRANSIT', label: 'En Tránsito', color: '#8B5CF6' },

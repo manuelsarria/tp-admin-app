@@ -44,7 +44,7 @@ function LabelPreview({ code, name, id = 'label-container' }: { code: string; na
 
         <Typography sx={{
           fontWeight: 900, fontSize: code.length > 10 ? '5rem' : '6.5rem',
-          color: '#0F172A', letterSpacing: '-0.02em', lineHeight: 1,
+          color: '#FAFAF9', letterSpacing: '-0.02em', lineHeight: 1,
           fontFamily: '"Arial Black", "Impact", sans-serif',
         }}>
           {code || 'TP-XXXX'}
@@ -288,7 +288,7 @@ export default function EtiquetasPage() {
       <Box sx={{ mb: 4 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
           <Label sx={{ color: '#FACC15', fontSize: 30 }} />
-          <Typography variant="h5" sx={{ fontWeight: 700, color: '#0F172A' }}>Generador de Etiquetas</Typography>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: '#FAFAF9' }}>Generador de Etiquetas</Typography>
         </Box>
         <Typography variant="body2" sx={{ color: '#6B7280' }}>
           Genera etiquetas de casillero para clientes. Descarga en PDF listo para imprimir.
@@ -349,7 +349,7 @@ export default function EtiquetasPage() {
             <CardContent sx={{ p: 3 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                 <Label sx={{ color: '#FACC15', fontSize: 20 }} />
-                <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#0F172A' }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#FAFAF9' }}>
                   Nueva Etiqueta
                 </Typography>
               </Box>
@@ -395,7 +395,7 @@ export default function EtiquetasPage() {
             <CardContent sx={{ p: 3 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                 <Refresh sx={{ color: '#3B82F6', fontSize: 20 }} />
-                <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#0F172A' }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#FAFAF9' }}>
                   Regenerar Etiqueta
                 </Typography>
               </Box>
@@ -438,7 +438,7 @@ export default function EtiquetasPage() {
         <Grid item xs={12} lg={7}>
           <Card sx={{ borderRadius: 3, border: '1px solid #E5E7EB', boxShadow: 'none' }}>
             <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#0F172A', mb: 2 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#FAFAF9', mb: 2 }}>
                 Vista Previa
               </Typography>
               {/* Responsive scaling wrapper */}

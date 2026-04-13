@@ -248,8 +248,8 @@ export default function OperacionDetailPage() {
                   <Box key={item.id} sx={{
                     display: 'grid', gridTemplateColumns: '60px 90px 1fr 90px 70px 110px 110px 50px',
                     bgcolor: item.isHighlighted ? 'rgba(245,158,11,0.08)' : (idx % 2 === 0 ? 'transparent' : 'rgba(148,163,184,0.03)'),
-                    borderBottom: '1px solid rgba(148,163,184,0.06)',
-                    '&:hover': { bgcolor: 'rgba(148, 163, 184, 0.06)' },
+                    borderBottom: '1px solid rgba(10,10,10,0.05)',
+                    '&:hover': { bgcolor: 'rgba(10, 10, 10, 0.05)' },
                   }}>
                     <Box sx={{ px: 1, py: 0.75, fontSize: '0.75rem', color: '#9CA3AF' }}>{idx + 1}</Box>
                     <Box sx={{ px: 1, py: 0.5 }}>

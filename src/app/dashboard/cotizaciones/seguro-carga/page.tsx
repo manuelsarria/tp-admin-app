@@ -8,7 +8,7 @@ export default function SeguroCargaPage() {
       <Box sx={{ mb: 4 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
           <Policy sx={{ color: '#FACC15', fontSize: 30 }} />
-          <Typography variant="h5" sx={{ fontWeight: 700, color: '#0F172A' }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: '#FAFAF9' }}>
             Cotizador de Seguro de Carga
           </Typography>
         </Box>

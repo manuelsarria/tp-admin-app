@@ -81,7 +81,7 @@ export default function ContabilidadDashboard() {
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
             <AccountBalance sx={{ color: '#FACC15', fontSize: 30 }} />
-            <Typography variant="h5" sx={{ fontWeight: 700, color: '#0F172A' }}>Contabilidad</Typography>
+            <Typography variant="h5" sx={{ fontWeight: 700, color: '#FAFAF9' }}>Contabilidad</Typography>
             <Chip label="Privado" size="small" sx={{ bgcolor: '#FACC15', color: 'white', fontWeight: 700, fontSize: '0.65rem' }} />
           </Box>
           <Typography variant="body2" sx={{ color: '#6B7280' }}>
@@ -213,7 +213,7 @@ export default function ContabilidadDashboard() {
                         <Box key={op.id} onClick={() => router.push(`/dashboard/contabilidad/operaciones/${op.id}`)}
                           sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 1.5,
                             borderRadius: 2, bgcolor: '#F8FAFC', cursor: 'pointer',
-                            '&:hover': { bgcolor: '#F1F5F9' } }}>
+                            '&:hover': { bgcolor: '#0A0A0A' } }}>
                           <Box>
                             <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.82rem' }}>{op.title}</Typography>
                             <Typography variant="caption" sx={{ color: '#6B7280' }}>{op.clientName} · {op.shipmentType}</Typography>

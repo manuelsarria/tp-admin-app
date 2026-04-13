@@ -8,7 +8,7 @@ export default function QuotesPage() {
       <Box sx={{ mb: 4 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
           <FolderOpen sx={{ color: '#FACC15', fontSize: 30 }} />
-          <Typography variant="h5" sx={{ fontWeight: 700, color: '#0F172A' }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: '#FAFAF9' }}>
             Quotes en Progreso
           </Typography>
         </Box>

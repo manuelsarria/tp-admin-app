@@ -251,7 +251,7 @@ export function QuoteForm({ initial }: Props) {
           {/* Quote header */}
           <Card sx={{ mb: 3, borderRadius: 3, border: '1px solid #E5E7EB', boxShadow: 'none' }}>
             <CardContent sx={{ p: 2.5 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: '#0F172A' }}>Encabezado de la Cotización</Typography>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: '#FAFAF9' }}>Encabezado de la Cotización</Typography>
               <Grid container spacing={2}>
                 <Grid item xs={6}><TF label="Tipo de Servicio" value={tipoServicio} onChange={setTipoServicio} /></Grid>
                 <Grid item xs={6}><TF label="Línea Naviera" value={lineaNaviera} onChange={setLineaNaviera} /></Grid>
@@ -267,7 +267,7 @@ export function QuoteForm({ initial }: Props) {
           {/* Client & shipment */}
           <Card sx={{ mb: 3, borderRadius: 3, border: '1px solid #E5E7EB', boxShadow: 'none' }}>
             <CardContent sx={{ p: 2.5 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: '#0F172A' }}>Cliente</Typography>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: '#FAFAF9' }}>Cliente</Typography>
               <Grid container spacing={2}>
                 <Grid item xs={12}>
                   <UserAssignmentSelector
@@ -287,7 +287,7 @@ export function QuoteForm({ initial }: Props) {
           {/* Addresses */}
           <Card sx={{ borderRadius: 3, border: '1px solid #E5E7EB', boxShadow: 'none' }}>
             <CardContent sx={{ p: 2.5 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: '#0F172A' }}>Direcciones</Typography>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: '#FAFAF9' }}>Direcciones</Typography>
               <Grid container spacing={2}>
                 <Grid item xs={6}><TF label="Dirección de Recogida" value={direccionRecogida} onChange={setDireccionRecogida} /></Grid>
                 <Grid item xs={6}><TF label="Dirección de Entrega" value={direccionEntrega} onChange={setDireccionEntrega} /></Grid>
@@ -303,7 +303,7 @@ export function QuoteForm({ initial }: Props) {
           {/* Shipment info */}
           <Card sx={{ mb: 3, borderRadius: 3, border: '1px solid #E5E7EB', boxShadow: 'none' }}>
             <CardContent sx={{ p: 2.5 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: '#0F172A' }}>Información de Embarque</Typography>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: '#FAFAF9' }}>Información de Embarque</Typography>
               <Grid container spacing={2}>
                 <Grid item xs={6}><TF label="Peso Bruto" value={pesoBruto} onChange={setPesoBruto} type="number" /></Grid>
                 <Grid item xs={6}><TF label="Volumen (Ej: 6.5 CBM)" value={volumen} onChange={setVolumen} /></Grid>
@@ -336,7 +336,7 @@ export function QuoteForm({ initial }: Props) {
           {/* Comments */}
           <Card sx={{ borderRadius: 3, border: '1px solid #E5E7EB', boxShadow: 'none' }}>
             <CardContent sx={{ p: 2.5 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: '#0F172A' }}>Comentarios</Typography>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: '#FAFAF9' }}>Comentarios</Typography>
               <TextField
                 value={comentarios}
                 onChange={e => setComentarios(e.target.value)}
@@ -356,7 +356,7 @@ export function QuoteForm({ initial }: Props) {
           <Card sx={{ borderRadius: 3, border: '1px solid #E5E7EB', boxShadow: 'none' }}>
             <CardContent sx={{ p: 2.5 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#0F172A' }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#FAFAF9' }}>
                   Detalles de Cotización — Líneas de Servicio
                 </Typography>
                 <Button size="small" startIcon={<Add />} onClick={addLine}
@@ -367,7 +367,7 @@ export function QuoteForm({ initial }: Props) {
 
               <Table size="small">
                 <TableHead>
-                  <TableRow sx={{ bgcolor: '#0F172A' }}>
+                  <TableRow sx={{ bgcolor: '#FAFAF9' }}>
                     {['Service', 'Package', 'Price (USD)', 'QTY', 'Amount', ''].map(h => (
                       <TableCell key={h} sx={{ color: 'white', fontWeight: 700, fontSize: '0.78rem', py: 1 }}>{h}</TableCell>
                     ))}
@@ -441,7 +441,7 @@ export function QuoteForm({ initial }: Props) {
 
               {/* Total */}
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2, pr: 6 }}>
-                <Box sx={{ bgcolor: '#0F172A', px: 3, py: 1.5, borderRadius: 2 }}>
+                <Box sx={{ bgcolor: '#FAFAF9', px: 3, py: 1.5, borderRadius: 2 }}>
                   <Typography variant="body2" sx={{ fontWeight: 400, fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)' }}>Total (USD)</Typography>
                   <Typography variant="h6" sx={{ fontWeight: 800, letterSpacing: '-0.02em', color: '#FFFFFF' }}>
                     $ {total.toLocaleString('en-US', { minimumFractionDigits: 2 })}

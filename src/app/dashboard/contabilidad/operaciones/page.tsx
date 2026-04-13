@@ -57,7 +57,7 @@ export default function OperacionesPage() {
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
             <LocalShipping sx={{ color: '#FACC15', fontSize: 28 }} />
-            <Typography variant="h5" sx={{ fontWeight: 700, color: '#0F172A' }}>Operaciones</Typography>
+            <Typography variant="h5" sx={{ fontWeight: 700, color: '#FAFAF9' }}>Operaciones</Typography>
           </Box>
           <Typography variant="body2" sx={{ color: '#6B7280' }}>
             P&L por contenedor/LCL — igual que tu hoja de Excel
@@ -105,7 +105,7 @@ export default function OperacionesPage() {
                 const polDate = op.polDate ? new Date(op.polDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : '—'
                 const podDate = op.podDate ? new Date(op.podDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : '—'
                 return (
-                  <TableRow key={op.id} sx={{ '&:hover': { bgcolor: 'rgba(148, 163, 184, 0.06)' }, cursor: 'pointer' }}
+                  <TableRow key={op.id} sx={{ '&:hover': { bgcolor: 'rgba(10, 10, 10, 0.05)' }, cursor: 'pointer' }}
                     onClick={() => router.push(`/dashboard/contabilidad/operaciones/${op.id}`)}>
                     <TableCell>
                       <Typography sx={{ fontWeight: 700, fontSize: '0.85rem' }}>{op.title}</Typography>

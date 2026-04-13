@@ -43,9 +43,9 @@ interface Props {
 }
 
 const RED = '#FACC15'
-const DARK = '#0F172A'
-const GRAY = '#64748B'
-const BORDER = '#CBD5E1'
+const DARK = '#FAFAF9'
+const GRAY = '#78716C'
+const BORDER = '#292524'
 const LIGHT_BG = '#F8FAFC'
 
 const STATUS_LABELS: Record<string, string> = {

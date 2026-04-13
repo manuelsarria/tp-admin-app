@@ -205,7 +205,7 @@ export function LclBookingList() {
   const fmtDate = (s: string) => new Date(s).toLocaleDateString('es-PA')
 
   const statCardData = [
-    { key: 'PENDING', label: 'Pendiente', color: '#64748B' },
+    { key: 'PENDING', label: 'Pendiente', color: '#78716C' },
     { key: 'IN_WAREHOUSE', label: 'En Bodega', color: '#F59E0B' },
     { key: 'ASSIGNED', label: 'Asignado', color: '#3B82F6' },
     { key: 'SHIPPED', label: 'Embarcado', color: '#8B5CF6' },
@@ -364,7 +364,7 @@ export function LclBookingList() {
                         sx={{ fontWeight: 700, fontSize: '0.65rem', bgcolor: 'rgba(16,185,129,0.12)', color: '#10B981', '& .MuiChip-icon': { color: '#10B981' } }}
                       />
                     ) : (
-                      <Typography variant="caption" sx={{ color: '#64748B', fontSize: '0.7rem' }}>Pendiente</Typography>
+                      <Typography variant="caption" sx={{ color: '#78716C', fontSize: '0.7rem' }}>Pendiente</Typography>
                     )}
                   </TableCell>
                   <TableCell sx={{ whiteSpace: 'nowrap', fontSize: '0.75rem', color: '#6B7280' }}>
@@ -460,14 +460,14 @@ export function LclBookingList() {
               <MenuItem value="ZLC">Zona Libre Colón</MenuItem>
             </Select>
           </FormControl>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 2, borderRadius: 2, bgcolor: pickupReady ? 'rgba(16,185,129,0.08)' : 'rgba(148,163,184,0.06)', border: `1px solid ${pickupReady ? 'rgba(16,185,129,0.2)' : 'rgba(148,163,184,0.1)'}` }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 2, borderRadius: 2, bgcolor: pickupReady ? 'rgba(16,185,129,0.08)' : 'rgba(10,10,10,0.05)', border: `1px solid ${pickupReady ? 'rgba(16,185,129,0.2)' : 'rgba(10,10,10,0.08)'}` }}>
             <Button
               variant={pickupReady ? 'contained' : 'outlined'}
               size="small"
               onClick={() => setPickupReady(!pickupReady)}
               sx={pickupReady
                 ? { bgcolor: '#10B981', '&:hover': { bgcolor: '#059669' }, fontWeight: 700, textTransform: 'none' }
-                : { fontWeight: 600, textTransform: 'none', borderColor: 'rgba(148,163,184,0.3)' }
+                : { fontWeight: 600, textTransform: 'none', borderColor: 'rgba(10,10,10,0.18)' }
               }
               startIcon={<CheckCircle />}
             >

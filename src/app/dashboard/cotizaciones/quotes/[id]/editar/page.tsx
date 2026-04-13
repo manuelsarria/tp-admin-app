@@ -13,7 +13,7 @@ export default async function EditarQuotePage({ params }: { params: { id: string
       <Box sx={{ mb: 4 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
           <Edit sx={{ color: '#FACC15', fontSize: 30 }} />
-          <Typography variant="h5" sx={{ fontWeight: 700, color: '#0F172A' }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: '#FAFAF9' }}>
             Editar Cotización — {quote.quoteNumber}
           </Typography>
         </Box>

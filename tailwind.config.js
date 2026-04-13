@@ -74,21 +74,21 @@ module.exports = {
           500: '#3B82F6',
           600: '#2563EB',
         },
-        // Dark theme surfaces
+        // Light theme surfaces
         surface: {
-          DEFAULT: '#111827',
-          light: '#1E293B',
-          dark: '#0B0F1A',
-          hover: 'rgba(148, 163, 184, 0.08)',
+          DEFAULT: '#FFFFFF',
+          light: '#FAFAF9',
+          dark: '#F5F5F4',
+          hover: 'rgba(10, 10, 10, 0.04)',
         },
-        // Legacy colors for compatibility
-        ink: '#F1F5F9',
-        'deep-black': '#0B0F1A',
-        'dark-gray': '#94A3B8',
-        'medium-gray': '#64748B',
-        'light-gray': 'rgba(148, 163, 184, 0.08)',
-        panel: '#111827',
-        'general-bg': '#0F1420',
+        // Legacy color keys remapped to light theme
+        ink: '#0A0A0A',
+        'deep-black': '#0A0A0A',
+        'dark-gray': '#57534E',
+        'medium-gray': '#78716C',
+        'light-gray': '#F5F5F4',
+        panel: '#FFFFFF',
+        'general-bg': '#FAFAF9',
       },
       backgroundImage: {
         'hero-gradient': 'linear-gradient(135deg, #FACC15 0%, #FDE047 50%, #FEF08A 100%)',

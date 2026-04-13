@@ -5,20 +5,17 @@ import { useRouter } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 import {
   Box,
-  Card,
-  CardContent,
   TextField,
   Button,
   Typography,
   Alert,
-  Link,
   Checkbox,
   FormControlLabel,
   InputAdornment,
   IconButton,
   CircularProgress,
 } from '@mui/material'
-import { Visibility, VisibilityOff, Email, Lock, Security } from '@mui/icons-material'
+import { Visibility, VisibilityOff, Email, Lock, Security, ArrowForward } from '@mui/icons-material'
 import Image from 'next/image'
 import { LoginForm } from '@/types'
 
@@ -37,7 +34,6 @@ export function LoginPage() {
   const [needs2FA, setNeeds2FA] = useState(false)
   const [totpCode, setTotpCode] = useState('')
 
-  // Inline validation state
   const [emailTouched, setEmailTouched] = useState(false)
   const [passwordTouched, setPasswordTouched] = useState(false)
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -45,7 +41,6 @@ export function LoginPage() {
   const passwordError = passwordTouched && formData.password.length < 6
   const isFormValid = emailRegex.test(formData.email) && formData.password.length >= 6
 
-  // Prefill email if user chose "Recordarme"
   useEffect(() => {
     const savedEmail = localStorage.getItem('saved-email')
     const remember = localStorage.getItem('remember-me') === 'true'
@@ -59,7 +54,6 @@ export function LoginPage() {
   ) => {
     const value = field === 'rememberMe' ? event.target.checked : event.target.value
     setFormData(prev => ({ ...prev, [field]: value }))
-    // Clear banner error as user edits
     setError('')
   }
 
@@ -68,7 +62,6 @@ export function LoginPage() {
     setIsLoading(true)
     setError('')
 
-    // Persist or clear remembered email before attempting login
     if (formData.rememberMe) {
       localStorage.setItem('saved-email', formData.email)
       localStorage.setItem('remember-me', 'true')
@@ -100,7 +93,7 @@ export function LoginPage() {
         router.push('/dashboard')
         router.refresh()
       }
-    } catch (err) {
+    } catch {
       setError('Error al iniciar sesión. Inténtalo de nuevo.')
     } finally {
       setIsLoading(false)
@@ -110,239 +103,369 @@ export function LoginPage() {
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    
     try {
-      // Mock password reset
       alert('Se ha enviado un enlace de recuperación a tu email')
       setShowResetPassword(false)
       setResetEmail('')
-    } catch (err) {
+    } catch {
       setError('Error al enviar email de recuperación')
     } finally {
       setIsLoading(false)
     }
   }
 
+  const cardSx = {
+    width: '100%',
+    maxWidth: 460,
+    background: '#FFFFFF',
+    borderRadius: '22px',
+    border: '1px solid #E7E5E4',
+    boxShadow: '0 24px 64px -16px rgba(10, 10, 10, 0.14)',
+    p: { xs: 3.5, sm: 5 },
+  }
+
   if (showResetPassword) {
     return (
-      <Box className="min-h-screen bg-general-bg flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardContent className="p-8">
-            <Box className="text-center mb-6">
-              <Typography variant="h4" className="font-bold text-ink mb-2">
-                Recuperar Contraseña
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                Ingresa tu email para recibir un enlace de recuperación
-              </Typography>
-            </Box>
+      <Box sx={{ minHeight: '100vh', bgcolor: '#FAFAF9', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 3 }}>
+        <Box sx={cardSx}>
+          <Box sx={{ textAlign: 'center', mb: 4 }}>
+            <Typography sx={{ fontFamily: '"Space Grotesk", sans-serif', fontSize: '1.8rem', fontWeight: 600, color: '#0A0A0A', letterSpacing: '-0.02em', mb: 1 }}>
+              Recuperar contraseña
+            </Typography>
+            <Typography sx={{ color: '#78716C', fontSize: '0.9rem' }}>
+              Ingresa tu email y te enviaremos un enlace de recuperación.
+            </Typography>
+          </Box>
 
-            <form onSubmit={handleResetPassword} className="space-y-4">
-              <TextField
-                fullWidth
-                label="Email"
-                type="email"
-                value={resetEmail}
-                onChange={(e) => setResetEmail(e.target.value)}
-                required
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Email className="text-medium-gray" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                size="large"
-                disabled={isLoading}
-                className="mt-6 bg-brand-primary hover:bg-brand-secondary"
-              >
-                {isLoading ? 'Enviando...' : 'Enviar enlace'}
-              </Button>
-
-              <Button
-                fullWidth
-                variant="text"
-                onClick={() => setShowResetPassword(false)}
-                className="mt-2"
-              >
-                Volver al login
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+          <form onSubmit={handleResetPassword}>
+            <TextField
+              fullWidth
+              label="Email"
+              type="email"
+              value={resetEmail}
+              onChange={(e) => setResetEmail(e.target.value)}
+              required
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Email sx={{ color: '#A8A29E', fontSize: '1.1rem' }} />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ mb: 2 }}
+            />
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              size="large"
+              disabled={isLoading}
+              sx={{ mt: 1.5, py: 1.5 }}
+            >
+              {isLoading ? 'Enviando...' : 'Enviar enlace'}
+            </Button>
+            <Button
+              fullWidth
+              variant="text"
+              onClick={() => setShowResetPassword(false)}
+              sx={{ mt: 1, color: '#78716C' }}
+            >
+              Volver al login
+            </Button>
+          </form>
+        </Box>
       </Box>
     )
   }
 
   return (
-    <Box className="min-h-screen bg-general-bg flex">
-      {/* Left side - Visual (wider on large screens) */}
-      <Box className="hidden lg:flex lg:basis-7/12 xl:basis-2/3 relative overflow-hidden">
-        <Image
-          src="/images/login-hero.png"
-          alt="Container Ship"
-          fill
-          priority
-          // Use the actual column widths to hint the browser
-          sizes="(min-width: 1280px) 66vw, (min-width: 1024px) 58vw, 0vw"
-          // Anchor crop to the right so the right side remains visible
-          className="object-cover object-right"
-        />
-        <Box className="absolute inset-0 bg-gradient-to-br from-black/30 to-black/10" />
-        <Box className="relative z-10 w-full h-full flex flex-col items-center justify-center text-center text-white p-8">
-          {/* <Typography variant="h2" className="font-bold mb-4">
-            TP Logistics
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#FAFAF9' }}>
+      {/* Left visual panel */}
+      <Box
+        sx={{
+          display: { xs: 'none', lg: 'flex' },
+          flexBasis: { lg: '58%', xl: '62%' },
+          position: 'relative',
+          overflow: 'hidden',
+          background: `
+            radial-gradient(ellipse at 20% 10%, rgba(250,204,21,0.18), transparent 55%),
+            radial-gradient(ellipse at 80% 90%, rgba(250,204,21,0.10), transparent 50%),
+            #0A0A0A
+          `,
+          color: '#FFFFFF',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          p: 7,
+        }}
+      >
+        {/* Grid overlay */}
+        <Box sx={{
+          position: 'absolute',
+          inset: 0,
+          backgroundImage: `
+            linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)
+          `,
+          backgroundSize: '60px 60px',
+          maskImage: 'radial-gradient(ellipse at center, black, transparent 75%)',
+          WebkitMaskImage: 'radial-gradient(ellipse at center, black, transparent 75%)',
+          pointerEvents: 'none',
+        }} />
+
+        <Box sx={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Box sx={{
+            background: '#FFFFFF',
+            borderRadius: '14px',
+            p: 1.2,
+            display: 'inline-flex',
+          }}>
+            <Image
+              src="/images/TP-Logo.png"
+              alt="TP Logistics"
+              width={140}
+              height={36}
+              priority
+              style={{ height: 'auto', display: 'block' }}
+            />
+          </Box>
+        </Box>
+
+        <Box sx={{ position: 'relative', zIndex: 2, maxWidth: 560 }}>
+          <Box sx={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 1.2,
+            px: 1.8,
+            py: 0.8,
+            border: '1px solid rgba(250,204,21,0.3)',
+            background: 'rgba(250,204,21,0.08)',
+            borderRadius: '999px',
+            mb: 3.5,
+          }}>
+            <Box sx={{
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              background: '#FACC15',
+              boxShadow: '0 0 0 4px rgba(250,204,21,0.2)',
+            }} />
+            <Typography sx={{
+              fontSize: '0.72rem',
+              fontWeight: 600,
+              color: '#FACC15',
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+            }}>
+              Panel interno · Operaciones
+            </Typography>
+          </Box>
+          <Typography sx={{
+            fontFamily: '"Space Grotesk", "Inter", sans-serif',
+            fontSize: { lg: '3.2rem', xl: '3.8rem' },
+            fontWeight: 600,
+            color: '#FFFFFF',
+            lineHeight: 1.02,
+            letterSpacing: '-0.035em',
+            mb: 2.5,
+          }}>
+            Logística global,<br />
+            <Box component="span" sx={{ color: '#FACC15' }}>sin fronteras</Box>.
           </Typography>
-          <Typography variant="h5" className="opacity-90">
-            Sistema de Gestión Logística
-          </Typography> */}
+          <Typography sx={{
+            fontSize: '1.02rem',
+            lineHeight: 1.55,
+            color: 'rgba(255,255,255,0.68)',
+            maxWidth: '44ch',
+          }}>
+            Cotizaciones, bookings, etiquetas, rastreo y contabilidad en un solo lugar.
+            Un equipo panameño detrás de cada movimiento.
+          </Typography>
+        </Box>
+
+        <Box sx={{ position: 'relative', zIndex: 2, display: 'flex', gap: 4, fontSize: '0.78rem', color: 'rgba(255,255,255,0.5)' }}>
+          <Typography variant="caption" sx={{ color: 'inherit' }}>© {new Date().getFullYear()} TP Logistics</Typography>
+          <Typography variant="caption" sx={{ color: 'inherit' }}>Miami · Guangzhou · Panamá</Typography>
         </Box>
       </Box>
 
-      {/* Right side - Login Form (narrower than left on large screens) */}
-      <Box className="w-full lg:basis-5/12 xl:basis-1/3 flex items-center justify-center p-6 lg:p-8">
-        <Card className="w-full max-w-md rounded-2xl shadow-xl">
-          <CardContent className="p-8">
-            {/* Logo and Title */}
-            <Box className="text-center mb-8">
-              <Box className="mx-auto mb-4 flex items-center justify-center">
-                <Image
-                  src="/images/TP-Logo.png"
-                  alt="TP Logistics logo"
-                  width={160}
-                  height={40}
-                  priority
-                  sizes="(max-width: 600px) 120px, 160px"
-                  className="h-10 w-auto object-contain"
-                />
-              </Box>
-              <Typography variant="h4" className="font-bold text-ink mb-2">
-                Bienvenido
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                Inicia sesión en tu cuenta de TP Logistics
-              </Typography>
-            </Box>
+      {/* Right form panel */}
+      <Box sx={{
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        p: { xs: 3, sm: 5 },
+      }}>
+        <Box sx={cardSx}>
+          {/* Mobile logo */}
+          <Box sx={{ display: { xs: 'flex', lg: 'none' }, justifyContent: 'center', mb: 3 }}>
+            <Image
+              src="/images/TP-Logo.png"
+              alt="TP Logistics"
+              width={140}
+              height={36}
+              priority
+              style={{ height: 'auto' }}
+            />
+          </Box>
 
-            {error && (
-              <Alert severity="error" className="mb-4">
-                {error}
-              </Alert>
+          <Box sx={{ mb: 4 }}>
+            <Typography sx={{
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              color: '#A8A29E',
+              mb: 1,
+            }}>
+              Bienvenido de vuelta
+            </Typography>
+            <Typography sx={{
+              fontFamily: '"Space Grotesk", "Inter", sans-serif',
+              fontSize: '2rem',
+              fontWeight: 600,
+              color: '#0A0A0A',
+              letterSpacing: '-0.03em',
+              lineHeight: 1.05,
+              mb: 1,
+            }}>
+              Inicia sesión
+            </Typography>
+            <Typography sx={{ color: '#78716C', fontSize: '0.92rem' }}>
+              Accede a tu cuenta para operar.
+            </Typography>
+          </Box>
+
+          {error && (
+            <Alert severity="error" sx={{ mb: 2.5, borderRadius: '12px' }}>
+              {error}
+            </Alert>
+          )}
+
+          <form onSubmit={handleLogin}>
+            <TextField
+              fullWidth
+              label="Email"
+              type="email"
+              autoFocus
+              value={formData.email}
+              onChange={handleInputChange('email')}
+              onBlur={() => setEmailTouched(true)}
+              autoComplete="username"
+              required
+              error={emailError}
+              helperText={emailError ? 'Ingresa un email válido' : ' '}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Email sx={{ color: '#A8A29E', fontSize: '1.1rem' }} />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ mb: 0.5 }}
+            />
+
+            <TextField
+              fullWidth
+              label="Contraseña"
+              type={showPassword ? 'text' : 'password'}
+              value={formData.password}
+              onChange={handleInputChange('password')}
+              onBlur={() => setPasswordTouched(true)}
+              autoComplete="current-password"
+              required
+              error={passwordError}
+              helperText={passwordError ? 'Mínimo 6 caracteres' : ' '}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Lock sx={{ color: '#A8A29E', fontSize: '1.1rem' }} />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end"
+                      size="small"
+                      aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                      sx={{ color: '#A8A29E' }}
+                    >
+                      {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ mb: 0.5 }}
+            />
+
+            {needs2FA && (
+              <TextField
+                fullWidth
+                label="Código 2FA"
+                value={totpCode}
+                onChange={e => { setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6)); setError('') }}
+                autoFocus
+                placeholder="000000"
+                inputProps={{
+                  maxLength: 6,
+                  inputMode: 'numeric',
+                  style: { letterSpacing: '0.5em', textAlign: 'center', fontSize: '1.3rem', fontWeight: 700 },
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Security sx={{ color: '#A8A29E', fontSize: '1.1rem' }} />
+                    </InputAdornment>
+                  ),
+                }}
+                helperText="Ingresa el código de tu app de autenticación"
+                sx={{ mt: 1 }}
+              />
             )}
 
-            <form onSubmit={handleLogin} className="space-y-4">
-              <TextField
-                fullWidth
-                label="Email"
-                type="email"
-                autoFocus
-                value={formData.email}
-                onChange={handleInputChange('email')}
-                onBlur={() => setEmailTouched(true)}
-                autoComplete="username"
-                required
-                error={emailError}
-                helperText={emailError ? 'Ingresa un email válido' : ' '}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Email className="text-medium-gray" />
-                    </InputAdornment>
-                  ),
-                }}
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1, mb: 2.5 }}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.rememberMe}
+                    onChange={handleInputChange('rememberMe')}
+                    sx={{
+                      color: '#D6D3D1',
+                      '&.Mui-checked': { color: '#0A0A0A' },
+                    }}
+                  />
+                }
+                label={<Typography sx={{ fontSize: '0.85rem', color: '#57534E' }}>Recordarme</Typography>}
               />
+            </Box>
 
-              <TextField
-                fullWidth
-                label="Contraseña"
-                type={showPassword ? 'text' : 'password'}
-                value={formData.password}
-                onChange={handleInputChange('password')}
-                onBlur={() => setPasswordTouched(true)}
-                autoComplete="current-password"
-                required
-                error={passwordError}
-                helperText={passwordError ? 'La contraseña debe tener al menos 6 caracteres' : ' '}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Lock className="text-medium-gray" />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={() => setShowPassword(!showPassword)}
-                        edge="end"
-                        aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-              />
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              size="large"
+              disabled={isLoading || !isFormValid}
+              endIcon={!isLoading ? <ArrowForward /> : undefined}
+              sx={{
+                py: 1.6,
+                fontSize: '0.95rem',
+                fontWeight: 600,
+              }}
+            >
+              {isLoading ? <CircularProgress size={22} sx={{ color: '#0A0A0A' }} /> : 'Iniciar sesión'}
+            </Button>
+          </form>
 
-              {needs2FA && (
-                <TextField
-                  fullWidth
-                  label="Código 2FA"
-                  value={totpCode}
-                  onChange={e => { setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6)); setError('') }}
-                  autoFocus
-                  placeholder="000000"
-                  inputProps={{ maxLength: 6, inputMode: 'numeric', style: { letterSpacing: '0.5em', textAlign: 'center', fontSize: '1.3rem', fontWeight: 700 } }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Security className="text-medium-gray" />
-                      </InputAdornment>
-                    ),
-                  }}
-                  helperText="Ingresa el código de tu app de autenticación"
-                />
-              )}
-
-              <Box className="flex items-center justify-between">
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.rememberMe}
-                      onChange={handleInputChange('rememberMe')}
-                      color="primary"
-                    />
-                  }
-                  label="Recordarme"
-                />
-                {/* <Link
-                  component="button"
-                  type="button"
-                  onClick={() => setShowResetPassword(true)}
-                  className="text-brand-primary hover:text-brand-secondary"
-                >
-                  ¿Olvidaste tu contraseña?
-                </Link> */}
-              </Box>
-
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                size="large"
-                disabled={isLoading || !isFormValid}
-                className="mt-6 bg-brand-primary hover:bg-brand-secondary"
-              >
-                {isLoading ? <CircularProgress size={22} color="inherit" /> : 'Iniciar Sesión'}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+          <Typography sx={{
+            textAlign: 'center',
+            mt: 3.5,
+            fontSize: '0.74rem',
+            color: '#A8A29E',
+          }}>
+            © {new Date().getFullYear()} TP Logistics · app.tplogist.com
+          </Typography>
+        </Box>
       </Box>
     </Box>
   )

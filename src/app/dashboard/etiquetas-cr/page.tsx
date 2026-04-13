@@ -53,7 +53,7 @@ function CRLabelPreview({ code, name }: { code: string; name?: string }) {
 
         <Typography sx={{
           fontWeight: 900, fontSize: code.length > 12 ? '4.5rem' : '6rem',
-          color: '#0F172A', letterSpacing: '-0.02em', lineHeight: 1,
+          color: '#FAFAF9', letterSpacing: '-0.02em', lineHeight: 1,
           fontFamily: '"Arial Black", "Impact", sans-serif',
         }}>
           {code || 'CR-TP-XXXX'}
@@ -283,7 +283,7 @@ export default function EtiquetasCRPage() {
       <Box sx={{ mb: 4 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
           <Label sx={{ color: '#002B7F', fontSize: 30 }} />
-          <Typography variant="h5" sx={{ fontWeight: 700, color: '#0F172A' }}>Generador de Etiquetas — Costa Rica</Typography>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: '#FAFAF9' }}>Generador de Etiquetas — Costa Rica</Typography>
         </Box>
         <Typography variant="body2" sx={{ color: '#6B7280' }}>
           Genera etiquetas de casillero para clientes de Costa Rica. Descarga en PDF listo para imprimir.
@@ -334,7 +334,7 @@ export default function EtiquetasCRPage() {
             <CardContent sx={{ p: 3 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                 <Label sx={{ color: '#002B7F', fontSize: 20 }} />
-                <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#0F172A' }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#FAFAF9' }}>
                   Nueva Etiqueta CR
                 </Typography>
               </Box>
@@ -380,7 +380,7 @@ export default function EtiquetasCRPage() {
             <CardContent sx={{ p: 3 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                 <Refresh sx={{ color: '#002B7F', fontSize: 20 }} />
-                <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#0F172A' }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#FAFAF9' }}>
                   Regenerar Etiqueta CR
                 </Typography>
               </Box>
@@ -423,7 +423,7 @@ export default function EtiquetasCRPage() {
         <Grid item xs={12} lg={7}>
           <Card sx={{ borderRadius: 3, border: '1px solid #E5E7EB', boxShadow: 'none' }}>
             <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#0F172A', mb: 2 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#FAFAF9', mb: 2 }}>
                 Vista Previa
               </Typography>
               <Box ref={previewContainerRef} sx={{ width: '100%' }}>

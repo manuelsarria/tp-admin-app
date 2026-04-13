@@ -80,15 +80,15 @@ const DAY_LABELS: Record<string, string> = {
 function StatCard({ title, value, icon, color }: { title: string; value: number; icon: React.ReactNode; color: string }) {
   return (
     <Card sx={{
-      borderRadius: '14px', border: '1px solid rgba(148,163,184,0.08)',
-      background: '#111827',
-      '&:hover': { borderColor: 'rgba(148,163,184,0.15)' },
+      borderRadius: '14px', border: '1px solid rgba(10,10,10,0.06)',
+      background: '#FFFFFF',
+      '&:hover': { borderColor: 'rgba(10,10,10,0.12)' },
     }}>
       <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Box>
-            <Typography sx={{ color: '#94A3B8', fontSize: '0.75rem', fontWeight: 500, mb: 0.5 }}>{title}</Typography>
-            <Typography sx={{ color: '#F1F5F9', fontSize: '1.5rem', fontWeight: 700 }}>{value}</Typography>
+            <Typography sx={{ color: '#A8A29E', fontSize: '0.75rem', fontWeight: 500, mb: 0.5 }}>{title}</Typography>
+            <Typography sx={{ color: '#0A0A0A', fontSize: '1.5rem', fontWeight: 700 }}>{value}</Typography>
           </Box>
           <Box sx={{ p: 1.25, borderRadius: '10px', background: color, display: 'flex' }}>{icon}</Box>
         </Box>
@@ -137,61 +137,61 @@ function AppointmentDetail({ appointment, open, onClose, onUpdate }: {
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
         <Box>
-          <Typography sx={{ fontWeight: 700, fontSize: '1rem', color: '#F1F5F9' }}>Cita {appointment.apptNumber}</Typography>
-          <Typography sx={{ fontSize: '0.75rem', color: '#64748B' }}>{appointment.warehouse.name}</Typography>
+          <Typography sx={{ fontWeight: 700, fontSize: '1rem', color: '#0A0A0A' }}>Cita {appointment.apptNumber}</Typography>
+          <Typography sx={{ fontSize: '0.75rem', color: '#78716C' }}>{appointment.warehouse.name}</Typography>
         </Box>
-        <IconButton onClick={onClose} sx={{ color: '#64748B' }}><Close /></IconButton>
+        <IconButton onClick={onClose} sx={{ color: '#78716C' }}><Close /></IconButton>
       </DialogTitle>
       <DialogContent sx={{ pt: '8px !important' }}>
         <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 2 }}>
           <Box>
-            <Typography sx={{ fontSize: '0.7rem', color: '#64748B', textTransform: 'uppercase' }}>Fecha</Typography>
-            <Typography sx={{ fontSize: '0.85rem', color: '#F1F5F9', fontWeight: 600 }}>{date}</Typography>
+            <Typography sx={{ fontSize: '0.7rem', color: '#78716C', textTransform: 'uppercase' }}>Fecha</Typography>
+            <Typography sx={{ fontSize: '0.85rem', color: '#0A0A0A', fontWeight: 600 }}>{date}</Typography>
           </Box>
           <Box>
-            <Typography sx={{ fontSize: '0.7rem', color: '#64748B', textTransform: 'uppercase' }}>Hora</Typography>
-            <Typography sx={{ fontSize: '0.85rem', color: '#F1F5F9', fontWeight: 600 }}>{appointment.appointmentTime}</Typography>
+            <Typography sx={{ fontSize: '0.7rem', color: '#78716C', textTransform: 'uppercase' }}>Hora</Typography>
+            <Typography sx={{ fontSize: '0.85rem', color: '#0A0A0A', fontWeight: 600 }}>{appointment.appointmentTime}</Typography>
           </Box>
           <Box>
-            <Typography sx={{ fontSize: '0.7rem', color: '#64748B', textTransform: 'uppercase' }}>Servicio</Typography>
-            <Typography sx={{ fontSize: '0.85rem', color: '#F1F5F9', fontWeight: 600 }}>
+            <Typography sx={{ fontSize: '0.7rem', color: '#78716C', textTransform: 'uppercase' }}>Servicio</Typography>
+            <Typography sx={{ fontSize: '0.85rem', color: '#0A0A0A', fontWeight: 600 }}>
               {SERVICE_LABELS[appointment.serviceType] || appointment.serviceType}
             </Typography>
           </Box>
           <Box>
-            <Typography sx={{ fontSize: '0.7rem', color: '#64748B', textTransform: 'uppercase' }}>Estado</Typography>
+            <Typography sx={{ fontSize: '0.7rem', color: '#78716C', textTransform: 'uppercase' }}>Estado</Typography>
             <Chip label={sc?.label} size="small" sx={{ bgcolor: `${sc?.color}20`, color: sc?.color, fontWeight: 700, fontSize: '0.7rem', mt: 0.3 }} />
           </Box>
         </Box>
 
-        <Box sx={{ borderTop: '1px solid rgba(148,163,184,0.08)', pt: 2, mb: 2 }}>
-          <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, color: '#F1F5F9', mb: 1 }}>Cliente</Typography>
-          <Typography sx={{ fontSize: '0.85rem', color: '#CBD5E1' }}>{appointment.clientName}</Typography>
-          <Typography sx={{ fontSize: '0.8rem', color: '#94A3B8' }}>{appointment.clientEmail} · {appointment.clientPhone}</Typography>
-          {appointment.companyName && <Typography sx={{ fontSize: '0.8rem', color: '#94A3B8' }}>Empresa: {appointment.companyName}</Typography>}
-          {appointment.clientRuc && <Typography sx={{ fontSize: '0.8rem', color: '#94A3B8' }}>RUC: {appointment.clientRuc}</Typography>}
+        <Box sx={{ borderTop: '1px solid rgba(10,10,10,0.06)', pt: 2, mb: 2 }}>
+          <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, color: '#0A0A0A', mb: 1 }}>Cliente</Typography>
+          <Typography sx={{ fontSize: '0.85rem', color: '#292524' }}>{appointment.clientName}</Typography>
+          <Typography sx={{ fontSize: '0.8rem', color: '#A8A29E' }}>{appointment.clientEmail} · {appointment.clientPhone}</Typography>
+          {appointment.companyName && <Typography sx={{ fontSize: '0.8rem', color: '#A8A29E' }}>Empresa: {appointment.companyName}</Typography>}
+          {appointment.clientRuc && <Typography sx={{ fontSize: '0.8rem', color: '#A8A29E' }}>RUC: {appointment.clientRuc}</Typography>}
         </Box>
 
         {appointment.description && (
           <Box sx={{ mb: 2 }}>
-            <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, color: '#F1F5F9', mb: 0.5 }}>Carga</Typography>
-            <Typography sx={{ fontSize: '0.8rem', color: '#94A3B8' }}>{appointment.description}</Typography>
-            {appointment.pieces && <Typography sx={{ fontSize: '0.8rem', color: '#94A3B8' }}>Piezas: {appointment.pieces}</Typography>}
-            {appointment.weight && <Typography sx={{ fontSize: '0.8rem', color: '#94A3B8' }}>Peso: {appointment.weight} kg</Typography>}
+            <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, color: '#0A0A0A', mb: 0.5 }}>Carga</Typography>
+            <Typography sx={{ fontSize: '0.8rem', color: '#A8A29E' }}>{appointment.description}</Typography>
+            {appointment.pieces && <Typography sx={{ fontSize: '0.8rem', color: '#A8A29E' }}>Piezas: {appointment.pieces}</Typography>}
+            {appointment.weight && <Typography sx={{ fontSize: '0.8rem', color: '#A8A29E' }}>Peso: {appointment.weight} kg</Typography>}
           </Box>
         )}
 
         {appointment.paymentProofUrl && (
           <Box sx={{ mb: 2 }}>
-            <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, color: '#F1F5F9', mb: 0.5 }}>Comprobante de Pago</Typography>
+            <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, color: '#0A0A0A', mb: 0.5 }}>Comprobante de Pago</Typography>
             <Button size="small" variant="outlined" href={appointment.paymentProofUrl} target="_blank"
-              sx={{ fontSize: '0.75rem', textTransform: 'none', borderColor: 'rgba(148,163,184,0.2)', color: '#60A5FA' }}>
+              sx={{ fontSize: '0.75rem', textTransform: 'none', borderColor: 'rgba(10,10,10,0.14)', color: '#60A5FA' }}>
               Ver comprobante
             </Button>
           </Box>
         )}
 
-        <Box sx={{ borderTop: '1px solid rgba(148,163,184,0.08)', pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Box sx={{ borderTop: '1px solid rgba(10,10,10,0.06)', pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
           <FormControl fullWidth size="small">
             <InputLabel>Estado</InputLabel>
             <Select value={status} onChange={e => setStatus(e.target.value)} label="Estado">
@@ -210,7 +210,7 @@ function AppointmentDetail({ appointment, open, onClose, onUpdate }: {
         </Box>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={onClose} sx={{ textTransform: 'none', color: '#94A3B8' }}>Cancelar</Button>
+        <Button onClick={onClose} sx={{ textTransform: 'none', color: '#A8A29E' }}>Cancelar</Button>
         <Button onClick={handleSave} variant="contained" disabled={saving}
           sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' }, textTransform: 'none', fontWeight: 700, borderRadius: 2 }}>
           {saving ? 'Guardando...' : 'Guardar'}
@@ -269,8 +269,8 @@ function WarehouseScheduleModal({ warehouses, open, onClose, onSave }: {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography sx={{ fontWeight: 700, fontSize: '1rem', color: '#F1F5F9' }}>Configurar Horarios</Typography>
-        <IconButton onClick={onClose} sx={{ color: '#64748B' }}><Close /></IconButton>
+        <Typography sx={{ fontWeight: 700, fontSize: '1rem', color: '#0A0A0A' }}>Configurar Horarios</Typography>
+        <IconButton onClick={onClose} sx={{ color: '#78716C' }}><Close /></IconButton>
       </DialogTitle>
       <DialogContent>
         <FormControl fullWidth size="small" sx={{ mb: 3 }}>
@@ -288,12 +288,12 @@ function WarehouseScheduleModal({ warehouses, open, onClose, onSave }: {
           return (
             <Box key={day} sx={{
               display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5,
-              p: 1.5, borderRadius: '10px', bgcolor: 'rgba(148,163,184,0.04)',
-              border: '1px solid rgba(148,163,184,0.06)',
+              p: 1.5, borderRadius: '10px', bgcolor: 'rgba(10,10,10,0.03)',
+              border: '1px solid rgba(10,10,10,0.05)',
             }}>
               <FormControlLabel
                 control={<Switch checked={isActive} onChange={() => handleDayToggle(day)} size="small" />}
-                label={<Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: '#F1F5F9', minWidth: 70 }}>{DAY_LABELS[day]}</Typography>}
+                label={<Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: '#0A0A0A', minWidth: 70 }}>{DAY_LABELS[day]}</Typography>}
                 sx={{ mr: 0 }}
               />
               {isActive && (
@@ -301,7 +301,7 @@ function WarehouseScheduleModal({ warehouses, open, onClose, onSave }: {
                   <TextField size="small" type="time" value={dayConf.open}
                     onChange={e => handleDayChange(day, 'open', e.target.value)}
                     sx={{ width: 110 }} inputProps={{ style: { fontSize: '0.8rem' } }} />
-                  <Typography sx={{ color: '#64748B', fontSize: '0.8rem' }}>a</Typography>
+                  <Typography sx={{ color: '#78716C', fontSize: '0.8rem' }}>a</Typography>
                   <TextField size="small" type="time" value={dayConf.close}
                     onChange={e => handleDayChange(day, 'close', e.target.value)}
                     sx={{ width: 110 }} inputProps={{ style: { fontSize: '0.8rem' } }} />
@@ -314,13 +314,13 @@ function WarehouseScheduleModal({ warehouses, open, onClose, onSave }: {
                   </Select>
                 </>
               )}
-              {!isActive && <Typography sx={{ color: '#64748B', fontSize: '0.75rem', fontStyle: 'italic' }}>Cerrado</Typography>}
+              {!isActive && <Typography sx={{ color: '#78716C', fontSize: '0.75rem', fontStyle: 'italic' }}>Cerrado</Typography>}
             </Box>
           )
         })}
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={onClose} sx={{ textTransform: 'none', color: '#94A3B8' }}>Cancelar</Button>
+        <Button onClick={onClose} sx={{ textTransform: 'none', color: '#A8A29E' }}>Cancelar</Button>
         <Button onClick={handleSave} variant="contained" disabled={saving}
           sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#C00510' }, textTransform: 'none', fontWeight: 700, borderRadius: 2 }}>
           {saving ? 'Guardando...' : 'Guardar Horarios'}
@@ -411,14 +411,14 @@ export default function AlmacenesPage() {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <EventAvailable sx={{ color: '#FACC15', fontSize: 28 }} />
             <Box>
-              <Typography variant="h5" sx={{ fontWeight: 700, color: '#F1F5F9', fontSize: '1.2rem' }}>Almacenes — Gestión de Citas</Typography>
-              <Typography sx={{ color: '#64748B', fontSize: '0.8rem' }}>
+              <Typography variant="h5" sx={{ fontWeight: 700, color: '#0A0A0A', fontSize: '1.2rem' }}>Almacenes — Gestión de Citas</Typography>
+              <Typography sx={{ color: '#78716C', fontSize: '0.8rem' }}>
                 Administra citas de entrega y retiro de carga
               </Typography>
             </Box>
           </Box>
           <Button startIcon={<Settings />} variant="outlined" onClick={() => setScheduleOpen(true)}
-            sx={{ textTransform: 'none', fontWeight: 600, fontSize: '0.8rem', borderColor: 'rgba(148,163,184,0.2)', color: '#CBD5E1', borderRadius: 2 }}>
+            sx={{ textTransform: 'none', fontWeight: 600, fontSize: '0.8rem', borderColor: 'rgba(10,10,10,0.14)', color: '#292524', borderRadius: 2 }}>
             Configurar Horarios
           </Button>
         </Box>
@@ -445,12 +445,12 @@ export default function AlmacenesPage() {
       </Grid>
 
       {/* Filters */}
-      <Card sx={{ mb: 3, borderRadius: '14px', border: '1px solid rgba(148,163,184,0.08)', bgcolor: '#111827' }}>
+      <Card sx={{ mb: 3, borderRadius: '14px', border: '1px solid rgba(10,10,10,0.06)', bgcolor: '#FFFFFF' }}>
         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
           <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', alignItems: 'center' }}>
             <TextField size="small" placeholder="Buscar..." value={search}
               onChange={e => setSearch(e.target.value)}
-              InputProps={{ startAdornment: <Search sx={{ color: '#64748B', mr: 0.5, fontSize: 18 }} /> }}
+              InputProps={{ startAdornment: <Search sx={{ color: '#78716C', mr: 0.5, fontSize: 18 }} /> }}
               sx={{ flex: 1, minWidth: 180 }} />
             <FormControl size="small" sx={{ minWidth: 150 }}>
               <InputLabel>Almacén</InputLabel>
@@ -472,13 +472,13 @@ export default function AlmacenesPage() {
                 <MenuItem value="NO_SHOW">No asistió</MenuItem>
               </Select>
             </FormControl>
-            <IconButton onClick={fetchData} sx={{ color: '#64748B' }}><Refresh /></IconButton>
+            <IconButton onClick={fetchData} sx={{ color: '#78716C' }}><Refresh /></IconButton>
           </Box>
         </CardContent>
       </Card>
 
       {/* Table */}
-      <Card sx={{ borderRadius: '14px', border: '1px solid rgba(148,163,184,0.08)', bgcolor: '#111827' }}>
+      <Card sx={{ borderRadius: '14px', border: '1px solid rgba(10,10,10,0.06)', bgcolor: '#FFFFFF' }}>
         <TableContainer>
           <Table size="small">
             <TableHead>
@@ -503,14 +503,14 @@ export default function AlmacenesPage() {
                 </TableRow>
               ) : appointments.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} align="center" sx={{ py: 6, color: '#64748B' }}>
+                  <TableCell colSpan={9} align="center" sx={{ py: 6, color: '#78716C' }}>
                     No hay citas para mostrar
                   </TableCell>
                 </TableRow>
               ) : appointments.map(appt => {
                 const sc = STATUS_CONFIG[appt.status]
                 return (
-                  <TableRow key={appt.id} sx={{ '&:hover': { bgcolor: 'rgba(148,163,184,0.06)' }, cursor: 'pointer' }}
+                  <TableRow key={appt.id} sx={{ '&:hover': { bgcolor: 'rgba(10,10,10,0.05)' }, cursor: 'pointer' }}
                     onClick={() => { setSelectedAppt(appt); setDetailOpen(true) }}>
                     <TableCell sx={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '0.8rem', color: '#FACC15' }}>
                       {appt.apptNumber}
@@ -527,13 +527,13 @@ export default function AlmacenesPage() {
                         }} />
                     </TableCell>
                     <TableCell sx={{ fontSize: '0.8rem', fontWeight: 500 }}>{appt.clientName}</TableCell>
-                    <TableCell sx={{ fontSize: '0.78rem', color: '#94A3B8' }}>{appt.clientPhone}</TableCell>
+                    <TableCell sx={{ fontSize: '0.78rem', color: '#A8A29E' }}>{appt.clientPhone}</TableCell>
                     <TableCell>
                       <Chip label={sc?.label} size="small"
                         sx={{ fontWeight: 700, fontSize: '0.65rem', height: 22, bgcolor: `${sc?.color}18`, color: sc?.color }} />
                     </TableCell>
                     <TableCell align="center">
-                      <IconButton size="small" sx={{ color: '#64748B' }}>
+                      <IconButton size="small" sx={{ color: '#78716C' }}>
                         <Visibility sx={{ fontSize: 16 }} />
                       </IconButton>
                     </TableCell>
@@ -544,8 +544,8 @@ export default function AlmacenesPage() {
           </Table>
         </TableContainer>
         {total > 50 && (
-          <Box sx={{ p: 1.5, textAlign: 'center', borderTop: '1px solid rgba(148,163,184,0.06)' }}>
-            <Typography sx={{ fontSize: '0.75rem', color: '#64748B' }}>
+          <Box sx={{ p: 1.5, textAlign: 'center', borderTop: '1px solid rgba(10,10,10,0.05)' }}>
+            <Typography sx={{ fontSize: '0.75rem', color: '#78716C' }}>
               Mostrando {appointments.length} de {total} citas
             </Typography>
           </Box>

@@ -208,8 +208,8 @@ export default function NuevaOperacionPage() {
                   display: 'grid',
                   gridTemplateColumns: '44px 96px 1fr 84px 64px 120px 120px 44px',
                   bgcolor: line.isHighlighted ? 'rgba(245,158,11,0.08)' : (idx % 2 === 0 ? 'transparent' : 'rgba(148,163,184,0.03)'),
-                  borderBottom: '1px solid rgba(148,163,184,0.06)',
-                  '&:hover': { bgcolor: line.isHighlighted ? 'rgba(245,158,11,0.12)' : 'rgba(148,163,184,0.06)' },
+                  borderBottom: '1px solid rgba(10,10,10,0.05)',
+                  '&:hover': { bgcolor: line.isHighlighted ? 'rgba(245,158,11,0.12)' : 'rgba(10,10,10,0.05)' },
                 }}>
                   {/* # */}
                   <Box sx={{ px: 1, display: 'flex', alignItems: 'center', fontSize: '0.72rem', color: '#9CA3AF' }}>

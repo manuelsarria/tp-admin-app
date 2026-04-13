@@ -207,7 +207,7 @@ export function QuoteList() {
                 const expiryInfo = getExpiryInfo(q.validoHasta)
                 const isActiveQuote = q.status === 'SENT' || q.status === 'DRAFT'
                 return (
-                  <TableRow key={q.id} sx={{ '&:hover': { bgcolor: 'rgba(148, 163, 184, 0.06)' } }}>
+                  <TableRow key={q.id} sx={{ '&:hover': { bgcolor: 'rgba(10, 10, 10, 0.05)' } }}>
                     <TableCell sx={{ fontFamily: 'monospace', fontWeight: 600, fontSize: '0.8rem', color: '#FACC15' }}>
                       {q.quoteNumber}
                     </TableCell>
@@ -263,7 +263,7 @@ export function QuoteList() {
 
       {/* ── Context menu ── */}
       <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={closeMenu}
-        PaperProps={{ sx: { borderRadius: 2, border: '1px solid #F1F5F9', boxShadow: '0 10px 25px -5px rgba(0,0,0,.1)', minWidth: 200 } }}>
+        PaperProps={{ sx: { borderRadius: 2, border: '1px solid #0A0A0A', boxShadow: '0 10px 25px -5px rgba(0,0,0,.1)', minWidth: 200 } }}>
 
         <MenuItem onClick={() => { router.push(`/dashboard/cotizaciones/quotes/${activeQuote?.id}/editar`); closeMenu() }}
           sx={{ fontSize: '0.875rem', py: 1.25 }}>
@@ -286,7 +286,7 @@ export function QuoteList() {
           </Box>
         )}
 
-        <Box sx={{ borderTop: '1px solid #F1F5F9', mt: 0.5 }}>
+        <Box sx={{ borderTop: '1px solid #0A0A0A', mt: 0.5 }}>
           <MenuItem onClick={deleteQuote} sx={{ fontSize: '0.875rem', py: 1.25, color: '#DC2626' }}>
             <Delete sx={{ mr: 1.5, fontSize: 18 }} /> Eliminar
           </MenuItem>

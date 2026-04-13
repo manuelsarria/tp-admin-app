@@ -94,7 +94,7 @@ export default function ChecklistDetailPage() {
         </Button>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
           <AssignmentTurnedIn sx={{ color: '#FACC15', fontSize: 28 }} />
-          <Typography variant="h5" sx={{ fontWeight: 700, color: '#0F172A' }}>{checklist.title}</Typography>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: '#FAFAF9' }}>{checklist.title}</Typography>
           <Chip label={checklist.status === 'COMPLETED' ? 'Completado' : checklist.status === 'CANCELLED' ? 'Cancelado' : 'Activo'}
             size="small"
             sx={{ fontWeight: 600, fontSize: '0.72rem',
@@ -111,7 +111,7 @@ export default function ChecklistDetailPage() {
       <Card sx={{ mb: 3, borderRadius: 3, border: '1px solid #E5E7EB', boxShadow: 'none' }}>
         <CardContent sx={{ p: 3 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#0F172A' }}>Progreso General</Typography>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#FAFAF9' }}>Progreso General</Typography>
             <Typography variant="h6" sx={{ fontWeight: 800, color: pct === 100 ? '#16A34A' : '#3B82F6' }}>
               {done}/{total} pasos
             </Typography>
@@ -152,9 +152,9 @@ export default function ChecklistDetailPage() {
                   {/* Step info */}
                   <Box sx={{ flex: 1, minWidth: 0 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Chip label={step.order} size="small" sx={{ fontWeight: 800, fontSize: '0.65rem', height: 22, minWidth: 22, bgcolor: '#F1F5F9', color: '#374151' }} />
+                      <Chip label={step.order} size="small" sx={{ fontWeight: 800, fontSize: '0.65rem', height: 22, minWidth: 22, bgcolor: '#0A0A0A', color: '#374151' }} />
                       <Typography variant="body1" sx={{
-                        fontWeight: 600, color: '#0F172A', fontSize: '0.9rem',
+                        fontWeight: 600, color: '#FAFAF9', fontSize: '0.9rem',
                         textDecoration: step.status === 'COMPLETED' ? 'line-through' : 'none',
                         opacity: step.status === 'COMPLETED' ? 0.7 : 1,
                       }}>

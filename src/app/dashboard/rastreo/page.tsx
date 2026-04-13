@@ -111,7 +111,7 @@ function TrackingStepper({ status }: { status: string }) {
             }}>
               {done ? '✓' : s.icon}
             </Box>
-            <Typography sx={{ fontSize: '0.75rem', fontWeight: done || active ? 700 : 500, color: done || active ? '#0F172A' : '#9CA3AF' }}>
+            <Typography sx={{ fontSize: '0.75rem', fontWeight: done || active ? 700 : 500, color: done || active ? '#FAFAF9' : '#9CA3AF' }}>
               {s.label}
             </Typography>
           </Box>
@@ -139,8 +139,8 @@ function DetailRow({ icon, label, value, highlight }: { icon: string; label: str
       bgcolor: highlight ? '#FEF2F2' : '#F8FAFC',
       borderLeft: `4px solid ${highlight ? '#FACC15' : '#10B981'}`,
     }}>
-      <Typography sx={{ color: '#475569', fontWeight: 600, fontSize: '0.88rem' }}>{icon} {label}</Typography>
-      <Typography sx={{ fontWeight: 700, fontSize: '0.88rem', color: '#0F172A' }}>{value}</Typography>
+      <Typography sx={{ color: '#A8A29E', fontWeight: 600, fontSize: '0.88rem' }}>{icon} {label}</Typography>
+      <Typography sx={{ fontWeight: 700, fontSize: '0.88rem', color: '#FAFAF9' }}>{value}</Typography>
     </Box>
   )
 }
@@ -181,7 +181,7 @@ export default function RastreoPage() {
     <Box>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
         <LocalShipping sx={{ color: '#FACC15', fontSize: 28 }} />
-        <Typography variant="h5" sx={{ fontWeight: 700, color: '#0F172A' }}>Rastreo de Paquete</Typography>
+        <Typography variant="h5" sx={{ fontWeight: 700, color: '#FAFAF9' }}>Rastreo de Paquete</Typography>
       </Box>
       <Typography variant="body2" sx={{ color: '#6B7280', mb: 3 }}>
         Busca por número de tracking, casillero, código adicional o contenedor.
@@ -228,18 +228,18 @@ export default function RastreoPage() {
           {/* Header */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2, mb: 1 }}>
             <Box>
-              <Typography sx={{ fontSize: '1.5rem', fontWeight: 800, color: '#0F172A', mb: 0.5 }}>Estado del Paquete</Typography>
-              <Typography sx={{ color: '#64748B', fontSize: '0.9rem' }}>
-                <strong style={{ color: '#334155' }}>Tracking:</strong> {result.trackingWarehouse}
+              <Typography sx={{ fontSize: '1.5rem', fontWeight: 800, color: '#FAFAF9', mb: 0.5 }}>Estado del Paquete</Typography>
+              <Typography sx={{ color: '#78716C', fontSize: '0.9rem' }}>
+                <strong style={{ color: '#D6D3D1' }}>Tracking:</strong> {result.trackingWarehouse}
               </Typography>
               {result.mailbox && (
-                <Typography sx={{ color: '#64748B', fontSize: '0.9rem' }}>
-                  <strong style={{ color: '#334155' }}>Casillero:</strong> {result.mailbox}
+                <Typography sx={{ color: '#78716C', fontSize: '0.9rem' }}>
+                  <strong style={{ color: '#D6D3D1' }}>Casillero:</strong> {result.mailbox}
                 </Typography>
               )}
               {result.companyName && (
-                <Typography sx={{ color: '#64748B', fontSize: '0.9rem' }}>
-                  <strong style={{ color: '#334155' }}>Empresa:</strong> {result.companyName}
+                <Typography sx={{ color: '#78716C', fontSize: '0.9rem' }}>
+                  <strong style={{ color: '#D6D3D1' }}>Empresa:</strong> {result.companyName}
                 </Typography>
               )}
             </Box>
@@ -267,7 +267,7 @@ export default function RastreoPage() {
 
           {/* Details */}
           <Box sx={{ bgcolor: '#F8FAFC', borderRadius: 3, p: 3, display: 'grid', gap: 1.5 }}>
-            <Typography sx={{ fontWeight: 800, fontSize: '1rem', color: '#0F172A', mb: 0.5 }}>📋 Detalles</Typography>
+            <Typography sx={{ fontWeight: 800, fontSize: '1rem', color: '#FAFAF9', mb: 0.5 }}>📋 Detalles</Typography>
 
             {result.fclCreatedAt && (
               <DetailRow icon={result.status === 'RECEIVED_IN_WAREHOUSE' ? '📦' : '✅'}

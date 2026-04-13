@@ -49,7 +49,7 @@ export default function ChecklistImportacionPage() {
       <Box sx={{ mb: 4 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
           <AssignmentTurnedIn sx={{ color: '#FACC15', fontSize: 30 }} />
-          <Typography variant="h5" sx={{ fontWeight: 700, color: '#0F172A' }}>Checklist de Importacion</Typography>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: '#FAFAF9' }}>Checklist de Importacion</Typography>
         </Box>
         <Typography variant="body2" sx={{ color: '#6B7280' }}>
           Lista de pasos para cada importacion desde China. Marca tu avance y no olvides nada.
@@ -109,7 +109,7 @@ export default function ChecklistImportacionPage() {
                 const pct = total > 0 ? (done / total) * 100 : 0
                 const sc = STATUS_CONFIG[c.status] || STATUS_CONFIG.ACTIVE
                 return (
-                  <TableRow key={c.id} sx={{ '&:hover': { bgcolor: 'rgba(148, 163, 184, 0.06)' }, cursor: 'pointer' }}
+                  <TableRow key={c.id} sx={{ '&:hover': { bgcolor: 'rgba(10, 10, 10, 0.05)' }, cursor: 'pointer' }}
                     onClick={() => router.push(`/dashboard/checklist-importacion/${c.id}`)}>
                     <TableCell sx={{ fontWeight: 600, fontSize: '0.85rem' }}>{c.title}</TableCell>
                     <TableCell sx={{ fontSize: '0.82rem', color: '#6B7280' }}>{c.productType || '—'}</TableCell>

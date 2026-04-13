@@ -162,7 +162,7 @@ export function CotizadorAduanas() {
       <Grid item xs={12} md={6}>
         <Card sx={{ borderRadius: 3, border: '1px solid #E5E7EB', boxShadow: 'none' }}>
           <CardContent sx={{ p: 3 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, mb: 3, color: '#0F172A' }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, mb: 3, color: '#FAFAF9' }}>
               Datos del Trámite
             </Typography>
 
@@ -272,7 +272,7 @@ export function CotizadorAduanas() {
             </Box>
 
             {/* Gastos adicionales */}
-            <Typography variant="body2" sx={{ fontWeight: 700, color: '#0F172A', mb: 1.5 }}>
+            <Typography variant="body2" sx={{ fontWeight: 700, color: '#FAFAF9', mb: 1.5 }}>
               Gastos Adicionales <Typography component="span" variant="caption" sx={{ color: '#9CA3AF', fontWeight: 400 }}>(seleccionar los que apliquen)</Typography>
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
@@ -340,7 +340,7 @@ export function CotizadorAduanas() {
         {result ? (
           <Card sx={{ borderRadius: 3, border: '1px solid #E5E7EB', boxShadow: 'none' }}>
             <CardContent sx={{ p: 3 }}>
-              <Typography variant="h6" sx={{ fontWeight: 700, mb: 3, color: '#0F172A' }}>
+              <Typography variant="h6" sx={{ fontWeight: 700, mb: 3, color: '#FAFAF9' }}>
                 Resultado
               </Typography>
 
@@ -411,7 +411,7 @@ export function CotizadorAduanas() {
               {/* Mensaje */}
               <Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 700, color: '#0F172A' }}>
+                  <Typography variant="body2" sx={{ fontWeight: 700, color: '#FAFAF9' }}>
                     Mensaje para el Cliente
                   </Typography>
                   <Button

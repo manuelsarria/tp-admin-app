@@ -91,17 +91,17 @@ function LiveClocks() {
         <Box key={c.label} sx={{
           display: 'flex', alignItems: 'center', gap: 1.5,
           px: 2, py: 1, borderRadius: '12px',
-          bgcolor: 'rgba(148, 163, 184, 0.06)', border: '1px solid rgba(148, 163, 184, 0.1)',
+          bgcolor: 'rgba(10, 10, 10, 0.05)', border: '1px solid rgba(10, 10, 10, 0.08)',
         }}>
           <Typography sx={{ fontSize: '1.4rem', lineHeight: 1 }}>{c.flag}</Typography>
           <Box>
-            <Typography sx={{ fontSize: '0.68rem', color: '#64748B', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', lineHeight: 1 }}>
+            <Typography sx={{ fontSize: '0.68rem', color: '#78716C', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', lineHeight: 1 }}>
               {c.label}
             </Typography>
-            <Typography sx={{ fontSize: '1.1rem', fontWeight: 700, color: '#F1F5F9', fontFamily: 'monospace', lineHeight: 1.3 }}>
+            <Typography sx={{ fontSize: '1.1rem', fontWeight: 700, color: '#0A0A0A', fontFamily: 'monospace', lineHeight: 1.3 }}>
               {c.time}
             </Typography>
-            <Typography sx={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 500, lineHeight: 1 }}>
+            <Typography sx={{ fontSize: '0.72rem', color: '#78716C', fontWeight: 500, lineHeight: 1 }}>
               {c.date}
             </Typography>
           </Box>
@@ -306,7 +306,7 @@ function ContainerDateBanner({ isAdmin }: { isAdmin: boolean }) {
         px: 3,
         py: 2,
         borderRadius: '14px',
-        background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
+        background: 'linear-gradient(135deg, #FAFAF9 0%, #F5F5F4 100%)',
         boxShadow: '0 4px 16px -4px rgba(15, 23, 42, 0.35)',
         flexWrap: 'wrap',
       }}>
@@ -371,20 +371,20 @@ function StatCard({ title, value, icon, color, trend, subtitle }: StatCardProps)
     <Card sx={{
       height: '100%',
       borderRadius: '16px',
-      border: '1px solid rgba(148, 163, 184, 0.08)',
-      background: '#111827',
+      border: '1px solid rgba(10, 10, 10, 0.06)',
+      background: '#FFFFFF',
       transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
       '&:hover': {
         transform: 'translateY(-3px)',
         boxShadow: '0 12px 30px -8px rgba(0, 0, 0, 0.3)',
-        borderColor: 'rgba(148, 163, 184, 0.15)',
+        borderColor: 'rgba(10, 10, 10, 0.12)',
       },
     }}>
       <CardContent sx={{ p: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Box sx={{ flex: 1 }}>
             <Typography variant="body2" sx={{
-              color: '#94A3B8',
+              color: '#A8A29E',
               mb: 1,
               fontSize: '0.82rem',
               fontWeight: 500,
@@ -394,7 +394,7 @@ function StatCard({ title, value, icon, color, trend, subtitle }: StatCardProps)
             </Typography>
             <Typography variant="h3" sx={{
               fontWeight: 700,
-              color: '#F1F5F9',
+              color: '#0A0A0A',
               fontSize: '2rem',
               lineHeight: 1,
               mb: 0.5
@@ -403,7 +403,7 @@ function StatCard({ title, value, icon, color, trend, subtitle }: StatCardProps)
             </Typography>
             {subtitle && (
               <Typography variant="caption" sx={{
-                color: '#64748B',
+                color: '#78716C',
                 fontSize: '0.75rem',
                 display: 'block',
                 mt: 0.5
@@ -532,7 +532,7 @@ function AlertItem({ q, onClick }: { q: SentQuoteAlert; onClick: () => void }) {
       <Box sx={{ color: cfg.color, display: 'flex' }}>{getLevelIcon(q.level)}</Box>
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#F1F5F9', fontSize: '0.82rem' }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#0A0A0A', fontSize: '0.82rem' }}>
             {q.quoteNumber}
           </Typography>
           {q.quoteType && (
@@ -541,8 +541,8 @@ function AlertItem({ q, onClick }: { q: SentQuoteAlert; onClick: () => void }) {
                 bgcolor: q.quoteType === 'FCL' ? 'rgba(59,130,246,0.15)' : 'rgba(16,185,129,0.15)',
                 color: q.quoteType === 'FCL' ? '#60A5FA' : '#34D399' }} />
           )}
-          <Typography variant="caption" sx={{ color: '#64748B' }}>—</Typography>
-          <Typography variant="body2" sx={{ fontWeight: 500, color: '#CBD5E1', fontSize: '0.82rem' }}>
+          <Typography variant="caption" sx={{ color: '#78716C' }}>—</Typography>
+          <Typography variant="body2" sx={{ fontWeight: 500, color: '#292524', fontSize: '0.82rem' }}>
             {q.cliente}
           </Typography>
         </Box>
@@ -550,7 +550,7 @@ function AlertItem({ q, onClick }: { q: SentQuoteAlert; onClick: () => void }) {
           {cfg.label} · Enviada hace {formatHours(q.hoursInSent)}
         </Typography>
       </Box>
-      <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#F1F5F9', whiteSpace: 'nowrap' }}>
+      <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#0A0A0A', whiteSpace: 'nowrap' }}>
         $ {q.total?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
       </Typography>
     </Box>
@@ -571,14 +571,14 @@ function FollowUpCard({ title, icon, alerts, editPath }: {
   return (
     <Card sx={{
       borderRadius: '16px',
-      border: hasCritical ? '1px solid rgba(239,68,68,0.25)' : '1px solid rgba(148, 163, 184, 0.08)',
-      background: '#111827',
+      border: hasCritical ? '1px solid rgba(239,68,68,0.25)' : '1px solid rgba(10, 10, 10, 0.06)',
+      background: '#FFFFFF',
       overflow: 'hidden',
       flex: 1,
       minWidth: 0,
     }}>
       {/* ── Fixed header ── */}
-      <Box sx={{ p: 2.5, pb: 2, borderBottom: '1px solid rgba(148, 163, 184, 0.06)' }}>
+      <Box sx={{ p: 2.5, pb: 2, borderBottom: '1px solid rgba(10, 10, 10, 0.05)' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <Box sx={{
@@ -589,10 +589,10 @@ function FollowUpCard({ title, icon, alerts, editPath }: {
               {icon}
             </Box>
             <Box>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#F1F5F9', lineHeight: 1.2, fontSize: '0.95rem' }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#0A0A0A', lineHeight: 1.2, fontSize: '0.95rem' }}>
                 {title}
               </Typography>
-              <Typography variant="caption" sx={{ color: '#64748B' }}>
+              <Typography variant="caption" sx={{ color: '#78716C' }}>
                 {alerts.length} enviada{alerts.length !== 1 ? 's' : ''} sin respuesta
               </Typography>
             </Box>
@@ -750,13 +750,13 @@ function AdsSection({ isAdmin }: { isAdmin: boolean }) {
         <Grid item xs={12}>
           <Card sx={{
             borderRadius: '16px',
-            border: '1px solid rgba(148, 163, 184, 0.08)',
-            background: '#111827',
+            border: '1px solid rgba(10, 10, 10, 0.06)',
+            background: '#FFFFFF',
           }}>
             <CardContent sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
                 <Typography variant="h6" sx={{
-                  fontWeight: 600, color: '#F1F5F9', fontSize: '1.15rem', fontFamily: '"Poppins", sans-serif',
+                  fontWeight: 600, color: '#0A0A0A', fontSize: '1.15rem', fontFamily: '"Poppins", sans-serif',
                 }}>
                   Promociones y Anuncios
                 </Typography>
@@ -971,16 +971,16 @@ function AdminWorkerDashboard({ isAdmin }: { isAdmin: boolean }) {
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
       {/* Header */}
       <Box sx={{
-        background: '#111827',
+        background: '#FFFFFF',
         borderRadius: '16px',
-        border: '1px solid rgba(148, 163, 184, 0.08)',
+        border: '1px solid rgba(10, 10, 10, 0.06)',
         p: { xs: 2.5, sm: 3, md: 4 },
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2,
       }}>
         <Box>
           <Typography variant="h4" sx={{
             fontWeight: 700,
-            color: '#F1F5F9',
+            color: '#0A0A0A',
             mb: 0.5,
             fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' },
             fontFamily: '"Poppins", sans-serif',
@@ -988,7 +988,7 @@ function AdminWorkerDashboard({ isAdmin }: { isAdmin: boolean }) {
           }}>
             Dashboard Administrativo
           </Typography>
-          <Typography variant="body1" sx={{ color: '#64748B', fontSize: '0.9rem' }}>
+          <Typography variant="body1" sx={{ color: '#78716C', fontSize: '0.9rem' }}>
             Vista general de operaciones y logística
           </Typography>
         </Box>
@@ -1081,15 +1081,15 @@ function AdminWorkerDashboard({ isAdmin }: { isAdmin: boolean }) {
           <Card sx={{
             height: '100%',
             borderRadius: '16px',
-            border: '1px solid rgba(148, 163, 184, 0.08)',
-            background: '#111827',
+            border: '1px solid rgba(10, 10, 10, 0.06)',
+            background: '#FFFFFF',
           }}>
             <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
                 <Inventory sx={{ color: '#FACC15', mr: 1.5, fontSize: '1.5rem' }} />
                 <Typography variant="h6" sx={{
                   fontWeight: 600,
-                  color: '#F1F5F9',
+                  color: '#0A0A0A',
                   fontSize: '1.1rem',
                   fontFamily: '"Poppins", sans-serif'
                 }}>
@@ -1102,29 +1102,29 @@ function AdminWorkerDashboard({ isAdmin }: { isAdmin: boolean }) {
                     key={container.id}
                     sx={{
                       p: 2.5,
-                      border: '1px solid rgba(148, 163, 184, 0.08)',
+                      border: '1px solid rgba(10, 10, 10, 0.06)',
                       borderRadius: '12px',
-                      background: 'rgba(148, 163, 184, 0.04)',
+                      background: 'rgba(10, 10, 10, 0.03)',
                       transition: 'all 0.2s',
                       '&:hover': {
-                        background: 'rgba(148, 163, 184, 0.08)',
+                        background: 'rgba(10, 10, 10, 0.06)',
                         transform: 'translateY(-1px)',
                       },
                     }}
                   >
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
                       <Box>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#F1F5F9', mb: 0.5 }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#0A0A0A', mb: 0.5 }}>
                           {container.referenceNo || container.containerNumber}
                         </Typography>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                          <LocationOn sx={{ fontSize: '0.875rem', color: '#64748B' }} />
-                          <Typography variant="caption" sx={{ color: '#64748B' }}>
+                          <LocationOn sx={{ fontSize: '0.875rem', color: '#78716C' }} />
+                          <Typography variant="caption" sx={{ color: '#78716C' }}>
                             {container.location}
                           </Typography>
                         </Box>
                         {container.shippingLine && (
-                          <Typography variant="caption" sx={{ color: '#64748B', display: 'block' }}>
+                          <Typography variant="caption" sx={{ color: '#78716C', display: 'block' }}>
                             {container.shippingLine}
                           </Typography>
                         )}
@@ -1142,7 +1142,7 @@ function AdminWorkerDashboard({ isAdmin }: { isAdmin: boolean }) {
                   </Box>
                 )) : (
                   <Box sx={{ textAlign: 'center', py: 4 }}>
-                    <Typography variant="body2" sx={{ color: '#64748B' }}>
+                    <Typography variant="body2" sx={{ color: '#78716C' }}>
                       No hay contenedores próximos
                     </Typography>
                   </Box>
@@ -1157,15 +1157,15 @@ function AdminWorkerDashboard({ isAdmin }: { isAdmin: boolean }) {
           <Card sx={{
             height: '100%',
             borderRadius: '16px',
-            border: '1px solid rgba(148, 163, 184, 0.08)',
-            background: '#111827',
+            border: '1px solid rgba(10, 10, 10, 0.06)',
+            background: '#FFFFFF',
           }}>
             <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
                 <LocalShipping sx={{ color: '#3B82F6', mr: 1.5, fontSize: '1.5rem' }} />
                 <Typography variant="h6" sx={{
                   fontWeight: 600,
-                  color: '#F1F5F9',
+                  color: '#0A0A0A',
                   fontSize: '1.1rem',
                   fontFamily: '"Poppins", sans-serif'
                 }}>
@@ -1178,18 +1178,18 @@ function AdminWorkerDashboard({ isAdmin }: { isAdmin: boolean }) {
                     key={shipment.id}
                     sx={{
                       p: 2.5,
-                      border: '1px solid rgba(148, 163, 184, 0.08)',
+                      border: '1px solid rgba(10, 10, 10, 0.06)',
                       borderRadius: '12px',
-                      background: 'rgba(148, 163, 184, 0.04)',
+                      background: 'rgba(10, 10, 10, 0.03)',
                       transition: 'all 0.2s',
                       '&:hover': {
-                        background: 'rgba(148, 163, 184, 0.08)',
+                        background: 'rgba(10, 10, 10, 0.06)',
                         transform: 'translateY(-1px)',
                       },
                     }}
                   >
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#F1F5F9' }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#0A0A0A' }}>
                         BL: {shipment.blNumber}
                       </Typography>
                       <Typography variant="caption" sx={{
@@ -1205,8 +1205,8 @@ function AdminWorkerDashboard({ isAdmin }: { isAdmin: boolean }) {
                     </Box>
                     {shipment.company && (
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
-                        <Business sx={{ fontSize: '0.875rem', color: '#64748B' }} />
-                        <Typography variant="caption" sx={{ color: '#64748B' }}>
+                        <Business sx={{ fontSize: '0.875rem', color: '#78716C' }} />
+                        <Typography variant="caption" sx={{ color: '#78716C' }}>
                           {shipment.company.company_id} - {shipment.company.name}
                         </Typography>
                       </Box>
@@ -1220,7 +1220,7 @@ function AdminWorkerDashboard({ isAdmin }: { isAdmin: boolean }) {
                   </Box>
                 )) : (
                   <Box sx={{ textAlign: 'center', py: 4 }}>
-                    <Typography variant="body2" sx={{ color: '#64748B' }}>
+                    <Typography variant="body2" sx={{ color: '#78716C' }}>
                       No hay envíos LCL próximos
                     </Typography>
                   </Box>

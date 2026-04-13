@@ -1135,7 +1135,7 @@ ${address.note || ''}`
               <Box component="img" src={qrCode} alt="QR Code" sx={{ width: 200, height: 200, mx: 'auto', mb: 2, border: '1px solid #E5E7EB', borderRadius: 2 }} />
             )}
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 3 }}>
-              Clave manual: <code style={{ background: '#F1F5F9', padding: '2px 8px', borderRadius: 4 }}>{twoFASecret}</code>
+              Clave manual: <code style={{ background: '#0A0A0A', padding: '2px 8px', borderRadius: 4 }}>{twoFASecret}</code>
             </Typography>
             <Divider sx={{ mb: 2 }} />
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>

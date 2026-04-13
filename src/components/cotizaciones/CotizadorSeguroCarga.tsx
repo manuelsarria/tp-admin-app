@@ -135,7 +135,7 @@ export function CotizadorSeguroCarga() {
       <Grid item xs={12} md={6}>
         <Card sx={{ borderRadius: 3, border: '1px solid #E5E7EB', boxShadow: 'none' }}>
           <CardContent sx={{ p: 3 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, mb: 3, color: '#0F172A' }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, mb: 3, color: '#FAFAF9' }}>
               Datos de la Carga
             </Typography>
 
@@ -294,7 +294,7 @@ export function CotizadorSeguroCarga() {
         {result ? (
           <Card sx={{ borderRadius: 3, border: '1px solid #E5E7EB', boxShadow: 'none' }}>
             <CardContent sx={{ p: 3 }}>
-              <Typography variant="h6" sx={{ fontWeight: 700, mb: 3, color: '#0F172A' }}>
+              <Typography variant="h6" sx={{ fontWeight: 700, mb: 3, color: '#FAFAF9' }}>
                 Resultado
               </Typography>
 
@@ -322,10 +322,10 @@ export function CotizadorSeguroCarga() {
                 <Divider sx={{ my: 1.5 }} />
 
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.75 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 700, color: '#0F172A' }}>
+                  <Typography variant="body2" sx={{ fontWeight: 700, color: '#FAFAF9' }}>
                     Total Asegurado
                   </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 700, color: '#0F172A' }}>
+                  <Typography variant="body2" sx={{ fontWeight: 700, color: '#FAFAF9' }}>
                     {fmt(result.totalAsegurado)}
                   </Typography>
                 </Box>
@@ -373,7 +373,7 @@ export function CotizadorSeguroCarga() {
               {/* Mensaje */}
               <Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 700, color: '#0F172A' }}>
+                  <Typography variant="body2" sx={{ fontWeight: 700, color: '#FAFAF9' }}>
                     Mensaje para el Cliente
                   </Typography>
                   <Button

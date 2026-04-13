@@ -155,7 +155,7 @@ export default function BoletinPage() {
     <Box>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
         <Email sx={{ color: '#FACC15', fontSize: 28 }} />
-        <Typography variant="h5" sx={{ fontWeight: 700, color: '#0F172A' }}>Boletín Semanal de Contenedores</Typography>
+        <Typography variant="h5" sx={{ fontWeight: 700, color: '#FAFAF9' }}>Boletín Semanal de Contenedores</Typography>
       </Box>
       <Typography variant="body2" sx={{ color: '#6B7280', mb: 3 }}>
         Envía actualizaciones semanales a los clientes sobre el estado de sus contenedores LCL.
@@ -191,8 +191,8 @@ export default function BoletinPage() {
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2, mb: 2 }}>
                     <Box>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
-                        <DirectionsBoat sx={{ color: '#0F172A', fontSize: 22 }} />
-                        <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', color: '#0F172A' }}>
+                        <DirectionsBoat sx={{ color: '#FAFAF9', fontSize: 22 }} />
+                        <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', color: '#FAFAF9' }}>
                           {c.containerNumber || c.mblNumber}
                         </Typography>
                         <Chip label={STATUS_LABELS[c.status] || c.status} size="small" sx={{
@@ -204,10 +204,10 @@ export default function BoletinPage() {
                         MBL: {c.mblNumber} {c.vessel && `• ${c.vessel}`} {c.voyage && `V.${c.voyage}`}
                       </Typography>
                       <Box sx={{ display: 'flex', gap: 3, mt: 0.5 }}>
-                        <Typography variant="body2" sx={{ color: '#475569', fontSize: '0.85rem' }}>
+                        <Typography variant="body2" sx={{ color: '#A8A29E', fontSize: '0.85rem' }}>
                           <strong>ETD:</strong> {fmtDate(c.etd)}
                         </Typography>
-                        <Typography variant="body2" sx={{ color: '#475569', fontSize: '0.85rem' }}>
+                        <Typography variant="body2" sx={{ color: '#A8A29E', fontSize: '0.85rem' }}>
                           <strong>ETA:</strong> {fmtDate(c.eta)}
                         </Typography>
                         <Typography variant="body2" sx={{ color: '#9CA3AF', fontSize: '0.82rem' }}>
@@ -247,7 +247,7 @@ export default function BoletinPage() {
                             <TableCell><Typography sx={{ fontSize: '0.83rem', fontWeight: 600 }}>{b.clientName}</Typography></TableCell>
                             <TableCell>
                               {b.clientEmail
-                                ? <Typography sx={{ fontSize: '0.8rem', color: '#475569' }}>{b.clientEmail}</Typography>
+                                ? <Typography sx={{ fontSize: '0.8rem', color: '#A8A29E' }}>{b.clientEmail}</Typography>
                                 : <Chip label="Sin email" size="small" sx={{ fontSize: '0.7rem', bgcolor: '#FEE2E2', color: '#991B1B' }} />
                               }
                             </TableCell>
@@ -328,7 +328,7 @@ export default function BoletinPage() {
               <Box>
                 <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', mb: 1 }}>Carga incluida en el boletín:</Typography>
                 {sendContainer.bookings.map(b => (
-                  <Typography key={b.id} variant="body2" sx={{ color: '#475569', fontSize: '0.85rem' }}>
+                  <Typography key={b.id} variant="body2" sx={{ color: '#A8A29E', fontSize: '0.85rem' }}>
                     <strong style={{ color: '#FACC15' }}>{b.hblNumber}</strong> — {b.clientName} — {b.packages} bultos — {b.description || '—'}
                   </Typography>
                 ))}

@@ -332,7 +332,7 @@ export function WarehouseList() {
       {/* Stat Cards */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid item xs={6} md={3}>
-          <StatCard label="En Bodega" count={stats.IN_WAREHOUSE} icon={<Warehouse />} color="#64748b" />
+          <StatCard label="En Bodega" count={stats.IN_WAREHOUSE} icon={<Warehouse />} color="#78716C" />
         </Grid>
         <Grid item xs={6} md={3}>
           <StatCard label="En Tránsito" count={stats.IN_TRANSIT} icon={<LocalShipping />} color="#f59e0b" />
@@ -525,7 +525,7 @@ export function WarehouseList() {
         PaperProps={{ sx: { borderRadius: 2, minWidth: 200 } }}
       >
         <MenuItem onClick={handleEdit}>
-          <Edit fontSize="small" sx={{ mr: 1.5, color: '#64748b' }} />
+          <Edit fontSize="small" sx={{ mr: 1.5, color: '#78716C' }} />
           Editar
         </MenuItem>
         <Divider />

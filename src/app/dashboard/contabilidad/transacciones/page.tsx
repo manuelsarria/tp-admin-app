@@ -109,7 +109,7 @@ export default function TransaccionesPage() {
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
             <Receipt sx={{ color: '#FACC15', fontSize: 28 }} />
-            <Typography variant="h5" sx={{ fontWeight: 700, color: '#0F172A' }}>Libro de Transacciones</Typography>
+            <Typography variant="h5" sx={{ fontWeight: 700, color: '#FAFAF9' }}>Libro de Transacciones</Typography>
           </Box>
           <Typography variant="body2" sx={{ color: '#6B7280' }}>Ingresos y gastos generales del negocio</Typography>
         </Box>
@@ -181,7 +181,7 @@ export default function TransaccionesPage() {
             </TableHead>
             <TableBody>
               {txs.map(tx => (
-                <TableRow key={tx.id} sx={{ '&:hover': { bgcolor: 'rgba(148, 163, 184, 0.06)' } }}>
+                <TableRow key={tx.id} sx={{ '&:hover': { bgcolor: 'rgba(10, 10, 10, 0.05)' } }}>
                   <TableCell sx={{ fontSize: '0.8rem', color: '#6B7280', whiteSpace: 'nowrap' }}>{fmtDate(tx.date)}</TableCell>
                   <TableCell>
                     <Chip label={tx.type === 'INCOME' ? 'Ingreso' : 'Gasto'} size="small"

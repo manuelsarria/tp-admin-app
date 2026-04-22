@@ -21,7 +21,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     if (!quote) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
     // Load images as base64 for PDF embedding
-    const bannerPath = path.join(process.cwd(), 'public', 'images', 'TP-Logo.png')
+    const bannerPath = path.join(process.cwd(), 'public', 'images', 'TP-banner.png')
     const logoBase64 = null
     const bannerBase64 = fs.existsSync(bannerPath)
       ? `data:image/png;base64,${fs.readFileSync(bannerPath).toString('base64')}`

@@ -61,7 +61,7 @@ export async function GET(
     // Approval stamp (only if readyForPickup)
     let approval = null
     if (booking.readyForPickup) {
-      const selloPath = path.join(process.cwd(), 'public', 'images', 'sello-cnc.png')
+      const selloPath = path.join(process.cwd(), 'public', 'images', 'sello-tp.png')
       const selloBase64 = fs.existsSync(selloPath)
         ? `data:image/png;base64,${fs.readFileSync(selloPath).toString('base64')}`
         : null

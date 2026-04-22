@@ -40,7 +40,7 @@ function CRLabelPreview({ code, name }: { code: string; name?: string }) {
         <Box sx={{
           display: 'flex', alignItems: 'center', gap: 1, mb: 1,
         }}>
-          <Box component="img" src="/images/TP-Logo.png" alt="CNC"
+          <Box component="img" src="/images/label-tp.png" alt="TP"
             sx={{ height: 32, objectFit: 'contain', opacity: 0.15 }} />
           <Typography sx={{
             fontWeight: 900, fontSize: '1.1rem', color: '#002B7F',

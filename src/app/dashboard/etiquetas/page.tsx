@@ -38,8 +38,8 @@ function LabelPreview({ code, name, id = 'label-container' }: { code: string; na
         alignItems: 'center', justifyContent: 'center',
         height: 300,
       }}>
-        {/* CNC Logo small */}
-        <Box component="img" src="/images/TP-Logo.png" alt="CNC"
+        {/* TP Label watermark */}
+        <Box component="img" src="/images/label-tp.png" alt="TP"
           sx={{ height: 36, objectFit: 'contain', mb: 1, opacity: 0.15 }} />
 
         <Typography sx={{

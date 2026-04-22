@@ -9,12 +9,12 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/images/TP-Logo.png",
+      "src": "/images/icon-to-logo.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/images/TP-Logo.png",
+      "src": "/images/icon-to-logo.png",
       "sizes": "512x512",
       "type": "image/png"
     }

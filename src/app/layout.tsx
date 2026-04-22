@@ -26,7 +26,9 @@ export default function RootLayout({
   return (
     <html lang="es">
       <head>
-        <link rel="apple-touch-icon" href="/images/TP-Logo.png" />
+        <link rel="icon" type="image/png" href="/images/icon-to-logo.png" />
+        <link rel="shortcut icon" href="/images/icon-to-logo.png" />
+        <link rel="apple-touch-icon" href="/images/icon-to-logo.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>
       <body className={inter.className}>

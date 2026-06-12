@@ -961,6 +961,11 @@ function ContainerCard({ group }: { group: ContainerGroup }) {
 
       {/* Clients inside */}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.4, mt: 0.25 }}>
+        {visibleClients.length === 0 && (
+          <Typography sx={{ fontSize: '0.76rem', color: '#A8A29E', fontStyle: 'italic' }}>
+            Sin clientes asignados
+          </Typography>
+        )}
         {visibleClients.map(c => (
           <Box key={c.key} sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
             <Box sx={{ width: 5, height: 5, borderRadius: '50%', bgcolor: '#FACC15', flexShrink: 0 }} />
@@ -1043,7 +1048,7 @@ function ClientContainersPanel() {
                 Contenedores de Clientes
               </Typography>
               <Typography variant="caption" sx={{ color: '#78716C' }}>
-                {groups.length} contenedor{groups.length !== 1 ? 'es' : ''} con carga de clientes
+                {groups.length} contenedor{groups.length !== 1 ? 'es' : ''} en seguimiento
               </Typography>
             </Box>
           </Box>
@@ -1085,7 +1090,7 @@ function ClientContainersPanel() {
         ) : (
           <Box sx={{ textAlign: 'center', py: 4 }}>
             <Typography variant="body2" sx={{ color: '#78716C' }}>
-              No hay contenedores con carga de clientes
+              No hay contenedores registrados
             </Typography>
           </Box>
         )}

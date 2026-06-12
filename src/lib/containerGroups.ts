@@ -146,10 +146,29 @@ export function buildContainerGroups(
     if (!existing || (!existing.eta && c.eta)) cargoByContainer.set(key, c)
   }
 
-  const groups = new Map<
-    string,
-    ContainerGroup & { _clients: Map<string, ContainerClient> }
-  >()
+  type WorkingGroup = ContainerGroup & { _clients: Map<string, ContainerClient> }
+  const groups = new Map<string, WorkingGroup>()
+
+  const newGroup = (cn: string, transportType: TransportType | null): WorkingGroup => ({
+    containerNumber: cn,
+    transportType,
+    shippingLine: null,
+    location: null,
+    status: null,
+    statusLabel: null,
+    referenceNo: null,
+    eta: null,
+    clients: [],
+    clientCount: 0,
+    shipmentCount: 0,
+    totalCbm: 0,
+    totalWeight: 0,
+    flaggedCount: 0,
+    dgCount: 0,
+    daysToEta: null,
+    arrivalLevel: 'none',
+    _clients: new Map(),
+  })
 
   for (const f of fcls) {
     const cn = (f.containerNumber ?? '').trim()
@@ -158,26 +177,7 @@ export function buildContainerGroups(
 
     let g = groups.get(key)
     if (!g) {
-      g = {
-        containerNumber: cn,
-        transportType: f.transportType ?? null,
-        shippingLine: null,
-        location: null,
-        status: null,
-        statusLabel: null,
-        referenceNo: null,
-        eta: null,
-        clients: [],
-        clientCount: 0,
-        shipmentCount: 0,
-        totalCbm: 0,
-        totalWeight: 0,
-        flaggedCount: 0,
-        dgCount: 0,
-        daysToEta: null,
-        arrivalLevel: 'none',
-        _clients: new Map(),
-      }
+      g = newGroup(cn, f.transportType ?? null)
       groups.set(key, g)
     }
 
@@ -207,6 +207,16 @@ export function buildContainerGroups(
     }
     client.shipmentCount += 1
     client.totalCbm += f.totalCbm || 0
+  }
+
+  // Seed groups for containers that only exist in CargoManagement (warehouse/
+  // transit tracking) and have no FCL cargo linked yet — so every tracked
+  // container still shows up with its ETA/status and arrival alert.
+  for (const c of cargos) {
+    const cn = (c.containerNumber ?? '').trim()
+    if (!cn) continue
+    const key = cn.toLowerCase()
+    if (!groups.has(key)) groups.set(key, newGroup(cn, null))
   }
 
   const result: ContainerGroup[] = []

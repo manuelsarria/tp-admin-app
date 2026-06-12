@@ -254,6 +254,11 @@ function AdminContainerCard({ group }: { group: ContainerGroup }) {
           </Box>
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mt: 1 }}>
+            {group.clients.length === 0 && (
+              <Typography sx={{ fontSize: '0.8rem', color: '#A8A29E', fontStyle: 'italic' }}>
+                Sin clientes asignados todavía
+              </Typography>
+            )}
             {(expanded ? group.clients : group.clients.slice(0, 3)).map(c => (
               <Box key={c.key} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, minWidth: 0 }}>

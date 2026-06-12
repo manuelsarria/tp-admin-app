@@ -60,6 +60,12 @@ import {
   Public,
 } from '@mui/icons-material'
 import { useRouter } from 'next/navigation'
+import {
+  buildContainerGroups,
+  ARRIVAL_CONFIG,
+  arrivalCountdown,
+  type ContainerGroup,
+} from '@/lib/containerGroups'
 
 // ============== Live Clocks ==============
 function useLiveClock() {
@@ -884,6 +890,214 @@ function AdsSection({ isAdmin }: { isAdmin: boolean }) {
   )
 }
 
+// ============== Client Containers Panel ==============
+function ContainerCard({ group }: { group: ContainerGroup }) {
+  const router = useRouter()
+  const cfg = ARRIVAL_CONFIG[group.arrivalLevel]
+  const countdown = arrivalCountdown(group)
+  const visibleClients = group.clients.slice(0, 3)
+  const extraClients = group.clients.length - visibleClients.length
+
+  return (
+    <Box
+      onClick={() => router.push('/dashboard/admin-carga')}
+      sx={{
+        p: 2.5,
+        borderRadius: '14px',
+        border: `1px solid ${group.arrivalLevel === 'imminent' ? cfg.border : 'rgba(10,10,10,0.08)'}`,
+        background: '#FFFFFF',
+        cursor: 'pointer',
+        transition: 'all 0.2s',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 1.25,
+        '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 12px 24px -10px rgba(10,10,10,0.16)' },
+      }}
+    >
+      {/* Top: container number + arrival chip */}
+      <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+          <Box sx={{ p: 0.75, borderRadius: '9px', bgcolor: 'rgba(250,204,21,0.16)', display: 'flex', flexShrink: 0 }}>
+            {group.transportType === 'AIR'
+              ? <Flight sx={{ fontSize: '1.15rem', color: '#A16207' }} />
+              : <DirectionsBoat sx={{ fontSize: '1.15rem', color: '#A16207' }} />}
+          </Box>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography sx={{ fontWeight: 800, color: '#0A0A0A', fontSize: '0.92rem', lineHeight: 1.2, fontFamily: 'monospace', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {group.containerNumber}
+            </Typography>
+            <Typography sx={{ fontSize: '0.7rem', color: '#78716C' }}>
+              {group.shippingLine || (group.transportType === 'AIR' ? 'Aéreo' : 'Marítimo')}
+            </Typography>
+          </Box>
+        </Box>
+        <Chip
+          label={countdown ? `${cfg.label} · ${countdown}` : cfg.label}
+          size="small"
+          sx={{ fontWeight: 700, fontSize: '0.66rem', bgcolor: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`, flexShrink: 0 }}
+        />
+      </Box>
+
+      {/* Meta: ETA / status / metrics */}
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
+        {group.eta && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4 }}>
+            <CalendarToday sx={{ fontSize: '0.78rem', color: '#FACC15' }} />
+            <Typography sx={{ fontSize: '0.74rem', color: '#57534E', fontWeight: 600 }}>
+              ETA {new Date(group.eta).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })}
+            </Typography>
+          </Box>
+        )}
+        <Typography sx={{ fontSize: '0.74rem', color: '#57534E', fontWeight: 600 }}>
+          {group.clientCount} cliente{group.clientCount !== 1 ? 's' : ''}
+        </Typography>
+        {group.totalCbm > 0 && (
+          <Typography sx={{ fontSize: '0.74rem', color: '#57534E', fontWeight: 600 }}>
+            {group.totalCbm.toFixed(1)} CBM
+          </Typography>
+        )}
+      </Box>
+
+      {/* Clients inside */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.4, mt: 0.25 }}>
+        {visibleClients.map(c => (
+          <Box key={c.key} sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+            <Box sx={{ width: 5, height: 5, borderRadius: '50%', bgcolor: '#FACC15', flexShrink: 0 }} />
+            <Typography sx={{ fontSize: '0.78rem', color: '#292524', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {c.display}
+            </Typography>
+          </Box>
+        ))}
+        {extraClients > 0 && (
+          <Typography sx={{ fontSize: '0.74rem', color: '#A16207', fontWeight: 600, pl: '13px' }}>
+            +{extraClients} más
+          </Typography>
+        )}
+      </Box>
+
+      {/* Flags */}
+      {(group.dgCount > 0 || group.flaggedCount > 0 || group.statusLabel) && (
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 'auto', pt: 0.5 }}>
+          {group.statusLabel && (
+            <Chip label={group.statusLabel} size="small" variant="outlined"
+              sx={{ height: 20, fontSize: '0.62rem', fontWeight: 600, borderRadius: '6px' }} />
+          )}
+          {group.dgCount > 0 && (
+            <Chip label="Mercancía peligrosa" size="small"
+              sx={{ height: 20, fontSize: '0.62rem', fontWeight: 700, bgcolor: '#FEF2F2', color: '#B91C1C' }} />
+          )}
+          {group.flaggedCount > 0 && (
+            <Chip label="Mal identificado" size="small"
+              sx={{ height: 20, fontSize: '0.62rem', fontWeight: 700, bgcolor: '#FFFBEB', color: '#B45309' }} />
+          )}
+        </Box>
+      )}
+    </Box>
+  )
+}
+
+function ClientContainersPanel() {
+  const router = useRouter()
+  const [groups, setGroups] = useState<ContainerGroup[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/fcl-shipments?pageSize=1000').then(r => r.ok ? r.json() : { data: [] }),
+      fetch('/api/cargo-management?pageSize=1000').then(r => r.ok ? r.json() : { data: [] }),
+    ])
+      .then(([fclData, cargoData]) => {
+        const fcls = (fclData.data || []).map((item: any) => ({
+          containerNumber: item.containerNumber,
+          empresaId: item.companyId,
+          empresaName: item.company?.name,
+          empresaCode: item.company?.company_id,
+          transportType: item.transportType,
+          totalCbm: item.totalCbm ?? null,
+          totalWeight: item.totalWeight ?? null,
+          misidentified: item.misidentified,
+          dangerousGoods: item.dangerousGoods,
+        }))
+        setGroups(buildContainerGroups(fcls, cargoData.data || []))
+      })
+      .catch(() => setGroups([]))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const imminentCount = groups.filter(g => g.arrivalLevel === 'imminent').length
+  const soonCount = groups.filter(g => g.arrivalLevel === 'soon').length
+  const visible = groups.slice(0, 6)
+
+  return (
+    <Card sx={{ borderRadius: '16px', border: '1px solid rgba(10,10,10,0.06)', background: '#FFFFFF' }}>
+      <CardContent sx={{ p: { xs: 2.5, sm: 3, md: 4 } }}>
+        {/* Header */}
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1.5, mb: 2.5 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Box sx={{ p: 1, borderRadius: '12px', background: 'linear-gradient(135deg, #FACC15 0%, #FDE047 100%)', display: 'flex' }}>
+              <Inventory sx={{ color: 'white', fontSize: '1.4rem' }} />
+            </Box>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 700, color: '#0A0A0A', fontSize: '1.15rem', fontFamily: '"Poppins", sans-serif', lineHeight: 1.2 }}>
+                Contenedores de Clientes
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#78716C' }}>
+                {groups.length} contenedor{groups.length !== 1 ? 'es' : ''} con carga de clientes
+              </Typography>
+            </Box>
+          </Box>
+          {groups.length > 0 && (
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => router.push('/dashboard/admin-carga')}
+              sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, fontSize: '0.8rem' }}
+            >
+              Ver todos
+            </Button>
+          )}
+        </Box>
+
+        {/* Arrival alert */}
+        {(imminentCount > 0 || soonCount > 0) && (
+          <Alert
+            severity={imminentCount > 0 ? 'error' : 'warning'}
+            icon={<NotificationsActive />}
+            sx={{ borderRadius: 3, mb: 2.5, fontWeight: 600 }}
+          >
+            {imminentCount > 0 && `${imminentCount} contenedor(es) llegan en 48h. `}
+            {soonCount > 0 && `${soonCount} con llegada esta semana.`}
+          </Alert>
+        )}
+
+        {/* Container cards */}
+        {loading ? (
+          <LinearProgress />
+        ) : visible.length > 0 ? (
+          <Grid container spacing={2}>
+            {visible.map(g => (
+              <Grid item xs={12} sm={6} lg={4} key={group_key(g)}>
+                <ContainerCard group={g} />
+              </Grid>
+            ))}
+          </Grid>
+        ) : (
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <Typography variant="body2" sx={{ color: '#78716C' }}>
+              No hay contenedores con carga de clientes
+            </Typography>
+          </Box>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+function group_key(g: ContainerGroup) {
+  return g.containerNumber
+}
+
 // ============== ADMIN/WORKER DASHBOARD ==============
 function AdminWorkerDashboard({ isAdmin }: { isAdmin: boolean }) {
   const [isLoading, setIsLoading] = useState(true)
@@ -1013,6 +1227,9 @@ function AdminWorkerDashboard({ isAdmin }: { isAdmin: boolean }) {
 
       {/* Quote Follow-Up Alerts */}
       {isAdmin && <QuoteFollowUpAlerts />}
+
+      {/* Client Containers — lo principal: contenedores agrupados por cliente */}
+      <ClientContainersPanel />
 
       {/* Stats Grid - Row 1: Shipment Overview */}
       <Grid container spacing={3}>

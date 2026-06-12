@@ -27,10 +27,19 @@ import {
   Autocomplete,
   Snackbar,
   Alert,
+  Tabs,
+  Tab,
+  LinearProgress,
 } from '@mui/material'
-import { Add, Search, FilterList, Download, LocalShipping, CloseRounded, Edit, Delete, Flight, Warning, Visibility, DirectionsBoat, UploadFile } from '@mui/icons-material'
+import { Add, Search, FilterList, Download, LocalShipping, CloseRounded, Edit, Delete, Flight, Warning, Visibility, DirectionsBoat, UploadFile, CalendarToday, Inventory2, NotificationsActive, ExpandMore, ExpandLess } from '@mui/icons-material'
 import { DataGrid, GridColDef, GridRowsProp, GridToolbar } from '@mui/x-data-grid'
 import * as XLSX from 'xlsx'
+import {
+  buildContainerGroups,
+  ARRIVAL_CONFIG,
+  arrivalCountdown,
+  type ContainerGroup,
+} from '@/lib/containerGroups'
 
 type TipoTransporte = 'AIR' | 'MAR'
 
@@ -140,9 +149,239 @@ function filterReferenceNos(input: string, referenceNos: string[]) {
   )
 }
 
+// ============== Vista de Contenedores (agrupada por cliente) ==============
+function AdminContainerCard({ group }: { group: ContainerGroup }) {
+  const [expanded, setExpanded] = useState(false)
+  const cfg = ARRIVAL_CONFIG[group.arrivalLevel]
+  const countdown = arrivalCountdown(group)
+
+  return (
+    <Card
+      sx={{
+        borderRadius: '14px',
+        border: `1px solid ${group.arrivalLevel === 'imminent' ? cfg.border : 'rgba(10,10,10,0.08)'}`,
+        height: '100%',
+        transition: 'all 0.2s',
+        '&:hover': { boxShadow: '0 10px 22px -12px rgba(10,10,10,0.18)' },
+      }}
+    >
+      <CardContent sx={{ p: 2.5 }}>
+        {/* Header */}
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1, mb: 1.25 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+            <Box sx={{ p: 0.75, borderRadius: '9px', bgcolor: 'rgba(250,204,21,0.16)', display: 'flex', flexShrink: 0 }}>
+              {group.transportType === 'AIR'
+                ? <Flight sx={{ fontSize: '1.15rem', color: '#A16207' }} />
+                : <DirectionsBoat sx={{ fontSize: '1.15rem', color: '#A16207' }} />}
+            </Box>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography sx={{ fontWeight: 800, color: '#0A0A0A', fontSize: '0.95rem', lineHeight: 1.2, fontFamily: 'monospace', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {group.containerNumber}
+              </Typography>
+              <Typography sx={{ fontSize: '0.72rem', color: '#78716C' }}>
+                {group.shippingLine || (group.transportType === 'AIR' ? 'Aéreo' : 'Marítimo')}
+                {group.referenceNo ? ` · ${group.referenceNo}` : ''}
+              </Typography>
+            </Box>
+          </Box>
+          <Chip
+            label={countdown ? `${cfg.label} · ${countdown}` : cfg.label}
+            size="small"
+            sx={{ fontWeight: 700, fontSize: '0.66rem', bgcolor: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`, flexShrink: 0 }}
+          />
+        </Box>
+
+        {/* Metrics row */}
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, mb: 1.25 }}>
+          {group.eta && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4 }}>
+              <CalendarToday sx={{ fontSize: '0.8rem', color: '#FACC15' }} />
+              <Typography sx={{ fontSize: '0.76rem', color: '#57534E', fontWeight: 600 }}>
+                ETA {new Date(group.eta).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}
+              </Typography>
+            </Box>
+          )}
+          <Typography sx={{ fontSize: '0.76rem', color: '#57534E', fontWeight: 600 }}>
+            {group.clientCount} cliente{group.clientCount !== 1 ? 's' : ''}
+          </Typography>
+          <Typography sx={{ fontSize: '0.76rem', color: '#57534E', fontWeight: 600 }}>
+            {group.shipmentCount} envío{group.shipmentCount !== 1 ? 's' : ''}
+          </Typography>
+          {group.totalCbm > 0 && (
+            <Typography sx={{ fontSize: '0.76rem', color: '#57534E', fontWeight: 600 }}>
+              {group.totalCbm.toFixed(2)} CBM
+            </Typography>
+          )}
+          {group.totalWeight > 0 && (
+            <Typography sx={{ fontSize: '0.76rem', color: '#57534E', fontWeight: 600 }}>
+              {group.totalWeight.toFixed(0)} kg
+            </Typography>
+          )}
+        </Box>
+
+        {/* Status / flags */}
+        {(group.statusLabel || group.location || group.dgCount > 0 || group.flaggedCount > 0) && (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1.25 }}>
+            {group.statusLabel && (
+              <Chip label={group.statusLabel} size="small" variant="outlined"
+                sx={{ height: 22, fontSize: '0.64rem', fontWeight: 600, borderRadius: '6px' }} />
+            )}
+            {group.location && (
+              <Chip label={group.location} size="small" variant="outlined"
+                sx={{ height: 22, fontSize: '0.64rem', fontWeight: 500, borderRadius: '6px', color: '#78716C' }} />
+            )}
+            {group.dgCount > 0 && (
+              <Chip label={`DG · ${group.dgCount}`} size="small"
+                sx={{ height: 22, fontSize: '0.64rem', fontWeight: 700, bgcolor: '#FEF2F2', color: '#B91C1C' }} />
+            )}
+            {group.flaggedCount > 0 && (
+              <Chip label={`Mal ident. · ${group.flaggedCount}`} size="small"
+                sx={{ height: 22, fontSize: '0.64rem', fontWeight: 700, bgcolor: '#FFFBEB', color: '#B45309' }} />
+            )}
+          </Box>
+        )}
+
+        {/* Clients */}
+        <Box sx={{ borderTop: '1px solid rgba(10,10,10,0.06)', pt: 1.25 }}>
+          <Box
+            onClick={() => setExpanded(e => !e)}
+            sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', userSelect: 'none' }}
+          >
+            <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: '#A16207', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Clientes en el contenedor
+            </Typography>
+            {expanded ? <ExpandLess sx={{ fontSize: '1.1rem', color: '#A16207' }} /> : <ExpandMore sx={{ fontSize: '1.1rem', color: '#A16207' }} />}
+          </Box>
+
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mt: 1 }}>
+            {(expanded ? group.clients : group.clients.slice(0, 3)).map(c => (
+              <Box key={c.key} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, minWidth: 0 }}>
+                  <Box sx={{ width: 5, height: 5, borderRadius: '50%', bgcolor: '#FACC15', flexShrink: 0 }} />
+                  <Typography sx={{ fontSize: '0.8rem', color: '#292524', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {c.display}
+                  </Typography>
+                </Box>
+                <Typography sx={{ fontSize: '0.72rem', color: '#78716C', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                  {c.shipmentCount} env.{c.totalCbm > 0 ? ` · ${c.totalCbm.toFixed(1)} CBM` : ''}
+                </Typography>
+              </Box>
+            ))}
+            {!expanded && group.clients.length > 3 && (
+              <Typography
+                onClick={() => setExpanded(true)}
+                sx={{ fontSize: '0.74rem', color: '#A16207', fontWeight: 600, pl: '13px', cursor: 'pointer' }}
+              >
+                +{group.clients.length - 3} más
+              </Typography>
+            )}
+          </Box>
+        </Box>
+      </CardContent>
+    </Card>
+  )
+}
+
+function ContainerGroupedView({ groups, loading }: { groups: ContainerGroup[]; loading: boolean }) {
+  const [search, setSearch] = useState('')
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    if (!q) return groups
+    return groups.filter(g =>
+      g.containerNumber.toLowerCase().includes(q) ||
+      (g.shippingLine || '').toLowerCase().includes(q) ||
+      g.clients.some(c => c.display.toLowerCase().includes(q))
+    )
+  }, [groups, search])
+
+  const imminent = groups.filter(g => g.arrivalLevel === 'imminent').length
+  const soon = groups.filter(g => g.arrivalLevel === 'soon').length
+  const totalClients = new Set(groups.flatMap(g => g.clients.map(c => c.key))).size
+
+  return (
+    <Box className="space-y-4">
+      {/* Summary stats */}
+      <Grid container spacing={3}>
+        <Grid item xs={6} sm={3}>
+          <Card><CardContent className="p-4">
+            <Box className="flex items-center justify-between">
+              <Box>
+                <Typography variant="h5" className="font-bold text-ink">{groups.length}</Typography>
+                <Typography variant="body2" className="text-medium-gray">Contenedores</Typography>
+              </Box>
+              <Inventory2 className="text-brand-primary text-3xl" />
+            </Box>
+          </CardContent></Card>
+        </Grid>
+        <Grid item xs={6} sm={3}>
+          <Card><CardContent className="p-4">
+            <Typography variant="h5" className="font-bold text-error">{imminent}</Typography>
+            <Typography variant="body2" className="text-medium-gray">Llegan en 48h</Typography>
+          </CardContent></Card>
+        </Grid>
+        <Grid item xs={6} sm={3}>
+          <Card><CardContent className="p-4">
+            <Typography variant="h5" className="font-bold text-warning">{soon}</Typography>
+            <Typography variant="body2" className="text-medium-gray">Esta semana</Typography>
+          </CardContent></Card>
+        </Grid>
+        <Grid item xs={6} sm={3}>
+          <Card><CardContent className="p-4">
+            <Typography variant="h5" className="font-bold text-info">{totalClients}</Typography>
+            <Typography variant="body2" className="text-medium-gray">Clientes</Typography>
+          </CardContent></Card>
+        </Grid>
+      </Grid>
+
+      {/* Arrival alert */}
+      {(imminent > 0 || soon > 0) && (
+        <Alert severity={imminent > 0 ? 'error' : 'warning'} icon={<NotificationsActive />} sx={{ borderRadius: 3, fontWeight: 600 }}>
+          {imminent > 0 && `${imminent} contenedor(es) llegan en las próximas 48 horas. `}
+          {soon > 0 && `${soon} con llegada esta semana. Avisa a los clientes.`}
+        </Alert>
+      )}
+
+      {/* Search */}
+      <Card><CardContent className="p-4">
+        <TextField
+          fullWidth
+          placeholder="Buscar por contenedor, naviera o cliente..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          InputProps={{ startAdornment: <Search className="mr-2 text-medium-gray" /> }}
+        />
+      </CardContent></Card>
+
+      {/* Cards */}
+      {loading ? (
+        <LinearProgress />
+      ) : filtered.length > 0 ? (
+        <Grid container spacing={2}>
+          {filtered.map(g => (
+            <Grid item xs={12} sm={6} lg={4} key={g.containerNumber}>
+              <AdminContainerCard group={g} />
+            </Grid>
+          ))}
+        </Grid>
+      ) : (
+        <Card><CardContent className="p-6">
+          <Typography variant="body2" className="text-medium-gray text-center">
+            {groups.length === 0 ? 'No hay contenedores con carga de clientes' : 'Ningún contenedor coincide con la búsqueda'}
+          </Typography>
+        </CardContent></Card>
+      )}
+    </Box>
+  )
+}
+
 export default function AdminCargaPage() {
   const { data: session } = useSession()
   const isAdmin = session?.user?.role === 'ADMIN'
+  // Vista principal: 0 = Contenedores (agrupado por cliente), 1 = Detalle de envíos
+  const [mainTab, setMainTab] = useState(0)
+  // CargoManagement (ETA / estado / naviera por contenedor)
+  const [cargoMgmt, setCargoMgmt] = useState<any[]>([])
   // Reference numbers from database
   const [recibidosEnBodegaReferenceNos, setRecibidosEnBodegaReferenceNos] = useState<string[]>([])
   const [isLoadingReferenceNos, setIsLoadingReferenceNos] = useState(false)
@@ -379,6 +618,19 @@ export default function AdminCargaPage() {
     }
   }
 
+  // Fetch CargoManagement (ETA / estado / naviera por contenedor)
+  const fetchCargoMgmt = async () => {
+    try {
+      const response = await fetch('/api/cargo-management?pageSize=1000')
+      if (response.ok) {
+        const data = await response.json()
+        setCargoMgmt(data.data || [])
+      }
+    } catch (error) {
+      console.error('Error fetching cargo-management:', error)
+    }
+  }
+
   // Fetch companies from database - NO CACHING
   const fetchCompanies = async () => {
     setIsLoadingCompanies(true)
@@ -451,7 +703,27 @@ export default function AdminCargaPage() {
     fetchLcl()
     fetchContainerShipments()
     fetchCompanies()
+    fetchCargoMgmt()
   }, [])
+
+  // Contenedores agrupados por cliente (FCL + ETA/estado de CargoManagement)
+  const containerGroups = useMemo(
+    () => buildContainerGroups(
+      envios.map(e => ({
+        containerNumber: e.numeroContenedor,
+        empresaId: e.empresaId,
+        empresaName: e.empresaName,
+        empresaCode: e.empresaCode,
+        transportType: e.tipoTransporte,
+        totalCbm: e.totalCbm,
+        totalWeight: e.totalWeight,
+        misidentified: e.malIdentificado,
+        dangerousGoods: e.dg,
+      })),
+      cargoMgmt,
+    ),
+    [envios, cargoMgmt]
+  )
 
   // Derived
   const filteredEnvios = useMemo(() => {
@@ -1665,6 +1937,26 @@ export default function AdminCargaPage() {
         )}
       </Box>
 
+      {/* Pestañas principales */}
+      <Card>
+        <Tabs
+          value={mainTab}
+          onChange={(_, v) => setMainTab(v)}
+          sx={{ px: 1, borderBottom: '1px solid rgba(10,10,10,0.06)', '& .MuiTab-root': { textTransform: 'none', fontWeight: 600 } }}
+        >
+          <Tab icon={<Inventory2 sx={{ fontSize: '1.1rem' }} />} iconPosition="start" label="Contenedores" />
+          <Tab icon={<LocalShipping sx={{ fontSize: '1.1rem' }} />} iconPosition="start" label="Detalle de envíos" />
+        </Tabs>
+      </Card>
+
+      {/* Tab 0: Contenedores agrupados por cliente */}
+      {mainTab === 0 && (
+        <ContainerGroupedView groups={containerGroups} loading={isLoadingEnvios} />
+      )}
+
+      {/* Tab 1: Detalle de envíos (FCL / LCL / Contenedores) */}
+      {mainTab === 1 && (
+      <>
       {/* Stats */}
       <Grid container spacing={3}>
         <Grid item xs={12} sm={6} md={3}>
@@ -1939,6 +2231,8 @@ export default function AdminCargaPage() {
           </Box>
         </CardContent>
       </Card>
+      </>
+      )}
 
       {/* Dialog Envío */}
       <Dialog open={openEnvioDialog} onClose={() => setOpenEnvioDialog(false)} maxWidth="md" fullWidth>

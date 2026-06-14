@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { saleType, clientName, description, saleAmount } = body
+    const { saleType, clientName, description, saleAmount, customCommission, customLabel } = body
 
     // Validate required fields
     if (!saleType || !clientName) {
@@ -102,21 +102,45 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Compute commission amount
-    const commissionAmount =
-      rule.mode === 'FIXED'
-        ? round2(rule.value)
-        : round2((saleAmount * rule.value) / 100)
+    // "OTRO" = a service not in the list: the worker enters a custom commission
+    // amount (and optionally a label for the service). Other types use the rule.
+    const isOtro = rule.saleType === 'OTRO'
+
+    let commissionMode: 'FIXED' | 'PERCENT' = rule.mode
+    let commissionValue = rule.value
+    let commissionAmount: number
+
+    if (isOtro) {
+      if (typeof customCommission !== 'number' || !Number.isFinite(customCommission) || customCommission < 0) {
+        return NextResponse.json(
+          { error: 'Para "Otro" debes indicar el monto de comisión (mayor o igual a 0)' },
+          { status: 400 }
+        )
+      }
+      commissionMode = 'FIXED'
+      commissionValue = round2(customCommission)
+      commissionAmount = round2(customCommission)
+    } else {
+      commissionAmount =
+        rule.mode === 'FIXED'
+          ? round2(rule.value)
+          : round2((saleAmount * rule.value) / 100)
+    }
+
+    const saleLabel =
+      isOtro && typeof customLabel === 'string' && customLabel.trim()
+        ? `Otro: ${customLabel.trim()}`
+        : rule.label
 
     const sale = await prisma.commissionSale.create({
       data: {
         saleType: rule.saleType,
-        saleLabel: rule.label,
+        saleLabel,
         clientName,
         description: description ?? null,
         saleAmount: round2(saleAmount),
-        commissionMode: rule.mode,
-        commissionValue: rule.value,
+        commissionMode,
+        commissionValue,
         commissionAmount,
         status: 'PENDING',
         workerId: session.user.id,

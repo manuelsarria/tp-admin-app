@@ -61,7 +61,7 @@ type Sale = {
 }
 type Payment = { id: string; workerId: string; workerName: string; amount: number; createdAt: string; note: string }
 
-const EMPTY_SALE = { saleType: '', clientName: '', description: '', saleAmount: '' }
+const EMPTY_SALE = { saleType: '', clientName: '', description: '', saleAmount: '', customLabel: '', customCommission: '' }
 const EMPTY_RULE = { saleType: '', label: '', mode: 'FIXED' as 'FIXED' | 'PERCENT', value: '', active: true, sortOrder: 0 }
 
 export default function VentasPage() {
@@ -149,8 +149,14 @@ export default function VentasPage() {
   }
 
   const selectedRule = activeRules.find(r => r.saleType === saleForm.saleType)
+  const isOtro = selectedRule?.saleType === 'OTRO'
   const commissionPreview = (() => {
     if (!selectedRule) return ''
+    if (isOtro) {
+      const c = Number(saleForm.customCommission)
+      if (saleForm.customCommission === '' || isNaN(c)) return 'Comisión: indica el monto'
+      return `Comisión: ${usd(c)}`
+    }
     if (selectedRule.mode === 'FIXED') return `Comisión: ${usd(selectedRule.value)}`
     return `Comisión: ${selectedRule.value}% del monto`
   })()
@@ -160,17 +166,29 @@ export default function VentasPage() {
     if (!saleForm.clientName.trim()) { setSaleError('El cliente es requerido'); return }
     const amount = Number(saleForm.saleAmount)
     if (saleForm.saleAmount === '' || isNaN(amount) || amount < 0) { setSaleError('Monto de venta inválido'); return }
+    let customCommission = NaN
+    if (isOtro) {
+      customCommission = Number(saleForm.customCommission)
+      if (saleForm.customCommission === '' || isNaN(customCommission) || customCommission < 0) {
+        setSaleError('Para "Otro" debes indicar el monto de comisión'); return
+      }
+    }
     setSaleSaving(true); setSaleError('')
     try {
+      const body: Record<string, unknown> = {
+        saleType: saleForm.saleType,
+        clientName: saleForm.clientName.trim(),
+        description: saleForm.description,
+        saleAmount: amount,
+      }
+      if (isOtro) {
+        body.customCommission = Number(customCommission)
+        body.customLabel = saleForm.customLabel.trim()
+      }
       const res = await fetch('/api/comisiones', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          saleType: saleForm.saleType,
-          clientName: saleForm.clientName.trim(),
-          description: saleForm.description,
-          saleAmount: amount,
-        }),
+        body: JSON.stringify(body),
       })
       if (!res.ok) { const e = await res.json().catch(() => ({})); setSaleError(e.error || 'Error al registrar la venta'); return }
       setSaleOpen(false)
@@ -501,6 +519,19 @@ export default function VentasPage() {
                 </Typography>
               )}
             </Grid>
+            {isOtro && (
+              <>
+                <Grid item xs={12}>
+                  <TextField label="Servicio (descripción corta)" value={saleForm.customLabel} fullWidth size="small"
+                    onChange={e => setSaleForm(p => ({ ...p, customLabel: e.target.value }))} />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField label="Comisión ($)" value={saleForm.customCommission} fullWidth size="small" type="number" required
+                    inputProps={{ min: 0, step: '0.01' }}
+                    onChange={e => setSaleForm(p => ({ ...p, customCommission: e.target.value }))} />
+                </Grid>
+              </>
+            )}
             <Grid item xs={12}>
               <TextField label="Cliente" value={saleForm.clientName} fullWidth size="small" required
                 onChange={e => setSaleForm(p => ({ ...p, clientName: e.target.value }))} />
@@ -518,7 +549,8 @@ export default function VentasPage() {
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2.5 }}>
           <Button onClick={() => setSaleOpen(false)} sx={{ textTransform: 'none', color: C.textSec }}>Cancelar</Button>
-          <Button onClick={handleSaveSale} variant="contained" disabled={saleSaving}
+          <Button onClick={handleSaveSale} variant="contained"
+            disabled={saleSaving || (isOtro && (saleForm.customCommission === '' || isNaN(Number(saleForm.customCommission)) || Number(saleForm.customCommission) < 0))}
             sx={{ bgcolor: C.yellow, color: C.text, '&:hover': { bgcolor: C.yellowHover }, textTransform: 'none', fontWeight: 700, borderRadius: 2 }}>
             {saleSaving ? 'Guardando...' : 'Guardar'}
           </Button>

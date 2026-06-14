@@ -27,6 +27,8 @@ import PendingActionsIcon from '@mui/icons-material/PendingActions'
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord'
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined'
+import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive'
+import NotificationsOffIcon from '@mui/icons-material/NotificationsOff'
 
 // ---------- Palette ----------
 const BG = '#0A0A0A'
@@ -42,6 +44,7 @@ const FONT_HEAD = '"Space Grotesk", "Inter", -apple-system, sans-serif'
 const FONT_BODY = '"Inter", -apple-system, sans-serif'
 
 const PW_STORAGE_KEY = 'pantalla_pw'
+const MUTE_STORAGE_KEY = 'pantalla_mute'
 
 // ---------- Types ----------
 type Seller = {
@@ -126,6 +129,21 @@ const shine = keyframes`
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 `
+
+// ---------- Celebration animations ----------
+const bannerPop = keyframes`
+  0% { opacity: 0; transform: translateY(-18px) scale(0.85); }
+  12% { opacity: 1; transform: translateY(0) scale(1.04); }
+  20% { transform: translateY(0) scale(1); }
+  85% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-8px) scale(0.96); }
+`
+const confettiFall = keyframes`
+  0% { opacity: 0; transform: translateY(-12vh) rotate(0deg) scale(0.6); }
+  10% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(96vh) rotate(540deg) scale(1.1); }
+`
+const CONFETTI_EMOJIS = ['🎉', '🎊', '🔔', '⭐', '💰', '🥳', '✨']
 
 function systemColor(s?: 'TP' | 'CNC') {
   return s === 'CNC' ? RED : YELLOW
@@ -503,6 +521,119 @@ function TeamStat({
   )
 }
 
+// ---------- Celebration overlay ----------
+function CelebrationOverlay({
+  sellerName,
+  amount,
+}: {
+  sellerName?: string
+  amount?: number
+}) {
+  // A dozen confetti pieces with deterministic-ish randomized positions/timing.
+  const pieces = useMemo(
+    () =>
+      Array.from({ length: 14 }).map((_, i) => ({
+        emoji: CONFETTI_EMOJIS[i % CONFETTI_EMOJIS.length],
+        left: Math.round((i / 14) * 92 + Math.random() * 6) + '%',
+        delay: (Math.random() * 0.6).toFixed(2) + 's',
+        dur: (1.8 + Math.random() * 1.4).toFixed(2) + 's',
+        size: `clamp(1.4rem, ${2.4 + Math.random() * 2}vw, 3.2rem)`,
+      })),
+    []
+  )
+
+  return (
+    <Box
+      sx={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 2000,
+        pointerEvents: 'none',
+        overflow: 'hidden',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      {/* Confetti */}
+      {pieces.map((p, i) => (
+        <Box
+          key={i}
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: p.left,
+            fontSize: p.size,
+            lineHeight: 1,
+            animation: `${confettiFall} ${p.dur} ease-in ${p.delay} both`,
+          }}
+        >
+          {p.emoji}
+        </Box>
+      ))}
+
+      {/* Banner */}
+      <Box
+        sx={{
+          animation: `${bannerPop} 3.6s ease both`,
+          textAlign: 'center',
+          px: 'clamp(2rem, 6vw, 6rem)',
+          py: 'clamp(1.2rem, 3vh, 2.6rem)',
+          borderRadius: 5,
+          bgcolor: 'rgba(20,20,22,0.92)',
+          border: `2px solid ${YELLOW}`,
+          boxShadow: `0 0 0 1px ${YELLOW}55, 0 30px 90px -20px ${YELLOW}66`,
+          maxWidth: '90vw',
+        }}
+      >
+        <Typography
+          sx={{
+            fontFamily: FONT_HEAD,
+            fontWeight: 900,
+            fontSize: 'clamp(2rem, 7vh, 5rem)',
+            letterSpacing: '-0.03em',
+            lineHeight: 1.05,
+            background: `linear-gradient(90deg, ${YELLOW}, #FDE68A, ${YELLOW})`,
+            backgroundClip: 'text',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          🎉 ¡NUEVA VENTA! 🔔
+        </Typography>
+        {sellerName && (
+          <Typography
+            sx={{
+              color: TEXT,
+              fontFamily: FONT_HEAD,
+              fontWeight: 800,
+              fontSize: 'clamp(1.1rem, 3.4vh, 2.4rem)',
+              mt: 1,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {sellerName}
+          </Typography>
+        )}
+        {amount != null && (
+          <Typography
+            sx={{
+              color: GREEN,
+              fontFamily: FONT_HEAD,
+              fontWeight: 800,
+              fontSize: 'clamp(1rem, 3vh, 2rem)',
+              mt: 0.5,
+            }}
+          >
+            {usd(amount)} 💰
+          </Typography>
+        )}
+      </Box>
+    </Box>
+  )
+}
+
 // ---------- Password gate ----------
 function PasswordGate({
   onSubmit,
@@ -658,6 +789,119 @@ export default function PantallaPage() {
   const periodRef = useRef(period)
   periodRef.current = period
 
+  // ---------- Celebration state ----------
+  const [celebration, setCelebration] = useState<{
+    sellerName?: string
+    amount?: number
+    key: number
+  } | null>(null)
+  const [muted, setMuted] = useState(false)
+  const mutedRef = useRef(false)
+  mutedRef.current = muted
+  // Previous known total ops count (per period). null = not yet initialized.
+  const prevCountRef = useRef<number | null>(null)
+  // The period the baseline belongs to, so a period switch resets the baseline.
+  const baselinePeriodRef = useRef<Period>(period)
+  const audioCtxRef = useRef<AudioContext | null>(null)
+  const celebrationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Load persisted mute choice on mount.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    setMuted(window.localStorage.getItem(MUTE_STORAGE_KEY) === '1')
+  }, [])
+
+  // Create or resume the shared AudioContext (must run from a user gesture).
+  const unlockAudio = useCallback(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const Ctx =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+      if (!Ctx) return
+      if (!audioCtxRef.current) audioCtxRef.current = new Ctx()
+      if (audioCtxRef.current.state === 'suspended') void audioCtxRef.current.resume()
+    } catch {
+      /* ignore */
+    }
+  }, [])
+
+  // Unlock audio on the very first click anywhere (fallback to the gate button).
+  useEffect(() => {
+    const handler = () => unlockAudio()
+    window.addEventListener('pointerdown', handler, { once: true })
+    return () => window.removeEventListener('pointerdown', handler)
+  }, [unlockAudio])
+
+  // Synthesize a short festive bell arpeggio (no audio files / libraries).
+  const playCelebrationSound = useCallback(() => {
+    if (mutedRef.current) return
+    const ctx = audioCtxRef.current
+    if (!ctx) return
+    if (ctx.state === 'suspended') void ctx.resume()
+    try {
+      const now = ctx.currentTime
+      // C5 - E5 - G5 - C6 - E6 major arpeggio.
+      const notes = [523.25, 659.25, 783.99, 1046.5, 1318.51]
+      const master = ctx.createGain()
+      master.gain.value = 0.32
+      master.connect(ctx.destination)
+
+      notes.forEach((freq, i) => {
+        const t = now + i * 0.13
+        // Bell = fundamental + a couple of partials for a "campana" shimmer.
+        const partials = [
+          { mult: 1, gain: 1, type: 'triangle' as OscillatorType },
+          { mult: 2.01, gain: 0.4, type: 'sine' as OscillatorType },
+          { mult: 3.02, gain: 0.18, type: 'sine' as OscillatorType },
+        ]
+        partials.forEach((p) => {
+          const osc = ctx.createOscillator()
+          const g = ctx.createGain()
+          osc.type = p.type
+          osc.frequency.value = freq * p.mult
+          // Quick attack + exponential decay envelope.
+          g.gain.setValueAtTime(0.0001, t)
+          g.gain.linearRampToValueAtTime(p.gain, t + 0.012)
+          g.gain.exponentialRampToValueAtTime(0.0001, t + 0.6)
+          osc.connect(g)
+          g.connect(master)
+          osc.start(t)
+          osc.stop(t + 0.65)
+        })
+      })
+    } catch {
+      /* ignore */
+    }
+  }, [])
+
+  // Fire a celebration: visual overlay + sound. Auto-dismisses after ~3.6s.
+  const triggerCelebration = useCallback(
+    (sellerName?: string, amount?: number) => {
+      playCelebrationSound()
+      setCelebration({ sellerName, amount, key: Date.now() })
+      if (celebrationTimerRef.current) clearTimeout(celebrationTimerRef.current)
+      celebrationTimerRef.current = setTimeout(() => setCelebration(null), 3800)
+    },
+    [playCelebrationSound]
+  )
+
+  // Toggle mute and persist.
+  const toggleMute = useCallback(() => {
+    setMuted((m) => {
+      const next = !m
+      if (typeof window !== 'undefined')
+        window.localStorage.setItem(MUTE_STORAGE_KEY, next ? '1' : '0')
+      return next
+    })
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (celebrationTimerRef.current) clearTimeout(celebrationTimerRef.current)
+    }
+  }, [])
+
   // Measure the ranking area so we render only as many rows as fit (no scroll).
   const rankAreaRef = useRef<HTMLDivElement | null>(null)
   const [rankAreaH, setRankAreaH] = useState(0)
@@ -739,6 +983,8 @@ export default function PantallaPage() {
   // Gate submit handler.
   const handleGateSubmit = useCallback(
     async (pw: string) => {
+      // The "Entrar" click is a user gesture — unlock audio now.
+      unlockAudio()
       setSubmitting(true)
       setGateError('')
       const result = await loadBoard(pw, periodRef.current, false)
@@ -753,7 +999,7 @@ export default function PantallaPage() {
       }
       setSubmitting(false)
     },
-    [loadBoard]
+    [loadBoard, unlockAudio]
   )
 
   // Lock: clear stored password and return to the gate.
@@ -780,6 +1026,29 @@ export default function PantallaPage() {
     }, 60000)
     return () => clearInterval(id)
   }, [authed, loadBoard])
+
+  // ---------- Celebration detector ----------
+  // Watch the combined ops count. Celebrate only when the period is unchanged
+  // and the count strictly increased vs. the previously known value. The very
+  // first observed value just initializes the baseline (no celebration). A
+  // period switch resets the baseline so switching numbers never celebrates.
+  useEffect(() => {
+    if (!data) return
+    const newCount = data.combined?.totals?.count ?? 0
+    const samePeriod = baselinePeriodRef.current === period
+    if (!samePeriod) {
+      // Period changed: reset baseline, don't celebrate.
+      baselinePeriodRef.current = period
+      prevCountRef.current = newCount
+      return
+    }
+    const prev = prevCountRef.current
+    if (prev !== null && newCount > prev) {
+      const top = data.combined?.sellers?.[0]
+      triggerCelebration(top?.name, top?.commission)
+    }
+    prevCountRef.current = newCount
+  }, [data, period, triggerCelebration])
 
   // Live clock (Panama).
   useEffect(() => {
@@ -884,6 +1153,15 @@ export default function PantallaPage() {
         boxSizing: 'border-box',
       }}
     >
+      {/* ---------- CELEBRATION OVERLAY ---------- */}
+      {celebration && (
+        <CelebrationOverlay
+          key={celebration.key}
+          sellerName={celebration.sellerName}
+          amount={celebration.amount}
+        />
+      )}
+
       {/* ---------- HEADER (~9vh) ---------- */}
       <Box
         sx={{
@@ -965,6 +1243,21 @@ export default function PantallaPage() {
               </Typography>
             </Box>
           </Box>
+
+          <Tooltip title={muted ? 'Activar sonido de ventas' : 'Silenciar sonido de ventas'}>
+            <IconButton
+              onClick={toggleMute}
+              size="small"
+              sx={{
+                color: muted ? MUTED : YELLOW,
+                bgcolor: SURFACE,
+                border: `1px solid ${BORDER}`,
+                '&:hover': { bgcolor: '#1f1f23', borderColor: YELLOW, color: YELLOW },
+              }}
+            >
+              {muted ? <NotificationsOffIcon /> : <NotificationsActiveIcon />}
+            </IconButton>
+          </Tooltip>
 
           <Tooltip title="Pantalla completa">
             <IconButton

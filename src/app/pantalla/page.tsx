@@ -10,6 +10,8 @@ import {
   Tooltip,
   ToggleButton,
   ToggleButtonGroup,
+  TextField,
+  Button,
   keyframes,
 } from '@mui/material'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
@@ -24,6 +26,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import PendingActionsIcon from '@mui/icons-material/PendingActions'
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord'
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined'
 
 // ---------- Palette ----------
 const BG = '#0A0A0A'
@@ -37,6 +40,8 @@ const TEXT = '#FAFAFA'
 const MUTED = '#A1A1AA'
 const FONT_HEAD = '"Space Grotesk", "Inter", -apple-system, sans-serif'
 const FONT_BODY = '"Inter", -apple-system, sans-serif'
+
+const PW_STORAGE_KEY = 'pantalla_pw'
 
 // ---------- Types ----------
 type Seller = {
@@ -487,8 +492,151 @@ function TeamStat({
   )
 }
 
+// ---------- Password gate ----------
+function PasswordGate({
+  onSubmit,
+  error,
+  submitting,
+}: {
+  onSubmit: (pw: string) => void
+  error: string
+  submitting: boolean
+}) {
+  const [value, setValue] = useState('')
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const pw = value.trim()
+    if (pw) onSubmit(pw)
+  }
+  return (
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: `radial-gradient(140% 100% at 50% -10%, #18181b 0%, ${BG} 55%)`,
+        color: TEXT,
+        fontFamily: FONT_BODY,
+        p: 3,
+      }}
+    >
+      <Box
+        component="form"
+        onSubmit={handleSubmit}
+        sx={{
+          width: '100%',
+          maxWidth: 420,
+          bgcolor: SURFACE,
+          border: `1px solid ${BORDER}`,
+          borderRadius: 5,
+          p: { xs: 3.5, md: 5 },
+          textAlign: 'center',
+          animation: `${fadeUp} 0.5s ease both`,
+          boxShadow: `0 30px 80px -30px #000`,
+        }}
+      >
+        <Box
+          sx={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 64,
+            height: 64,
+            borderRadius: '50%',
+            bgcolor: `${YELLOW}1a`,
+            border: `1px solid ${YELLOW}44`,
+            mb: 2.5,
+          }}
+        >
+          <EmojiEventsIcon sx={{ color: YELLOW, fontSize: '2rem' }} />
+        </Box>
+        <Typography
+          sx={{
+            fontFamily: FONT_HEAD,
+            fontWeight: 800,
+            fontSize: 'clamp(1.4rem, 3vw, 2rem)',
+            letterSpacing: '-0.02em',
+            color: TEXT,
+            mb: 0.5,
+          }}
+        >
+          Pantalla de Rendimiento
+        </Typography>
+        <Typography sx={{ color: MUTED, fontSize: '0.9rem', fontWeight: 500, mb: 3 }}>
+          Ingresa la contraseña para ver el tablero del equipo
+        </Typography>
+
+        <TextField
+          type="password"
+          fullWidth
+          autoFocus
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder="Contraseña"
+          disabled={submitting}
+          sx={{
+            mb: error ? 1 : 2.5,
+            '& .MuiOutlinedInput-root': {
+              bgcolor: BG,
+              color: TEXT,
+              borderRadius: 3,
+              fontFamily: FONT_BODY,
+              '& fieldset': { borderColor: BORDER },
+              '&:hover fieldset': { borderColor: '#3f3f46' },
+              '&.Mui-focused fieldset': { borderColor: YELLOW },
+            },
+            '& input': { color: TEXT },
+            '& input::placeholder': { color: MUTED, opacity: 1 },
+          }}
+        />
+
+        {error && (
+          <Typography sx={{ color: RED, fontSize: '0.85rem', fontWeight: 600, mb: 2, mt: 0.5 }}>
+            {error}
+          </Typography>
+        )}
+
+        <Button
+          type="submit"
+          fullWidth
+          disabled={submitting || !value.trim()}
+          sx={{
+            bgcolor: YELLOW,
+            color: '#0A0A0A',
+            fontFamily: FONT_HEAD,
+            fontWeight: 800,
+            fontSize: '1.05rem',
+            textTransform: 'none',
+            borderRadius: 3,
+            py: 1.3,
+            '&:hover': { bgcolor: '#eab308' },
+            '&.Mui-disabled': { bgcolor: '#3f3f46', color: MUTED },
+          }}
+        >
+          {submitting ? (
+            <CircularProgress size={22} sx={{ color: '#0A0A0A' }} />
+          ) : (
+            'Entrar'
+          )}
+        </Button>
+      </Box>
+    </Box>
+  )
+}
+
 // ---------- Page ----------
-export default function LeaderboardPage() {
+export default function PantallaPage() {
+  // auth state
+  const [password, setPassword] = useState<string | null>(null)
+  const [authed, setAuthed] = useState(false)
+  const [gateError, setGateError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [bootstrapped, setBootstrapped] = useState(false)
+  const passwordRef = useRef<string | null>(null)
+  passwordRef.current = password
+
+  // board state
   const [period, setPeriod] = useState<Period>('month')
   const [data, setData] = useState<ApiResponse | null>(null)
   const [loading, setLoading] = useState(true)
@@ -499,39 +647,116 @@ export default function LeaderboardPage() {
   const periodRef = useRef(period)
   periodRef.current = period
 
-  const fetchData = useCallback(async (p: Period, soft = false) => {
-    if (soft) setRefreshing(true)
-    else setLoading(true)
-    try {
-      const res = await fetch(`/api/leaderboard/combined?period=${p}`, {
-        cache: 'no-store',
-      })
-      if (!res.ok) throw new Error('bad response')
-      const json: ApiResponse = await res.json()
-      if (periodRef.current === p) {
-        setData(json)
-        setError(false)
+  // Core fetch — always sends the x-screen-password header.
+  // Returns true on success, false on failure. Throws nothing.
+  const loadBoard = useCallback(
+    async (pw: string, p: Period, soft = false): Promise<'ok' | 'unauthorized' | 'error'> => {
+      if (soft) setRefreshing(true)
+      else setLoading(true)
+      try {
+        const res = await fetch(`/api/leaderboard/combined?period=${p}`, {
+          cache: 'no-store',
+          headers: { 'x-screen-password': pw },
+        })
+        if (res.status === 401) {
+          if (!soft) setLoading(false)
+          else setRefreshing(false)
+          return 'unauthorized'
+        }
+        if (!res.ok) throw new Error('bad response')
+        const json: ApiResponse = await res.json()
+        if (periodRef.current === p) {
+          setData(json)
+          setError(false)
+        }
+        return 'ok'
+      } catch {
+        if (!soft) setError(true)
+        return 'error'
+      } finally {
+        setLoading(false)
+        setRefreshing(false)
       }
-    } catch {
-      if (!soft) setError(true)
-    } finally {
-      setLoading(false)
-      setRefreshing(false)
+    },
+    []
+  )
+
+  // Bootstrap: try a saved password from localStorage on mount.
+  useEffect(() => {
+    let cancelled = false
+    const saved =
+      typeof window !== 'undefined' ? window.localStorage.getItem(PW_STORAGE_KEY) : null
+    if (!saved) {
+      setBootstrapped(true)
+      return
     }
+    setSubmitting(true)
+    loadBoard(saved, periodRef.current, false).then((result) => {
+      if (cancelled) return
+      if (result === 'unauthorized') {
+        window.localStorage.removeItem(PW_STORAGE_KEY)
+        setAuthed(false)
+        setGateError('Contraseña incorrecta')
+      } else {
+        // 'ok' or transient 'error' (network) — keep the saved password and
+        // let the board show its own retry/error UI.
+        setPassword(saved)
+        setAuthed(true)
+      }
+      setSubmitting(false)
+      setBootstrapped(true)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [loadBoard])
+
+  // Gate submit handler.
+  const handleGateSubmit = useCallback(
+    async (pw: string) => {
+      setSubmitting(true)
+      setGateError('')
+      const result = await loadBoard(pw, periodRef.current, false)
+      if (result === 'ok') {
+        if (typeof window !== 'undefined') window.localStorage.setItem(PW_STORAGE_KEY, pw)
+        setPassword(pw)
+        setAuthed(true)
+      } else if (result === 'unauthorized') {
+        setGateError('Contraseña incorrecta')
+      } else {
+        setGateError('No se pudo conectar. Intenta de nuevo.')
+      }
+      setSubmitting(false)
+    },
+    [loadBoard]
+  )
+
+  // Lock: clear stored password and return to the gate.
+  const handleLock = useCallback(() => {
+    if (typeof window !== 'undefined') window.localStorage.removeItem(PW_STORAGE_KEY)
+    setPassword(null)
+    setAuthed(false)
+    setData(null)
+    setGateError('')
   }, [])
 
-  // initial + on period change
+  // Re-fetch when period changes (only while authed).
   useEffect(() => {
-    fetchData(period, false)
-  }, [period, fetchData])
+    if (!authed || !passwordRef.current) return
+    loadBoard(passwordRef.current, period, false)
+  }, [period, authed, loadBoard])
 
-  // auto-refresh every 60s
+  // Auto-refresh every 60s (only while authed).
   useEffect(() => {
-    const id = setInterval(() => fetchData(periodRef.current, true), 60000)
+    if (!authed) return
+    const id = setInterval(() => {
+      const pw = passwordRef.current
+      if (pw) loadBoard(pw, periodRef.current, true)
+    }, 60000)
     return () => clearInterval(id)
-  }, [fetchData])
+  }, [authed, loadBoard])
 
-  // live clock (Panama)
+  // Live clock (Panama).
   useEffect(() => {
     const tick = () => {
       setClock(
@@ -549,7 +774,7 @@ export default function LeaderboardPage() {
     return () => clearInterval(id)
   }, [])
 
-  // rotating motivation
+  // Rotating motivation.
   useEffect(() => {
     const id = setInterval(() => setMotoIdx((i) => (i + 1) % MOTIVATIONAL.length), 12000)
     return () => clearInterval(id)
@@ -575,6 +800,35 @@ export default function LeaderboardPage() {
     else document.exitFullscreen?.()
   }
 
+  const handleRetry = () => {
+    const pw = passwordRef.current
+    if (pw) loadBoard(pw, periodRef.current, false)
+  }
+
+  // ---------- Render: gate ----------
+  if (!bootstrapped) {
+    return (
+      <Box
+        sx={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: BG,
+        }}
+      >
+        <CircularProgress sx={{ color: YELLOW }} size={48} />
+      </Box>
+    )
+  }
+
+  if (!authed) {
+    return (
+      <PasswordGate onSubmit={handleGateSubmit} error={gateError} submitting={submitting} />
+    )
+  }
+
+  // ---------- Render: board ----------
   const sellers = data?.combined.sellers ?? []
   const podium = sellers.slice(0, 3)
   const rest = sellers.slice(3)
@@ -586,7 +840,6 @@ export default function LeaderboardPage() {
     <Box
       sx={{
         minHeight: '100vh',
-        m: { xs: -2, md: -3 },
         background: `radial-gradient(140% 100% at 50% -10%, #18181b 0%, ${BG} 55%)`,
         color: TEXT,
         fontFamily: FONT_BODY,
@@ -686,6 +939,20 @@ export default function LeaderboardPage() {
               <FullscreenIcon />
             </IconButton>
           </Tooltip>
+
+          <Tooltip title="Bloquear pantalla">
+            <IconButton
+              onClick={handleLock}
+              sx={{
+                color: MUTED,
+                bgcolor: SURFACE,
+                border: `1px solid ${BORDER}`,
+                '&:hover': { bgcolor: '#1f1f23', borderColor: RED, color: RED },
+              }}
+            >
+              <LockOutlinedIcon />
+            </IconButton>
+          </Tooltip>
         </Box>
       </Box>
 
@@ -705,6 +972,22 @@ export default function LeaderboardPage() {
             No se pudo cargar el tablero
           </Typography>
           <Typography sx={{ color: MUTED }}>Reintentando automáticamente…</Typography>
+          <Button
+            onClick={handleRetry}
+            sx={{
+              mt: 1,
+              bgcolor: YELLOW,
+              color: '#0A0A0A',
+              fontFamily: FONT_HEAD,
+              fontWeight: 800,
+              textTransform: 'none',
+              borderRadius: 3,
+              px: 3,
+              '&:hover': { bgcolor: '#eab308' },
+            }}
+          >
+            Reintentar
+          </Button>
         </Box>
       )}
 

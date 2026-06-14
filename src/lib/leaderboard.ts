@@ -161,7 +161,10 @@ export async function getTpLeaderboard(period: Period): Promise<TpLeaderboardPay
   }
 }
 
-// ── Auth: shared token OR ADMIN/WORKER session ────────────────────────────────
+// ── Auth: shared token, office-screen password, OR ADMIN/WORKER session ───────
+// The standalone office screen (/pantalla) authenticates with SCREEN_PASSWORD
+// sent as the `x-screen-password` header (or `?password=`), so a TV can show the
+// board behind a simple password without a full user login.
 export async function isLeaderboardAuthorized(request: NextRequest): Promise<boolean> {
   const token = process.env.LEADERBOARD_TOKEN
   if (token) {
@@ -170,6 +173,14 @@ export async function isLeaderboardAuthorized(request: NextRequest): Promise<boo
     const authHeader = request.headers.get('authorization') ?? ''
     if (authHeader === `Bearer ${token}`) return true
   }
+
+  const screenPassword = process.env.SCREEN_PASSWORD
+  if (screenPassword) {
+    const headerPw = request.headers.get('x-screen-password')
+    const queryPw = request.nextUrl.searchParams.get('password')
+    if (headerPw === screenPassword || queryPw === screenPassword) return true
+  }
+
   const session = await getServerSession(authOptions)
   const role = session?.user?.role
   if (session?.user?.id && (role === 'ADMIN' || role === 'WORKER')) return true

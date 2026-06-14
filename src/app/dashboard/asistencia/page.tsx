@@ -6,10 +6,11 @@ import {
   Box, Typography, Card, CardContent, Grid, Button, Chip,
   LinearProgress, Snackbar, Alert, TextField, Table, TableHead,
   TableBody, TableRow, TableCell, TableContainer, Divider,
+  Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions,
 } from '@mui/material'
 import {
   Login, Logout, Restaurant, FreeBreakfast, Coffee, AccessTime,
-  CalendarMonth, Groups, EmojiEvents, Favorite,
+  CalendarMonth, Groups, EmojiEvents, Favorite, Schedule,
 } from '@mui/icons-material'
 
 // ── Theme tokens (TP light) ──────────────────────────────────────────────
@@ -89,6 +90,29 @@ const ACTION_META: Record<NextAction, { label: string; color: string; hover: str
   DONE: null,
 }
 
+const CONFIRM_META: Record<Exclude<NextAction, 'DONE'>, { title: string; body: string; confirm: string }> = {
+  CLOCK_IN: {
+    title: '¿Marcar tu entrada?',
+    body: 'Vas a registrar tu hora de entrada. ¿Continuar?',
+    confirm: 'Sí, marcar entrada',
+  },
+  LUNCH_OUT: {
+    title: '¿Salir a almuerzo?',
+    body: 'Vas a registrar tu salida a almuerzo. ¿Continuar?',
+    confirm: 'Sí, salir a almuerzo',
+  },
+  LUNCH_IN: {
+    title: '¿Regresar de almuerzo?',
+    body: 'Vas a registrar tu regreso de almuerzo. ¿Continuar?',
+    confirm: 'Sí, regresar de almuerzo',
+  },
+  CLOCK_OUT: {
+    title: '¿Marcar tu salida?',
+    body: 'Vas a registrar tu salida y finalizar tu jornada. ¿Estás seguro?',
+    confirm: 'Sí, marcar salida',
+  },
+}
+
 const SUCCESS_MSG: Record<Exclude<NextAction, 'DONE'>, string> = {
   CLOCK_IN: '¡Entrada registrada! Que tengas un gran día 💪',
   LUNCH_OUT: '¡Buen provecho! Disfruta tu almuerzo 🍽️',
@@ -136,6 +160,7 @@ export default function AsistenciaPage() {
 
   const [snack, setSnack] = useState<{ msg: string; sev: 'success' | 'info' } | null>(null)
   const [tipIdx, setTipIdx] = useState(() => Math.floor(Math.random() * WELLNESS_TIPS.length))
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   // ── Live clock (every second) ──
   useEffect(() => {
@@ -180,7 +205,13 @@ export default function AsistenciaPage() {
     return () => clearInterval(id)
   }, [])
 
-  // ── Punch action ──
+  // ── Open confirmation dialog (does NOT punch yet) ──
+  const requestAction = () => {
+    if (!state || state.nextAction === 'DONE') return
+    setConfirmOpen(true)
+  }
+
+  // ── Punch action (runs only on confirm) ──
   const handleAction = async () => {
     if (!state || state.nextAction === 'DONE') return
     const action = state.nextAction
@@ -194,6 +225,7 @@ export default function AsistenciaPage() {
       if (r.ok) {
         setState(await r.json())
         setSnack({ msg: SUCCESS_MSG[action as Exclude<NextAction, 'DONE'>], sev: 'success' })
+        setConfirmOpen(false)
       } else {
         setSnack({ msg: 'No se pudo registrar la marca. Intenta de nuevo.', sev: 'info' })
       }
@@ -337,13 +369,27 @@ export default function AsistenciaPage() {
                 })}
               </Box>
 
+              {/* Schedule note */}
+              <Box sx={{
+                display: 'flex', alignItems: 'center', gap: 1.2,
+                px: 1.6, py: 1.2, mb: 2,
+                borderRadius: '12px',
+                bgcolor: '#F5F5F4',
+                border: C.border,
+              }}>
+                <Schedule sx={{ fontSize: 18, color: C.textMid, flexShrink: 0 }} />
+                <Typography sx={{ fontSize: '0.82rem', color: C.textMid, fontWeight: 600 }}>
+                  Horario: 9:00 a.m. – 6:00 p.m. · 1 hora de almuerzo
+                </Typography>
+              </Box>
+
               <Box sx={{ flex: 1 }} />
 
               {/* Primary action */}
               {aMeta ? (
                 <Button
                   fullWidth
-                  onClick={handleAction}
+                  onClick={requestAction}
                   disabled={submitting}
                   startIcon={aMeta.icon}
                   sx={{
@@ -409,6 +455,64 @@ export default function AsistenciaPage() {
           </Grid>
         )}
       </Grid>
+
+      {/* Confirmation dialog */}
+      {aMeta && state && state.nextAction !== 'DONE' && (() => {
+        const cMeta = CONFIRM_META[state.nextAction as Exclude<NextAction, 'DONE'>]
+        return (
+          <Dialog
+            open={confirmOpen}
+            onClose={() => { if (!submitting) setConfirmOpen(false) }}
+            PaperProps={{ sx: { borderRadius: '16px', border: C.border, maxWidth: 420 } }}
+          >
+            <DialogTitle sx={{
+              fontFamily: HEADING, fontWeight: 700, fontSize: '1.15rem', color: C.text,
+              display: 'flex', alignItems: 'center', gap: 1.2, pb: 1,
+            }}>
+              <Box sx={{
+                width: 40, height: 40, borderRadius: '12px', flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                bgcolor: `${aMeta.color}14`, color: aMeta.color,
+              }}>
+                {aMeta.icon}
+              </Box>
+              {cMeta.title}
+            </DialogTitle>
+            <DialogContent>
+              <DialogContentText sx={{ color: C.textMid, fontSize: '0.95rem' }}>
+                {cMeta.body}
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions sx={{ px: 3, pb: 2.5, gap: 1 }}>
+              <Button
+                onClick={() => setConfirmOpen(false)}
+                disabled={submitting}
+                sx={{
+                  textTransform: 'none', fontWeight: 700, color: C.textMid,
+                  borderRadius: '10px', px: 2,
+                  '&:hover': { bgcolor: '#F5F5F4' },
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleAction}
+                disabled={submitting}
+                startIcon={aMeta.icon}
+                sx={{
+                  bgcolor: aMeta.color, color: '#FFFFFF',
+                  textTransform: 'none', fontWeight: 800,
+                  borderRadius: '10px', px: 2.2, boxShadow: 'none',
+                  '&:hover': { bgcolor: aMeta.hover, boxShadow: 'none' },
+                  '&.Mui-disabled': { bgcolor: aMeta.color, opacity: 0.6, color: '#FFFFFF' },
+                }}
+              >
+                {submitting ? 'Registrando…' : cMeta.confirm}
+              </Button>
+            </DialogActions>
+          </Dialog>
+        )
+      })()}
 
       {/* Snackbar */}
       <Snackbar

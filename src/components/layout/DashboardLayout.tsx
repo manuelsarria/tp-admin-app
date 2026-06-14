@@ -62,6 +62,7 @@ import {
   ViewKanban,
   Schedule,
   Paid,
+  Leaderboard,
 } from '@mui/icons-material'
 import { UserRole } from '@/types'
 import { LoginSuccessPopup } from '@/components/ui/LoginSuccessPopup'
@@ -181,6 +182,13 @@ const menuSections: MenuSection[] = [
         icon: <Schedule />,
         path: '/dashboard/asistencia',
         roles: ['ADMIN', 'WORKER'],
+      },
+      {
+        id: 'leaderboard',
+        label: 'Rendimiento (Pantalla)',
+        icon: <Leaderboard />,
+        path: '/dashboard/leaderboard',
+        roles: ['ADMIN'],
       },
     ],
   },
@@ -855,6 +863,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       ['/dashboard/ventas', 'Ventas y Comisiones'],
       ['/dashboard/tablero', 'Tablero de Tareas'],
       ['/dashboard/asistencia', 'Reporte de Entrada y Salida'],
+      ['/dashboard/leaderboard', 'Rendimiento del Equipo'],
       ['/dashboard/contabilidad/operaciones', 'Operaciones'],
       ['/dashboard/contabilidad/transacciones', 'Transacciones'],
       ['/dashboard/contabilidad', 'Dashboard Financiero'],

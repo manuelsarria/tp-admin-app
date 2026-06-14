@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-options'
 import { prisma } from '@/lib/prisma'
+import { isSuperAdmin } from '@/lib/permissions'
 import * as bcrypt from 'bcryptjs'
 
 // PUT - Update user (Admin only)
@@ -33,6 +34,37 @@ export async function PUT(
       return NextResponse.json(
         { error: 'Usuario no encontrado' },
         { status: 404 }
+      )
+    }
+
+    const requesterIsSuperAdmin = isSuperAdmin(session.user.email)
+
+    // Only the super-admin may promote a user to ADMIN.
+    if (role === 'ADMIN' && existingUser.role !== 'ADMIN' && !requesterIsSuperAdmin) {
+      return NextResponse.json(
+        { error: 'Solo el administrador principal puede asignar el rol ADMIN' },
+        { status: 403 }
+      )
+    }
+
+    // The super-admin account can only be modified by itself.
+    if (isSuperAdmin(existingUser.email) && !requesterIsSuperAdmin) {
+      return NextResponse.json(
+        { error: 'No puedes modificar la cuenta del administrador principal' },
+        { status: 403 }
+      )
+    }
+
+    // ADMIN accounts can only be modified by the super-admin or by the admin
+    // themselves — a regular admin cannot edit/demote/reset a peer admin.
+    if (
+      existingUser.role === 'ADMIN' &&
+      existingUser.id !== session.user.id &&
+      !requesterIsSuperAdmin
+    ) {
+      return NextResponse.json(
+        { error: 'Solo el administrador principal puede modificar a otros administradores' },
+        { status: 403 }
       )
     }
 

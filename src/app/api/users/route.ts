@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-options'
 import { prisma } from '@/lib/prisma'
+import { isSuperAdmin } from '@/lib/permissions'
 import * as bcrypt from 'bcryptjs'
 
 // GET - List all users (Admin only)
@@ -76,6 +77,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Nombre, email y rol son requeridos' },
         { status: 400 }
+      )
+    }
+
+    // Only the super-admin may create ADMIN users.
+    if (role === 'ADMIN' && !isSuperAdmin(session.user.email)) {
+      return NextResponse.json(
+        { error: 'Solo el administrador principal puede crear usuarios ADMIN' },
+        { status: 403 }
       )
     }
 

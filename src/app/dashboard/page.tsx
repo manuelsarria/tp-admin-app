@@ -891,7 +891,7 @@ function AdsSection({ isAdmin }: { isAdmin: boolean }) {
 }
 
 // ============== Client Containers Panel ==============
-function ContainerCard({ group }: { group: ContainerGroup }) {
+function ContainerCard({ group, clientView = false }: { group: ContainerGroup; clientView?: boolean }) {
   const router = useRouter()
   const cfg = ARRIVAL_CONFIG[group.arrivalLevel]
   const countdown = arrivalCountdown(group)
@@ -949,9 +949,15 @@ function ContainerCard({ group }: { group: ContainerGroup }) {
             </Typography>
           </Box>
         )}
-        <Typography sx={{ fontSize: '0.74rem', color: '#57534E', fontWeight: 600 }}>
-          {group.clientCount} cliente{group.clientCount !== 1 ? 's' : ''}
-        </Typography>
+        {clientView ? (
+          <Typography sx={{ fontSize: '0.74rem', color: '#57534E', fontWeight: 600 }}>
+            {group.shipmentCount} envío{group.shipmentCount !== 1 ? 's' : ''}
+          </Typography>
+        ) : (
+          <Typography sx={{ fontSize: '0.74rem', color: '#57534E', fontWeight: 600 }}>
+            {group.clientCount} cliente{group.clientCount !== 1 ? 's' : ''}
+          </Typography>
+        )}
         {group.totalCbm > 0 && (
           <Typography sx={{ fontSize: '0.74rem', color: '#57534E', fontWeight: 600 }}>
             {group.totalCbm.toFixed(1)} CBM
@@ -959,7 +965,8 @@ function ContainerCard({ group }: { group: ContainerGroup }) {
         )}
       </Box>
 
-      {/* Clients inside */}
+      {/* Clients inside — hidden in client view to avoid exposing co-loaders */}
+      {!clientView && (
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.4, mt: 0.25 }}>
         {visibleClients.length === 0 && (
           <Typography sx={{ fontSize: '0.76rem', color: '#A8A29E', fontStyle: 'italic' }}>
@@ -980,6 +987,7 @@ function ContainerCard({ group }: { group: ContainerGroup }) {
           </Typography>
         )}
       </Box>
+      )}
 
       {/* Flags */}
       {(group.dgCount > 0 || group.flaggedCount > 0 || group.statusLabel) && (
@@ -1002,12 +1010,23 @@ function ContainerCard({ group }: { group: ContainerGroup }) {
   )
 }
 
-function ClientContainersPanel() {
+function ClientContainersPanel({
+  clientView = false,
+  groups: groupsProp,
+  loading: loadingProp,
+}: {
+  clientView?: boolean
+  /** When provided, the panel renders these instead of fetching its own data. */
+  groups?: ContainerGroup[]
+  loading?: boolean
+}) {
   const router = useRouter()
-  const [groups, setGroups] = useState<ContainerGroup[]>([])
-  const [loading, setLoading] = useState(true)
+  const [groupsState, setGroups] = useState<ContainerGroup[]>([])
+  const [loadingState, setLoading] = useState(true)
+  const controlled = groupsProp !== undefined
 
   useEffect(() => {
+    if (controlled) return
     Promise.all([
       fetch('/api/fcl-shipments?pageSize=1000').then(r => r.ok ? r.json() : { data: [] }),
       fetch('/api/cargo-management?pageSize=1000').then(r => r.ok ? r.json() : { data: [] }),
@@ -1024,11 +1043,32 @@ function ClientContainersPanel() {
           misidentified: item.misidentified,
           dangerousGoods: item.dangerousGoods,
         }))
-        setGroups(buildContainerGroups(fcls, cargoData.data || []))
+
+        // The FCL list is already scoped to the user's company by the API, but
+        // cargo-management is NOT company-scoped. For the client view we keep
+        // only cargo records that match one of the client's own containers (so
+        // buildContainerGroups doesn't seed foreign containers) and strip the
+        // co-loader `clients` array (so other companies aren't exposed).
+        let cargos = cargoData.data || []
+        if (clientView) {
+          const own = new Set(
+            fcls
+              .map((f: any) => (f.containerNumber ?? '').trim().toLowerCase())
+              .filter(Boolean)
+          )
+          cargos = cargos
+            .filter((c: any) => own.has((c.containerNumber ?? '').trim().toLowerCase()))
+            .map((c: any) => ({ ...c, clients: [] }))
+        }
+
+        setGroups(buildContainerGroups(fcls, cargos))
       })
       .catch(() => setGroups([]))
       .finally(() => setLoading(false))
-  }, [])
+  }, [clientView, controlled])
+
+  const groups = controlled ? groupsProp! : groupsState
+  const loading = controlled ? !!loadingProp : loadingState
 
   const imminentCount = groups.filter(g => g.arrivalLevel === 'imminent').length
   const soonCount = groups.filter(g => g.arrivalLevel === 'soon').length
@@ -1045,7 +1085,7 @@ function ClientContainersPanel() {
             </Box>
             <Box>
               <Typography variant="h6" sx={{ fontWeight: 700, color: '#0A0A0A', fontSize: '1.15rem', fontFamily: '"Poppins", sans-serif', lineHeight: 1.2 }}>
-                Contenedores de Clientes
+                {clientView ? 'Mis Contenedores' : 'Contenedores de Clientes'}
               </Typography>
               <Typography variant="caption" sx={{ color: '#78716C' }}>
                 {groups.length} contenedor{groups.length !== 1 ? 'es' : ''} en seguimiento
@@ -1083,15 +1123,21 @@ function ClientContainersPanel() {
           <Grid container spacing={2}>
             {visible.map(g => (
               <Grid item xs={12} sm={6} lg={4} key={group_key(g)}>
-                <ContainerCard group={g} />
+                <ContainerCard group={g} clientView={clientView} />
               </Grid>
             ))}
           </Grid>
         ) : (
-          <Box sx={{ textAlign: 'center', py: 4 }}>
-            <Typography variant="body2" sx={{ color: '#78716C' }}>
-              No hay contenedores registrados
+          <Box sx={{ textAlign: 'center', py: 5 }}>
+            <Inventory sx={{ fontSize: '2.4rem', color: '#D6D3D1', mb: 1 }} />
+            <Typography variant="body2" sx={{ color: '#78716C', fontWeight: 600 }}>
+              {clientView ? 'Aún no tienes contenedores FCL en seguimiento.' : 'No hay contenedores registrados'}
             </Typography>
+            {clientView && (
+              <Typography variant="caption" sx={{ color: '#A8A29E', display: 'block', mt: 0.5 }}>
+                Tus contenedores aparecerán aquí en cuanto registremos tu carga.
+              </Typography>
+            )}
           </Box>
         )}
       </CardContent>
@@ -1459,17 +1505,232 @@ function AdminWorkerDashboard({ isAdmin }: { isAdmin: boolean }) {
   )
 }
 
+// ============== CLIENT: compact KPI ==============
+function MiniKpi({ label, value, sub, icon, accent }: {
+  label: string
+  value: string
+  sub?: string
+  icon: React.ReactNode
+  accent: string
+}) {
+  return (
+    <Box sx={{
+      display: 'flex', alignItems: 'center', gap: 1.75,
+      p: 2.25, borderRadius: '14px',
+      border: '1px solid #E7E5E4', background: '#FFFFFF', height: '100%',
+    }}>
+      <Box sx={{
+        width: 44, height: 44, borderRadius: '12px', flexShrink: 0,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        bgcolor: `${accent}1A`, color: accent,
+      }}>
+        {icon}
+      </Box>
+      <Box sx={{ minWidth: 0 }}>
+        <Typography sx={{ fontSize: '0.7rem', color: '#78716C', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', lineHeight: 1.2 }}>
+          {label}
+        </Typography>
+        <Typography sx={{ fontSize: '1.5rem', fontWeight: 800, color: '#0A0A0A', lineHeight: 1.15, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {value}
+        </Typography>
+        {sub && (
+          <Typography sx={{ fontSize: '0.7rem', color: '#A8A29E', lineHeight: 1.2 }}>{sub}</Typography>
+        )}
+      </Box>
+    </Box>
+  )
+}
+
+// ============== CLIENT: Alerts / próximas llegadas ==============
+interface ClientAlert {
+  id: string
+  level: 'imminent' | 'soon' | 'flag'
+  icon: React.ReactNode
+  title: string
+  detail: string
+  badge?: string
+  eta: number // sort key (ms since epoch; Infinity for flags)
+}
+
+function alertStyle(level: ClientAlert['level']) {
+  if (level === 'imminent') return { color: '#B91C1C', bg: '#FEF2F2', border: '#FECACA' }
+  if (level === 'soon') return { color: '#B45309', bg: '#FFFBEB', border: '#FDE68A' }
+  return { color: '#1D4ED8', bg: '#EFF6FF', border: '#BFDBFE' }
+}
+
+function ClientAlertsPanel({ alerts, loading }: { alerts: ClientAlert[]; loading: boolean }) {
+  return (
+    <Card sx={{ borderRadius: '16px', border: '1px solid #E7E5E4', background: '#FFFFFF' }}>
+      <CardContent sx={{ p: { xs: 2.5, sm: 3 } }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+          <Box sx={{ p: 1, borderRadius: '12px', background: 'linear-gradient(135deg, #FACC15 0%, #FDE047 100%)', display: 'flex' }}>
+            <NotificationsActive sx={{ color: '#0A0A0A', fontSize: '1.35rem' }} />
+          </Box>
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 700, color: '#0A0A0A', fontSize: '1.1rem', fontFamily: '"Poppins", sans-serif', lineHeight: 1.2 }}>
+              Próximas llegadas y avisos
+            </Typography>
+            <Typography variant="caption" sx={{ color: '#78716C' }}>
+              {loading ? 'Cargando…' : alerts.length > 0 ? `${alerts.length} aviso${alerts.length !== 1 ? 's' : ''} para tu carga` : 'Estado de tu carga'}
+            </Typography>
+          </Box>
+        </Box>
+
+        {loading ? (
+          <LinearProgress />
+        ) : alerts.length === 0 ? (
+          <Box sx={{
+            display: 'flex', alignItems: 'center', gap: 1.5,
+            p: 2, borderRadius: '12px', bgcolor: '#ECFDF5', border: '1px solid #A7F3D0',
+          }}>
+            <CheckCircle sx={{ color: '#047857' }} />
+            <Box>
+              <Typography sx={{ fontWeight: 700, color: '#065F46', fontSize: '0.88rem' }}>
+                Todo en orden — no hay avisos.
+              </Typography>
+              <Typography sx={{ color: '#047857', fontSize: '0.76rem' }}>
+                Te avisaremos aquí cuando tu carga esté por llegar.
+              </Typography>
+            </Box>
+          </Box>
+        ) : (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25, maxHeight: 360, overflowY: 'auto', pr: 0.5 }}>
+            {alerts.map(a => {
+              const s = alertStyle(a.level)
+              return (
+                <Box key={a.id} sx={{
+                  display: 'flex', alignItems: 'center', gap: 1.5,
+                  p: 1.75, borderRadius: '12px', bgcolor: s.bg, border: `1px solid ${s.border}`,
+                }}>
+                  <Box sx={{ color: s.color, display: 'flex', flexShrink: 0 }}>{a.icon}</Box>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography sx={{ fontWeight: 700, color: '#0A0A0A', fontSize: '0.85rem', lineHeight: 1.25 }}>
+                      {a.title}
+                    </Typography>
+                    <Typography sx={{ color: s.color, fontSize: '0.74rem', fontWeight: 600 }}>
+                      {a.detail}
+                    </Typography>
+                  </Box>
+                  {a.badge && (
+                    <Chip label={a.badge} size="small"
+                      sx={{ fontWeight: 800, fontSize: '0.68rem', bgcolor: '#FFFFFF', color: s.color, border: `1px solid ${s.border}`, flexShrink: 0 }} />
+                  )}
+                </Box>
+              )
+            })}
+          </Box>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+// ============== CLIENT: LCL shipments list ==============
+function ClientLclList({ shipments, loading }: { shipments: LclShipment[]; loading: boolean }) {
+  const now = startOfDayLocal(new Date())
+  const sorted = [...shipments].sort((a, b) => new Date(a.eta).getTime() - new Date(b.eta).getTime())
+  const visible = sorted.slice(0, 6)
+
+  return (
+    <Card sx={{ borderRadius: '16px', border: '1px solid #E7E5E4', background: '#FFFFFF', height: '100%' }}>
+      <CardContent sx={{ p: { xs: 2.5, sm: 3 } }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2.5 }}>
+          <Box sx={{ p: 1, borderRadius: '12px', background: 'linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%)', display: 'flex' }}>
+            <LocalShipping sx={{ color: 'white', fontSize: '1.35rem' }} />
+          </Box>
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 700, color: '#0A0A0A', fontSize: '1.1rem', fontFamily: '"Poppins", sans-serif', lineHeight: 1.2 }}>
+              Mi carga LCL
+            </Typography>
+            <Typography variant="caption" sx={{ color: '#78716C' }}>
+              {shipments.length} embarque{shipments.length !== 1 ? 's' : ''} consolidado{shipments.length !== 1 ? 's' : ''}
+            </Typography>
+          </Box>
+        </Box>
+
+        {loading ? (
+          <LinearProgress />
+        ) : visible.length > 0 ? (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            {visible.map(s => {
+              const etaMs = startOfDayLocal(new Date(s.eta))
+              const days = Math.round((etaMs - now) / 86400000)
+              let cd: { txt: string; color: string; bg: string; border: string }
+              if (days < 0) cd = { txt: 'Arribado', color: '#047857', bg: '#ECFDF5', border: '#A7F3D0' }
+              else if (days === 0) cd = { txt: 'Llega hoy', color: '#B91C1C', bg: '#FEF2F2', border: '#FECACA' }
+              else if (days <= 7) cd = { txt: `Llega en ${days} día${days !== 1 ? 's' : ''}`, color: '#B45309', bg: '#FFFBEB', border: '#FDE68A' }
+              else cd = { txt: `Llega en ${days} días`, color: '#1D4ED8', bg: '#EFF6FF', border: '#BFDBFE' }
+              return (
+                <Box key={s.id} sx={{
+                  p: 2, borderRadius: '12px', border: '1px solid #E7E5E4', background: '#FAFAF9',
+                  transition: 'all 0.2s', '&:hover': { transform: 'translateY(-1px)', boxShadow: '0 8px 18px -10px rgba(10,10,10,0.14)' },
+                }}>
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1, mb: 0.75 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, minWidth: 0 }}>
+                      <DirectionsBoat sx={{ fontSize: '1rem', color: '#3B82F6', flexShrink: 0 }} />
+                      <Typography sx={{ fontWeight: 800, color: '#0A0A0A', fontSize: '0.86rem', fontFamily: 'monospace', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        BL {s.blNumber}
+                      </Typography>
+                    </Box>
+                    <Chip label={cd.txt} size="small"
+                      sx={{ fontWeight: 700, fontSize: '0.66rem', bgcolor: cd.bg, color: cd.color, border: `1px solid ${cd.border}`, flexShrink: 0 }} />
+                  </Box>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, alignItems: 'center' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4 }}>
+                      <CalendarToday sx={{ fontSize: '0.78rem', color: '#FACC15' }} />
+                      <Typography sx={{ fontSize: '0.74rem', color: '#57534E', fontWeight: 600 }}>
+                        ETA {new Date(s.eta).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })}
+                      </Typography>
+                    </Box>
+                    {s.totalCbm > 0 && (
+                      <Typography sx={{ fontSize: '0.74rem', color: '#57534E', fontWeight: 600 }}>
+                        {s.totalCbm.toFixed(1)} m³
+                      </Typography>
+                    )}
+                    {s.cargoAmount > 0 && (
+                      <Typography sx={{ fontSize: '0.74rem', color: '#57534E', fontWeight: 600 }}>
+                        {s.cargoAmount.toLocaleString()} bulto{s.cargoAmount !== 1 ? 's' : ''}
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+              )
+            })}
+            {sorted.length > visible.length && (
+              <Typography sx={{ fontSize: '0.74rem', color: '#A16207', fontWeight: 600, textAlign: 'center', mt: 0.5 }}>
+                +{sorted.length - visible.length} embarque(s) más
+              </Typography>
+            )}
+          </Box>
+        ) : (
+          <Box sx={{ textAlign: 'center', py: 5 }}>
+            <LocalShipping sx={{ fontSize: '2.4rem', color: '#D6D3D1', mb: 1 }} />
+            <Typography variant="body2" sx={{ color: '#78716C', fontWeight: 600 }}>
+              Aún no tienes carga LCL registrada.
+            </Typography>
+          </Box>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+function startOfDayLocal(d: Date): number {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+}
+
 // ============== BUSINESS USER DASHBOARD ==============
 function BusinessUserDashboard() {
   const { data: session } = useSession()
   const [isLoading, setIsLoading] = useState(true)
-  // Stats
+  // KPIs
   const [myFclShipments, setMyFclShipments] = useState(0)
   const [myLclShipments, setMyLclShipments] = useState(0)
-  const [myAirShipments, setMyAirShipments] = useState(0)
-  const [mySeaShipments, setMySeaShipments] = useState(0)
   const [totalCbm, setTotalCbm] = useState(0)
   const [totalCargoValue, setTotalCargoValue] = useState(0)
+  // Cargo data (shared by alerts + panels)
+  const [groups, setGroups] = useState<ContainerGroup[]>([])
+  const [lclShipments, setLclShipments] = useState<LclShipment[]>([])
 
   useEffect(() => {
     fetchBusinessDashboardData()
@@ -1477,34 +1738,107 @@ function BusinessUserDashboard() {
 
   const fetchBusinessDashboardData = async () => {
     try {
-      const [fclRes, lclRes] = await Promise.all([
-        fetch('/api/fcl-shipments?pageSize=1000'),
-        fetch('/api/lcl-shipments?pageSize=1000'),
+      const [fclData, lclData, cargoData] = await Promise.all([
+        fetch('/api/fcl-shipments?pageSize=1000').then(r => r.ok ? r.json() : { data: [] }),
+        fetch('/api/lcl-shipments?pageSize=1000').then(r => r.ok ? r.json() : { data: [] }),
+        fetch('/api/cargo-management?pageSize=1000').then(r => r.ok ? r.json() : { data: [] }),
       ])
-
-      const fclData = await fclRes.json()
-      const lclData = await lclRes.json()
 
       const fcl: FclShipment[] = fclData.data || []
       const lcl: LclShipment[] = lclData.data || []
 
-      // Calculate stats — use meta.total for accurate counts beyond pageSize
+      // KPIs — use meta.total for accurate counts beyond pageSize
       setMyFclShipments(fclData.meta?.total ?? fcl.length)
       setMyLclShipments(lclData.meta?.total ?? lcl.length)
-      setMyAirShipments(fcl.filter(s => s.transportType === 'AIR').length)
-      setMySeaShipments(fcl.filter(s => s.transportType === 'MAR').length)
+      setTotalCbm(lcl.reduce((sum, l) => sum + (l.totalCbm || 0), 0))
+      setTotalCargoValue(lcl.reduce((sum, l) => sum + (l.cargoAmount || 0), 0))
+      setLclShipments(lcl)
 
-      // Calculate LCL totals
-      const cbmTotal = lcl.reduce((sum, l) => sum + l.totalCbm, 0)
-      const valueTotal = lcl.reduce((sum, l) => sum + l.cargoAmount, 0)
-      setTotalCbm(cbmTotal)
-      setTotalCargoValue(valueTotal)
+      // Build FCL container groups (same scoping rules as ClientContainersPanel)
+      const fcls = fcl.map((item: any) => ({
+        containerNumber: item.containerNumber,
+        empresaId: item.companyId,
+        empresaName: item.company?.name,
+        empresaCode: item.company?.company_id,
+        transportType: item.transportType,
+        totalCbm: item.totalCbm ?? null,
+        totalWeight: item.totalWeight ?? null,
+        misidentified: item.misidentified,
+        dangerousGoods: item.dangerousGoods,
+      }))
+      const own = new Set(
+        fcls.map((f: any) => (f.containerNumber ?? '').trim().toLowerCase()).filter(Boolean)
+      )
+      const cargos = (cargoData.data || [])
+        .filter((c: any) => own.has((c.containerNumber ?? '').trim().toLowerCase()))
+        .map((c: any) => ({ ...c, clients: [] }))
+      setGroups(buildContainerGroups(fcls, cargos))
     } catch (error) {
       console.error('Error fetching business dashboard data:', error)
     } finally {
       setIsLoading(false)
     }
   }
+
+  // Derive actionable alerts entirely from the client's own data
+  const alerts: ClientAlert[] = (() => {
+    const out: ClientAlert[] = []
+    // FCL containers arriving soon (≤7 days, not yet arrived)
+    for (const g of groups) {
+      if ((g.arrivalLevel === 'imminent' || g.arrivalLevel === 'soon') && g.daysToEta !== null && g.daysToEta >= 0) {
+        const cd = arrivalCountdown(g)
+        out.push({
+          id: `fcl-${g.containerNumber}`,
+          level: g.arrivalLevel,
+          icon: g.transportType === 'AIR' ? <Flight sx={{ fontSize: 20 }} /> : <DirectionsBoat sx={{ fontSize: 20 }} />,
+          title: `Contenedor ${g.containerNumber}`,
+          detail: `Llega ${cd ? cd.toLowerCase() : 'pronto'}${g.eta ? ` · ETA ${g.eta.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })}` : ''}`,
+          badge: cd || undefined,
+          eta: g.eta ? g.eta.getTime() : 0,
+        })
+      }
+    }
+    // LCL embarques arriving soon (≤7 days)
+    const nowMs = startOfDayLocal(new Date())
+    for (const s of lclShipments) {
+      const days = Math.round((startOfDayLocal(new Date(s.eta)) - nowMs) / 86400000)
+      if (days >= 0 && days <= 7) {
+        out.push({
+          id: `lcl-${s.id}`,
+          level: days <= 2 ? 'imminent' : 'soon',
+          icon: <DirectionsBoat sx={{ fontSize: 20 }} />,
+          title: `Embarque LCL · BL ${s.blNumber}`,
+          detail: days === 0 ? 'Llega hoy' : `Llega en ${days} día${days !== 1 ? 's' : ''} · ETA ${new Date(s.eta).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })}`,
+          badge: days === 0 ? 'Hoy' : `en ${days}d`,
+          eta: new Date(s.eta).getTime(),
+        })
+      }
+    }
+    // Flagged cargo (dangerous goods / misidentified) — gentle warnings
+    const dgContainers = groups.filter(g => g.dgCount > 0)
+    const flaggedContainers = groups.filter(g => g.flaggedCount > 0)
+    if (dgContainers.length > 0) {
+      out.push({
+        id: 'flag-dg',
+        level: 'flag',
+        icon: <WarningAmber sx={{ fontSize: 20 }} />,
+        title: 'Mercancía peligrosa detectada',
+        detail: `${dgContainers.length} contenedor(es) con carga marcada como peligrosa. Verifica la documentación.`,
+        eta: Infinity,
+      })
+    }
+    if (flaggedContainers.length > 0) {
+      out.push({
+        id: 'flag-mis',
+        level: 'flag',
+        icon: <WarningAmber sx={{ fontSize: 20 }} />,
+        title: 'Carga mal identificada',
+        detail: `${flaggedContainers.length} contenedor(es) requieren revisión de identificación.`,
+        eta: Infinity,
+      })
+    }
+    return out.sort((a, b) => a.eta - b.eta)
+  })()
 
   if (isLoading) {
     return (
@@ -1514,6 +1848,9 @@ function BusinessUserDashboard() {
       </Box>
     )
   }
+
+  const fmtCbm = totalCbm > 0 ? totalCbm.toLocaleString('es-ES', { maximumFractionDigits: 1 }) : '0'
+  const fmtValue = totalCargoValue > 0 ? `$ ${totalCargoValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}` : '$ 0'
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -1534,73 +1871,66 @@ function BusinessUserDashboard() {
           Mi Dashboard
         </Typography>
         <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.85)', fontSize: '0.9rem' }}>
-          Resumen de tus envíos y operaciones
+          Seguimiento de tu carga: llegadas, contenedores y avisos.
         </Typography>
         <Box sx={{ mt: 2 }}>
           <LiveClocks />
         </Box>
       </Box>
 
-      {/* Address Change Banner */}
+      {/* ── Avisos prioritarios ── */}
+      {/* Address Change Banner — importante */}
       <AddressChangeBanner mailbox={session?.user?.mailbox} name={session?.user?.name} />
 
-      {/* Container Date Banner */}
+      {/* Container Date Banner — cierre/salida del próximo contenedor */}
       <ContainerDateBanner isAdmin={false} />
 
-      {/* Stats Grid */}
-      <Grid container spacing={3}>
-        <Grid item xs={12} sm={6} lg={3}>
-          <StatCard
-            title="Mis Envíos FCL"
-            value={myFclShipments}
-            icon={<Inventory sx={{ color: 'white', fontSize: '1.75rem' }} />}
-            color="linear-gradient(135deg, #FACC15 0%, #FDE047 100%)"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} lg={3}>
-          <StatCard
-            title="Mis Envíos LCL"
-            value={myLclShipments}
-            icon={<LocalShipping sx={{ color: 'white', fontSize: '1.75rem' }} />}
-            color="linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%)"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} lg={3}>
-          <StatCard
-            title="Aéreos"
-            value={myAirShipments}
-            icon={<Flight sx={{ color: 'white', fontSize: '1.75rem' }} />}
-            color="linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%)"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} lg={3}>
-          <StatCard
-            title="Marítimos"
-            value={mySeaShipments}
-            icon={<DirectionsBoat sx={{ color: 'white', fontSize: '1.75rem' }} />}
-            color="linear-gradient(135deg, #06B6D4 0%, #22D3EE 100%)"
-          />
-        </Grid>
-      </Grid>
+      {/* Alerts derived from the client's own cargo */}
+      <ClientAlertsPanel alerts={alerts} loading={isLoading} />
 
-      {/* LCL Summary Stats */}
-      <Grid container spacing={3}>
-        <Grid item xs={12} sm={6}>
-          <StatCard
-            title="Volumen Total (LCL)"
-            value={parseFloat(totalCbm.toFixed(2))}
-            icon={<Inventory sx={{ color: 'white', fontSize: '1.75rem' }} />}
-            color="linear-gradient(135deg, #10B981 0%, #34D399 100%)"
-            subtitle="Metros cúbicos"
+      {/* ── Cargo: the centerpiece ── */}
+      {/* My FCL containers — organized by container, sorted by soonest ETA */}
+      <ClientContainersPanel clientView groups={groups} loading={isLoading} />
+
+      {/* My LCL shipments — sorted by soonest ETA */}
+      <ClientLclList shipments={lclShipments} loading={isLoading} />
+
+      {/* ── Secondary KPIs ── */}
+      <Grid container spacing={2.5}>
+        <Grid item xs={6} lg={3}>
+          <MiniKpi
+            label="Envíos FCL"
+            value={myFclShipments.toLocaleString()}
+            sub="Contenedor completo"
+            icon={<Inventory sx={{ fontSize: '1.4rem' }} />}
+            accent="#CA8A04"
           />
         </Grid>
-        <Grid item xs={12} sm={6}>
-          <StatCard
-            title="Valor de Carga (LCL)"
-            value={parseFloat(totalCargoValue.toFixed(0))}
-            icon={<CheckCircle sx={{ color: 'white', fontSize: '1.75rem' }} />}
-            color="linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)"
-            subtitle="USD"
+        <Grid item xs={6} lg={3}>
+          <MiniKpi
+            label="Envíos LCL"
+            value={myLclShipments.toLocaleString()}
+            sub="Carga consolidada"
+            icon={<LocalShipping sx={{ fontSize: '1.4rem' }} />}
+            accent="#3B82F6"
+          />
+        </Grid>
+        <Grid item xs={6} lg={3}>
+          <MiniKpi
+            label="Volumen total"
+            value={fmtCbm}
+            sub="Metros cúbicos (LCL)"
+            icon={<Public sx={{ fontSize: '1.4rem' }} />}
+            accent="#10B981"
+          />
+        </Grid>
+        <Grid item xs={6} lg={3}>
+          <MiniKpi
+            label="Valor de carga"
+            value={fmtValue}
+            sub="USD declarado (LCL)"
+            icon={<CheckCircle sx={{ fontSize: '1.4rem' }} />}
+            accent="#F59E0B"
           />
         </Grid>
       </Grid>

@@ -20,6 +20,7 @@ export interface FclLike {
 
 /** Minimal shape of a CargoManagement record used to enrich a container. */
 export interface CargoMgmtLike {
+  id?: string | null
   containerNumber?: string | null
   eta?: string | Date | null
   status?: string | null
@@ -27,6 +28,11 @@ export interface CargoMgmtLike {
   location?: string | null
   referenceNo?: string | null
   departureDate?: string | Date | null
+  clients?: Array<{
+    companyId?: string | null
+    cbm?: number | null
+    company?: { id?: string; name?: string | null; company_id?: string | null } | null
+  }> | null
 }
 
 export interface ContainerClient {
@@ -44,6 +50,8 @@ export type ArrivalLevel = 'arrived' | 'imminent' | 'soon' | 'upcoming' | 'none'
 
 export interface ContainerGroup {
   containerNumber: string
+  /** CargoManagement record id, when this container is tracked there. */
+  cargoId: string | null
   transportType?: TransportType | null
   shippingLine?: string | null
   location?: string | null
@@ -151,6 +159,7 @@ export function buildContainerGroups(
 
   const newGroup = (cn: string, transportType: TransportType | null): WorkingGroup => ({
     containerNumber: cn,
+    cargoId: null,
     transportType,
     shippingLine: null,
     location: null,
@@ -223,12 +232,36 @@ export function buildContainerGroups(
   for (const g of groups.values()) {
     const cargo = cargoByContainer.get(g.containerNumber.toLowerCase())
     if (cargo) {
+      g.cargoId = cargo.id ?? null
       g.eta = toDate(cargo.eta)
       g.status = cargo.status ?? null
       g.statusLabel = statusLabel(cargo.status)
       g.shippingLine = cargo.shippingLine ?? null
       g.location = cargo.location ?? null
       g.referenceNo = cargo.referenceNo ?? null
+
+      // Merge clients assigned directly on the container (CargoManagement) with
+      // any derived from FCL cargo — dedupe by company id.
+      for (const cc of cargo.clients ?? []) {
+        const id = cc.company?.id || cc.companyId || norm(cc.company?.name)
+        if (!id) continue
+        let client = g._clients.get(id)
+        if (!client) {
+          const name = cc.company?.name ?? null
+          const code = cc.company?.company_id ?? null
+          client = {
+            key: id,
+            empresaId: cc.companyId ?? cc.company?.id ?? null,
+            empresaName: name,
+            empresaCode: code,
+            display: code && name ? `${code} - ${name}` : name || 'Sin empresa',
+            shipmentCount: 0,
+            totalCbm: 0,
+          }
+          g._clients.set(id, client)
+        }
+        if (cc.cbm) client.totalCbm += cc.cbm
+      }
     }
     const { level, days } = classifyArrival(g.eta, g.status, now)
     g.arrivalLevel = level

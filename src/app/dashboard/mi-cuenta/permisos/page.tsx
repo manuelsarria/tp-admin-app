@@ -97,6 +97,9 @@ const roleColors: Record<string, 'error' | 'info' | 'success' | 'warning' | 'def
 
 export default function PermisosUsuariosPage() {
   const { data: session, status } = useSession()
+  // Only the super-admin may create/assign the ADMIN role (also enforced server-side).
+  const canManageAdmins =
+    session?.user?.email?.trim().toLowerCase() === 'manuell.sarria@gmail.com'
   const [users, setUsers] = useState<User[]>([])
   const [companies, setCompanies] = useState<Company[]>([])
   const [loading, setLoading] = useState(true)
@@ -855,7 +858,10 @@ export default function PermisosUsuariosPage() {
                     borderRadius: '8px',
                   }}
                 >
-                  <MenuItem value="ADMIN">Administrador</MenuItem>
+                  {/* ADMIN role can only be assigned by the super-admin */}
+                  {(canManageAdmins || formData.role === 'ADMIN') && (
+                    <MenuItem value="ADMIN" disabled={!canManageAdmins}>Administrador</MenuItem>
+                  )}
                   <MenuItem value="WORKER">Trabajador</MenuItem>
                   <MenuItem value="BUSINESS_USER">Usuario de Empresa</MenuItem>
                   <MenuItem value="CUSTOMER_USER">Usuario de Cliente</MenuItem>

@@ -59,6 +59,9 @@ import {
   ReceiptLong,
   Email,
   EventAvailable,
+  ViewKanban,
+  Schedule,
+  Paid,
 } from '@mui/icons-material'
 import { UserRole } from '@/types'
 import { LoginSuccessPopup } from '@/components/ui/LoginSuccessPopup'
@@ -144,6 +147,39 @@ const menuSections: MenuSection[] = [
         label: 'Almacenes / Citas',
         icon: <EventAvailable />,
         path: '/dashboard/almacenes',
+        roles: ['ADMIN', 'WORKER'],
+      },
+    ],
+  },
+  {
+    id: 'ventas',
+    label: 'Ventas',
+    items: [
+      {
+        id: 'ventas-comisiones',
+        label: 'Ventas y Comisiones',
+        icon: <Paid />,
+        path: '/dashboard/ventas',
+        roles: ['ADMIN', 'WORKER'],
+      },
+    ],
+  },
+  {
+    id: 'productividad',
+    label: 'Productividad',
+    items: [
+      {
+        id: 'tablero',
+        label: 'Tablero de Tareas',
+        icon: <ViewKanban />,
+        path: '/dashboard/tablero',
+        roles: ['ADMIN', 'WORKER'],
+      },
+      {
+        id: 'asistencia',
+        label: 'Asistencia',
+        icon: <Schedule />,
+        path: '/dashboard/asistencia',
         roles: ['ADMIN', 'WORKER'],
       },
     ],
@@ -816,6 +852,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       ['/dashboard/freight/boletin', 'Boletín Semanal'],
       ['/dashboard/rastreo', 'Rastreo de Paquete'],
       ['/dashboard/almacenes', 'Almacenes — Gestión de Citas'],
+      ['/dashboard/ventas', 'Ventas y Comisiones'],
+      ['/dashboard/tablero', 'Tablero de Tareas'],
+      ['/dashboard/asistencia', 'Reporte de Entrada y Salida'],
       ['/dashboard/contabilidad/operaciones', 'Operaciones'],
       ['/dashboard/contabilidad/transacciones', 'Transacciones'],
       ['/dashboard/contabilidad', 'Dashboard Financiero'],

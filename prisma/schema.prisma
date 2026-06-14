@@ -25,10 +25,26 @@ model User {
   ruc_id    String?
 
   // 2FA
-  twoFactorEnabled Boolean  @default(false)
+  twoFactorEnabled Boolean @default(false)
   twoFactorSecret  String?
 
-  company   Company? @relation(fields: [companyId], references: [id])
+  // Personal finance module — PIN (bcrypt hash) required to unlock the module.
+  // Only owners on the email allowlist can set/use it. See lib/finance-auth.ts.
+  financePinHash String?
+
+  company Company? @relation(fields: [companyId], references: [id])
+
+  // Commissions module — sales registered by this user (worker) and payouts.
+  commissionSales    CommissionSale[]    @relation("WorkerSales")
+  commissionPayments CommissionPayment[] @relation("WorkerPayments")
+
+  // Team task board — tasks assigned to / created by this user, and notes.
+  assignedTasks TeamTask[] @relation("AssignedTasks")
+  createdTasks  TeamTask[] @relation("CreatedTasks")
+  teamNotes     TeamNote[] @relation("TeamNotes")
+
+  // Time clock — daily attendance shifts (entrada/almuerzo/salida).
+  workShifts WorkShift[] @relation("WorkShifts")
 
   @@index([email])
   @@index([companyId])
@@ -37,26 +53,27 @@ model User {
 
 /// Business entities (logistics companies)
 model Company {
-  id           String        @id @default(cuid())
-  name         String
-  ruc          String        @unique
-  dv           String
-  address      String
-  phone        String
-  email        String
-  website      String?
-  industry     String?
-  employees    String?
-  established  String?
-  isActive     Boolean       @default(true)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  company_id        String?           @unique
-  cargos            Cargo[]
-  fclShipments      FclShipment[]
-  lclShipments      LclShipment[]
+  id                 String                  @id @default(cuid())
+  name               String
+  ruc                String                  @unique
+  dv                 String
+  address            String
+  phone              String
+  email              String
+  website            String?
+  industry           String?
+  employees          String?
+  established        String?
+  isActive           Boolean                 @default(true)
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+  company_id         String?                 @unique
+  cargos             Cargo[]
+  fclShipments       FclShipment[]
+  lclShipments       LclShipment[]
   containerShipments ContainerShipment[]
-  users             User[]
+  users              User[]
+  containerClients   CargoManagementClient[]
 
   @@index([company_id])
   @@index([ruc])
@@ -101,23 +118,41 @@ model Cargo {
 
 /// Container management workflow (extended tracking)
 model CargoManagement {
-  id              String          @id @default(cuid())
+  id              String                  @id @default(cuid())
   containerNumber String
   eta             DateTime?
   location        String
-  status          ContainerStatus @default(RECEIVED_IN_WAREHOUSE)
+  status          ContainerStatus         @default(RECEIVED_IN_WAREHOUSE)
   shippingLine    String?
   departureDate   DateTime?
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  referenceNo     String?         @unique
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  referenceNo     String?                 @unique
   statusHistory   StatusHistory[]
+  clients         CargoManagementClient[]
 
   @@index([referenceNo])
   @@index([containerNumber])
   @@index([status])
   @@index([eta])
   @@map("cargo_management")
+}
+
+/// Clients (companies) whose cargo is inside a given container
+model CargoManagementClient {
+  id                String          @id @default(cuid())
+  cargoManagementId String
+  companyId         String
+  cbm               Float?
+  notes             String?
+  createdAt         DateTime        @default(now())
+  cargoManagement   CargoManagement @relation(fields: [cargoManagementId], references: [id], onDelete: Cascade)
+  company           Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([cargoManagementId, companyId])
+  @@index([cargoManagementId])
+  @@index([companyId])
+  @@map("cargo_management_clients")
 }
 
 /// Status history for cargo management tracking
@@ -135,22 +170,22 @@ model StatusHistory {
 
 /// FCL (Full Container Load) shipments
 model FclShipment {
-  id                  String        @id @default(cuid())
+  id                  String             @id @default(cuid())
   trackingWarehouse   String
   forwarder           String?
   mailbox             String
-  transportType       TransportType @default(MAR)
+  transportType       TransportType      @default(MAR)
   containerNumber     String
   approximateDate     DateTime?
-  misidentified       Boolean       @default(false)
-  dangerousGoods      Boolean       @default(false)
-  refrigeratedProduct Boolean       @default(false)
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
+  misidentified       Boolean            @default(false)
+  dangerousGoods      Boolean            @default(false)
+  refrigeratedProduct Boolean            @default(false)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
   companyId           String?
-  company             Company?      @relation(fields: [companyId], references: [id])
-  itemType            String?       // 'company' or 'user' to distinguish selected type
-  userId              String?       // ID of the user if itemType is 'user'
+  company             Company?           @relation(fields: [companyId], references: [id])
+  itemType            String? // 'company' or 'user' to distinguish selected type
+  userId              String? // ID of the user if itemType is 'user'
   totalCbm            Float?
   totalWeight         Float?
   comments            String?
@@ -171,10 +206,10 @@ model FclShipmentPiece {
   fclShipmentId String
   fclShipment   FclShipment @relation(fields: [fclShipmentId], references: [id], onDelete: Cascade)
   quantity      Int         @default(1)
-  length        Float?      // largo en cm
-  width         Float?      // ancho en cm
-  height        Float?      // alto en cm
-  weight        Float?      // peso en kg
+  length        Float? // largo en cm
+  width         Float? // ancho en cm
+  height        Float? // alto en cm
+  weight        Float? // peso en kg
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
@@ -195,8 +230,8 @@ model LclShipment {
   updatedAt     DateTime @updatedAt
   companyId     String?
   company       Company? @relation(fields: [companyId], references: [id])
-  itemType      String?  // 'company' or 'user' to distinguish selected type
-  userId        String?  // ID of the user if itemType is 'user'
+  itemType      String? // 'company' or 'user' to distinguish selected type
+  userId        String? // ID of the user if itemType is 'user'
 
   @@index([blNumber])
   @@index([eta])
@@ -217,8 +252,8 @@ model ContainerShipment {
   updatedAt     DateTime @updatedAt
   companyId     String?
   company       Company? @relation(fields: [companyId], references: [id])
-  itemType      String?  // 'company' or 'user' to distinguish selected type
-  userId        String?  // ID of the user if itemType is 'user'
+  itemType      String? // 'company' or 'user' to distinguish selected type
+  userId        String? // ID of the user if itemType is 'user'
 
   @@index([blNumber])
   @@index([eta])
@@ -260,19 +295,19 @@ enum TransportType {
 
 /// Logistics quotes (FCL / LCL)
 model Quote {
-  id            String      @id @default(cuid())
-  quoteNumber   String      @unique
-  quoteType     QuoteType   @default(FCL)
-  status        QuoteStatus @default(DRAFT)
+  id          String      @id @default(cuid())
+  quoteNumber String      @unique
+  quoteType   QuoteType   @default(FCL)
+  status      QuoteStatus @default(DRAFT)
 
   // Quote header
-  tipoServicio       String   @default("Maritimo")
-  validoDesde        DateTime
-  validoHasta        DateTime
-  frecuencia         String?
-  tiempoTransito     String?
-  lineaNaviera       String?
-  ruta               String?
+  tipoServicio   String   @default("Maritimo")
+  validoDesde    DateTime
+  validoHasta    DateTime
+  frecuencia     String?
+  tiempoTransito String?
+  lineaNaviera   String?
+  ruta           String?
 
   // Shipment info
   cliente                String
@@ -292,9 +327,9 @@ model Quote {
   direccionEntrega       String?
 
   // Service lines: [{service, package, price, qty, amount}]
-  servicios    Json     @default("[]")
-  comentarios  String?
-  total        Float    @default(0)
+  servicios   Json    @default("[]")
+  comentarios String?
+  total       Float   @default(0)
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -317,24 +352,24 @@ enum QuoteType {
 
 /// Extra Manejos — surcharges linked to quotes
 model ExtraManejo {
-  id             String            @id @default(cuid())
-  monto          Float
-  motivo         String
-  estado         ExtraManejoEstado @default(PENDIENTE)
-  fechaCobro     DateTime?
-  cobradoPor     String?
+  id         String            @id @default(cuid())
+  monto      Float
+  motivo     String
+  estado     ExtraManejoEstado @default(PENDIENTE)
+  fechaCobro DateTime?
+  cobradoPor String?
 
   // Denormalized for fast search/display
-  clienteNombre  String
-  quoteNumber    String
-  quoteType      String            @default("FAST_QUOTE") // FAST_QUOTE or QUOTE
+  clienteNombre String
+  quoteNumber   String
+  quoteType     String @default("FAST_QUOTE") // FAST_QUOTE or QUOTE
 
   // Soft FK — works for both Quote and FastQuote
-  fastQuoteId    String?
-  quoteId        String?
+  fastQuoteId String?
+  quoteId     String?
 
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([estado])
   @@index([clienteNombre])
@@ -390,38 +425,38 @@ enum WarehouseStatus {
 
 /// Warehouse entries for Freight Forwarder module
 model WarehouseEntry {
-  id              String          @id @default(cuid())
-  wrNumber        String          @unique
+  id       String @id @default(cuid())
+  wrNumber String @unique
 
-  clientId        String?
-  clientType      String?         // "user" | "company"
-  clientName      String
+  clientId   String?
+  clientType String? // "user" | "company"
+  clientName String
 
-  consigneeName   String?
+  consigneeName String?
 
-  description     String?
-  pieces          Int             @default(1)
-  pieceType       String          @default("Cajas")
-  weight          Float?
-  largo           Float?
-  ancho           Float?
-  alto            Float?
-  unidadMedida    String          @default("cm")
+  description  String?
+  pieces       Int     @default(1)
+  pieceType    String  @default("Cajas")
+  weight       Float?
+  largo        Float?
+  ancho        Float?
+  alto         Float?
+  unidadMedida String  @default("cm")
 
-  originWarehouse String          @default("CHINA")
+  originWarehouse String  @default("CHINA")
   destWarehouse   String?
 
-  status          WarehouseStatus @default(IN_WAREHOUSE)
+  status WarehouseStatus @default(IN_WAREHOUSE)
 
   coordinatorId   String?
   coordinatorName String?
 
-  notes           String?
+  notes String?
 
-  lclBookingId    String?         @unique
+  lclBookingId String? @unique
 
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([wrNumber])
   @@index([status])
@@ -450,67 +485,67 @@ enum LclContainerStatus {
 
 /// LCL Booking — House Bill of Lading
 model LclBooking {
-  id               String           @id @default(cuid())
-  hblNumber        String           @unique
+  id        String @id @default(cuid())
+  hblNumber String @unique
 
-  warehouseEntryId String?          @unique
+  warehouseEntryId String? @unique
 
   // Shipper
-  shipperName      String
-  shipperAddress   String?
+  shipperName    String
+  shipperAddress String?
 
   // Consignee
-  clientId         String?
-  clientType       String?
-  clientName       String
-  clientAddress    String?
+  clientId      String?
+  clientType    String?
+  clientName    String
+  clientAddress String?
 
   // Notify Party
-  notifyParty      String?
-  notifyPhone      String?
+  notifyParty String?
+  notifyPhone String?
 
   // Routing
-  portOfLoading    String           @default("QINGDAO")
-  portOfDischarge  String           @default("BALBOA")
-  placeOfReceipt   String?
-  placeOfDelivery  String?
-  preCarriageBy    String?
-  vessel           String?
-  voyage           String?
+  portOfLoading   String  @default("QINGDAO")
+  portOfDischarge String  @default("BALBOA")
+  placeOfReceipt  String?
+  placeOfDelivery String?
+  preCarriageBy   String?
+  vessel          String?
+  voyage          String?
 
   // Cargo
-  description      String?
-  marks            String?
-  packages         Int              @default(1)
-  packageType      String           @default("CTNS")
-  grossWeightKg    Float?
-  cbm              Float?
-  hsCode           String?
+  description   String?
+  marks         String?
+  packages      Int     @default(1)
+  packageType   String  @default("CTNS")
+  grossWeightKg Float?
+  cbm           Float?
+  hsCode        String?
 
   // Freight
-  freightTerms     String           @default("PREPAID")
-  freightAmount    Float?
-  freightCurrency  String           @default("USD")
-  freightDesc      String?
+  freightTerms    String  @default("PREPAID")
+  freightAmount   Float?
+  freightCurrency String  @default("USD")
+  freightDesc     String?
 
   // Refs
-  exportReference  String?
-  documentNumber   String?
+  exportReference String?
+  documentNumber  String?
 
-  status           LclBookingStatus @default(PENDING)
-  readyForPickup   Boolean          @default(false)
-  pickupWarehouse  String?          // "PWEST" | "PCENT" | "ZLC"
+  status          LclBookingStatus @default(PENDING)
+  readyForPickup  Boolean          @default(false)
+  pickupWarehouse String? // "PWEST" | "PCENT" | "ZLC"
 
-  lclContainerId   String?
-  lclContainer     LclContainer?    @relation(fields: [lclContainerId], references: [id])
+  lclContainerId String?
+  lclContainer   LclContainer? @relation(fields: [lclContainerId], references: [id])
 
-  coordinatorId    String?
-  coordinatorName  String?
-  notes            String?
-  blDate           DateTime?
+  coordinatorId   String?
+  coordinatorName String?
+  notes           String?
+  blDate          DateTime?
 
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([hblNumber])
   @@index([status])
@@ -522,8 +557,8 @@ model LclBooking {
 
 /// LCL Container — groups multiple bookings
 model LclContainer {
-  id              String             @id @default(cuid())
-  mblNumber       String             @unique
+  id        String @id @default(cuid())
+  mblNumber String @unique
 
   containerNumber String?
   containerType   String?
@@ -531,19 +566,19 @@ model LclContainer {
   vessel          String?
   voyage          String?
 
-  portOfLoading   String             @default("QINGDAO")
-  portOfDischarge String             @default("BALBOA")
+  portOfLoading   String @default("QINGDAO")
+  portOfDischarge String @default("BALBOA")
 
-  etd             DateTime?
-  eta             DateTime?
-  closingDate     DateTime?
+  etd         DateTime?
+  eta         DateTime?
+  closingDate DateTime?
 
-  status          LclContainerStatus @default(OPEN)
-  bookings        LclBooking[]
+  status   LclContainerStatus @default(OPEN)
+  bookings LclBooking[]
 
-  notes           String?
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([mblNumber])
   @@index([status])
@@ -553,42 +588,42 @@ model LclContainer {
 
 /// Fast quote for casillero (maritime/air)
 model FastQuote {
-  id             String      @id @default(cuid())
-  quoteNumber    String      @unique
-  status         QuoteStatus @default(DRAFT)
+  id          String      @id @default(cuid())
+  quoteNumber String      @unique
+  status      QuoteStatus @default(DRAFT)
 
   // Datos del cliente
-  cliente        String
-  direccion      String?
+  cliente   String
+  direccion String?
 
   // Medidas de la carga
-  medidaLargo    Float?
-  medidaAncho    Float?
-  medidaAlto     Float?
-  tipoCarga      String?
-  tipoEnvio      String      @default("MARITIMO")
+  medidaLargo Float?
+  medidaAncho Float?
+  medidaAlto  Float?
+  tipoCarga   String?
+  tipoEnvio   String  @default("MARITIMO")
 
   // Volumen (manual)
-  cbmFt3         Float?
-  unidadVolumen  String      @default("CBM")
+  cbmFt3        Float?
+  unidadVolumen String @default("CBM")
 
   // Tiempos
-  tiempoTransito Int         @default(45)
-  validezTarifa  Int         @default(10)
+  tiempoTransito Int    @default(45)
+  validezTarifa  Int    @default(10)
   peso           Float?
 
   // Servicios (campos fijos)
-  flete          Float       @default(0)
-  extraManejo    Float?
-  entregaPanama  Float?
-  descuento      Float?
+  flete         Float  @default(0)
+  extraManejo   Float?
+  entregaPanama Float?
+  descuento     Float?
 
-  comentarios    String?
-  items          Json?
-  total          Float       @default(0)
+  comentarios String?
+  items       Json?
+  total       Float   @default(0)
 
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
   createdById     String?
   assignedToId    String?
   rejectionReason String?
@@ -732,25 +767,25 @@ enum TransactionCategory {
 }
 
 model ShipmentOperation {
-  id             String                  @id @default(cuid())
-  title          String
-  clientName     String
-  clientCountry  OperationCountry        @default(PANAMA)
-  clientPhone    String?
-  shipmentRef    String?
-  shipmentType   String                  @default("FCL")
-  pol            String?
-  pod            String?
-  polDate        DateTime?
-  podDate        DateTime?
-  cbm            Float?
-  ingresoTotal   Float                   @default(0)
-  notes          String?
-  userId         String
-  createdAt      DateTime                @default(now())
-  updatedAt      DateTime                @updatedAt
-  items          ShipmentOperationItem[]
-  transactions   AccountingTransaction[]
+  id            String                  @id @default(cuid())
+  title         String
+  clientName    String
+  clientCountry OperationCountry        @default(PANAMA)
+  clientPhone   String?
+  shipmentRef   String?
+  shipmentType  String                  @default("FCL")
+  pol           String?
+  pod           String?
+  polDate       DateTime?
+  podDate       DateTime?
+  cbm           Float?
+  ingresoTotal  Float                   @default(0)
+  notes         String?
+  userId        String
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+  items         ShipmentOperationItem[]
+  transactions  AccountingTransaction[]
 
   @@index([userId])
   @@index([createdAt])
@@ -758,18 +793,18 @@ model ShipmentOperation {
 }
 
 model ShipmentOperationItem {
-  id          String             @id @default(cuid())
-  operationId String
-  operation   ShipmentOperation  @relation(fields: [operationId], references: [id], onDelete: Cascade)
-  tipo        ItemTipo           @default(ORIGEN)
-  descripcion String
-  medida      ItemMedida         @default(EVENTO)
-  cantidad    Float              @default(1)
-  costoUnit   Float              @default(0)
-  costoTotal  Float              @default(0)
-  isHighlighted Boolean          @default(false)
-  order       Int                @default(0)
-  notes       String?
+  id            String            @id @default(cuid())
+  operationId   String
+  operation     ShipmentOperation @relation(fields: [operationId], references: [id], onDelete: Cascade)
+  tipo          ItemTipo          @default(ORIGEN)
+  descripcion   String
+  medida        ItemMedida        @default(EVENTO)
+  cantidad      Float             @default(1)
+  costoUnit     Float             @default(0)
+  costoTotal    Float             @default(0)
+  isHighlighted Boolean           @default(false)
+  order         Int               @default(0)
+  notes         String?
 
   @@index([operationId])
   @@map("shipment_operation_items")
@@ -815,18 +850,18 @@ enum AppointmentStatus {
 
 /// Physical warehouse locations with configurable schedule
 model Warehouse {
-  id             String   @id @default(cuid())
+  id             String  @id @default(cuid())
   name           String
-  code           String   @unique
+  code           String  @unique
   address        String?
   phone          String?
-  isActive       Boolean  @default(true)
+  isActive       Boolean @default(true)
   scheduleConfig Json?
 
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  appointments   Appointment[]
+  appointments Appointment[]
 
   @@index([code])
   @@index([isActive])
@@ -835,35 +870,35 @@ model Warehouse {
 
 /// Scheduled warehouse appointments
 model Appointment {
-  id              String                  @id @default(cuid())
-  apptNumber      String                  @unique
+  id         String @id @default(cuid())
+  apptNumber String @unique
 
-  warehouseId     String
-  warehouse       Warehouse               @relation(fields: [warehouseId], references: [id])
+  warehouseId String
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
 
-  serviceType     AppointmentServiceType
+  serviceType AppointmentServiceType
 
   appointmentDate DateTime
   appointmentTime String
 
-  clientName      String
-  clientEmail     String
-  clientPhone     String
-  clientRuc       String?
-  companyName     String?
+  clientName  String
+  clientEmail String
+  clientPhone String
+  clientRuc   String?
+  companyName String?
 
-  description     String?
-  pieces          Int?
-  weight          Float?
+  description String?
+  pieces      Int?
+  weight      Float?
 
   paymentProofUrl String?
 
-  status          AppointmentStatus       @default(CONFIRMED)
-  notes           String?
-  cancelReason    String?
+  status       AppointmentStatus @default(CONFIRMED)
+  notes        String?
+  cancelReason String?
 
-  createdAt       DateTime                @default(now())
-  updatedAt       DateTime                @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([apptNumber])
   @@index([warehouseId])
@@ -871,4 +906,260 @@ model Appointment {
   @@index([status])
   @@index([clientEmail])
   @@map("appointments")
+}
+
+// =====================================================================
+// PERSONAL FINANCE MODULE ("Finanzas Personales" / contabilidad personal)
+// Private to the owners (email allowlist) — see lib/finance-auth.ts.
+// `PersonalLedgerEntry` is the single master journal ("Registro Diario");
+// every dashboard/summary is computed from it. Catalog values (units,
+// categories, methods) live in `PersonalLedgerCatalog` so they're editable
+// without migrations. `PersonalLedgerAudit` records every change.
+// =====================================================================
+
+enum LedgerType {
+  INGRESO
+  EGRESO
+}
+
+enum LedgerStatus {
+  PAGADO
+  PENDIENTE
+  PARCIAL
+  ANULADO
+}
+
+/// Master daily journal — one row per money movement (income or expense).
+model PersonalLedgerEntry {
+  id           String       @id @default(cuid())
+  date         DateTime // fecha del movimiento
+  unit         String // Unidad: Shippy, TrackingPTY, CNC, Salario Personal, Dividendos Empresa, Contenedores Valdai, Ventas Adicionales...
+  type         LedgerType // Ingreso / Egreso
+  category     String // Categoría (Venta servicio, Flete, Comida, Salario, Dividendos...)
+  subcategory  String?
+  method       String? // Método: Efectivo, Transferencia, ACH, Yappy, Tarjeta, Cheque, Otro
+  status       LedgerStatus @default(PAGADO)
+  counterparty String? // Cliente / Proveedor
+  reference    String? // Referencia / Contenedor
+  description  String?
+  amount       Float // monto (positivo; el signo lo da `type`)
+  receiptUrl   String? // comprobante
+  notes        String?
+
+  createdById String?
+  updatedById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([date])
+  @@index([unit])
+  @@index([type])
+  @@index([status])
+  @@index([category])
+  @@map("personal_ledger_entries")
+}
+
+/// Editable dropdown catalogs for the personal finance module.
+model PersonalLedgerCatalog {
+  id        String   @id @default(cuid())
+  kind      String // 'unit' | 'category' | 'method'
+  value     String
+  active    Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@unique([kind, value])
+  @@index([kind])
+  @@map("personal_ledger_catalog")
+}
+
+/// Audit trail for the personal finance module.
+model PersonalLedgerAudit {
+  id        String   @id @default(cuid())
+  entityId  String? // affected ledger entry, when applicable
+  action    String // 'create' | 'update' | 'delete' | 'unlock' | 'pin_set' | 'access'
+  userId    String?
+  userEmail String?
+  detail    Json? // snapshot / diff / context
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([entityId])
+  @@map("personal_ledger_audit")
+}
+
+// ===========================================================================
+// Commissions module ("Ventas y Comisiones")
+// Workers register sales; a configurable rule per sale type computes the
+// commission as a FIXED amount or a PERCENT of the sale. Every sale records
+// the worker who created it. Admins settle pending commissions as payouts.
+// ===========================================================================
+
+/// Configurable commission rule per sale type (FIXED $ or PERCENT of sale).
+model CommissionRule {
+  id        String         @id @default(cuid())
+  saleType  String         @unique // 'FCL' | 'LCL' | 'SEGURO' | 'COTIZACION_ALIBABA' | custom
+  label     String // human label shown in the UI
+  mode      CommissionMode // FIXED or PERCENT
+  value     Float          @default(0) // fixed $ amount, or percent number (e.g. 10 = 10%)
+  active    Boolean        @default(true)
+  sortOrder Int            @default(0)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@map("commission_rules")
+}
+
+/// A registered sale and its computed commission, tied to the worker.
+model CommissionSale {
+  id          String  @id @default(cuid())
+  saleType    String // matches a CommissionRule.saleType (snapshot below)
+  saleLabel   String // label of the sale type at time of creation
+  clientName  String
+  description String?
+  saleAmount  Float   @default(0)
+
+  // Commission snapshot — frozen at creation so later rule edits don't change history.
+  commissionMode   CommissionMode
+  commissionValue  Float          @default(0) // fixed $ or percent number used
+  commissionAmount Float          @default(0) // resolved $ commission
+
+  status CommissionStatus @default(PENDING)
+  paidAt DateTime?
+
+  // Worker who registered the sale (denormalized name/email kept for history).
+  workerId    String?
+  workerName  String
+  workerEmail String?
+
+  paymentId String? // CommissionPayment that settled this sale, if any
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  worker User? @relation("WorkerSales", fields: [workerId], references: [id], onDelete: SetNull)
+
+  @@index([workerId])
+  @@index([status])
+  @@index([saleType])
+  @@map("commission_sales")
+}
+
+/// A commission payout that settles one or more pending sales for a worker.
+model CommissionPayment {
+  id         String   @id @default(cuid())
+  workerId   String?
+  workerName String
+  amount     Float    @default(0)
+  note       String?
+  paidById   String? // admin who registered the payout
+  paidByName String?
+  createdAt  DateTime @default(now())
+
+  worker User? @relation("WorkerPayments", fields: [workerId], references: [id], onDelete: SetNull)
+
+  @@index([workerId])
+  @@map("commission_payments")
+}
+
+enum CommissionMode {
+  FIXED
+  PERCENT
+}
+
+enum CommissionStatus {
+  PENDING
+  PAID
+}
+
+// ===========================================================================
+// Team task board ("Tablero de Tareas")
+// A shared Kanban board: tasks assigned to people across status columns, plus
+// sticky notes for important reminders the whole team can see.
+// ===========================================================================
+
+/// A task card on the shared team board.
+model TeamTask {
+  id          String           @id @default(cuid())
+  title       String
+  description String?
+  status      TeamTaskStatus   @default(TODO)
+  priority    TeamTaskPriority @default(MEDIUM)
+  dueDate     DateTime?
+  sortOrder   Int              @default(0) // order within its column
+
+  assigneeId   String?
+  assigneeName String?
+
+  createdById   String?
+  createdByName String?
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  completedAt DateTime?
+
+  assignee  User? @relation("AssignedTasks", fields: [assigneeId], references: [id], onDelete: SetNull)
+  createdBy User? @relation("CreatedTasks", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([assigneeId])
+  @@map("team_tasks")
+}
+
+/// A sticky note pinned to the team board (important reminders).
+model TeamNote {
+  id         String   @id @default(cuid())
+  content    String
+  color      String   @default("yellow") // sticky color: yellow | pink | blue | green | orange
+  pinned     Boolean  @default(false)
+  authorId   String?
+  authorName String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  author User? @relation("TeamNotes", fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([pinned])
+  @@map("team_notes")
+}
+
+enum TeamTaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+enum TeamTaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+// ===========================================================================
+// Time clock / attendance ("Reporte de Entrada y Salida")
+// One row per worker per day; four punches: clock-in, lunch-out, lunch-in,
+// clock-out. Workers mark their own day; admins see the team report.
+// ===========================================================================
+
+/// A worker's attendance for a single day.
+model WorkShift {
+  id         String    @id @default(cuid())
+  userId     String
+  userName   String
+  workDate   String // local date key 'YYYY-MM-DD' for one-shift-per-day
+  clockIn    DateTime?
+  lunchStart DateTime?
+  lunchEnd   DateTime?
+  clockOut   DateTime?
+  note       String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  user User? @relation("WorkShifts", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workDate])
+  @@index([userId])
+  @@index([workDate])
+  @@map("work_shifts")
 }

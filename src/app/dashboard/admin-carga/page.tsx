@@ -150,7 +150,7 @@ function filterReferenceNos(input: string, referenceNos: string[]) {
 }
 
 // ============== Vista de Contenedores (agrupada por cliente) ==============
-function AdminContainerCard({ group }: { group: ContainerGroup }) {
+function AdminContainerCard({ group, isAdmin, onAssign }: { group: ContainerGroup; isAdmin: boolean; onAssign?: (g: ContainerGroup) => void }) {
   const [expanded, setExpanded] = useState(false)
   const cfg = ARRIVAL_CONFIG[group.arrivalLevel]
   const countdown = arrivalCountdown(group)
@@ -268,7 +268,10 @@ function AdminContainerCard({ group }: { group: ContainerGroup }) {
                   </Typography>
                 </Box>
                 <Typography sx={{ fontSize: '0.72rem', color: '#78716C', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                  {c.shipmentCount} env.{c.totalCbm > 0 ? ` · ${c.totalCbm.toFixed(1)} CBM` : ''}
+                  {[
+                    c.shipmentCount > 0 ? `${c.shipmentCount} env.` : null,
+                    c.totalCbm > 0 ? `${c.totalCbm.toFixed(1)} CBM` : null,
+                  ].filter(Boolean).join(' · ')}
                 </Typography>
               </Box>
             ))}
@@ -281,14 +284,84 @@ function AdminContainerCard({ group }: { group: ContainerGroup }) {
               </Typography>
             )}
           </Box>
+
+          {isAdmin && group.cargoId && (
+            <Button
+              size="small"
+              startIcon={<Add sx={{ fontSize: '1rem' }} />}
+              onClick={() => onAssign?.(group)}
+              sx={{ mt: 1, textTransform: 'none', fontWeight: 600, fontSize: '0.74rem', color: '#A16207', px: 0.5, minWidth: 0 }}
+            >
+              {group.clients.length > 0 ? 'Editar clientes' : 'Asignar clientes'}
+            </Button>
+          )}
         </Box>
       </CardContent>
     </Card>
   )
 }
 
-function ContainerGroupedView({ groups, loading }: { groups: ContainerGroup[]; loading: boolean }) {
+type CompanyOption = { id: string; label: string }
+
+function ContainerGroupedView({
+  groups,
+  loading,
+  isAdmin,
+  companies,
+  onSaved,
+  showSnackbar,
+}: {
+  groups: ContainerGroup[]
+  loading: boolean
+  isAdmin: boolean
+  companies: Array<{ id: string; name: string; company_id?: string; type?: 'company' | 'user' }>
+  onSaved: () => void
+  showSnackbar: (message: string, severity: 'success' | 'error' | 'warning' | 'info') => void
+}) {
   const [search, setSearch] = useState('')
+  const [assignGroup, setAssignGroup] = useState<ContainerGroup | null>(null)
+  const [selected, setSelected] = useState<CompanyOption[]>([])
+  const [saving, setSaving] = useState(false)
+
+  const companyOptions = useMemo<CompanyOption[]>(() => {
+    const seen = new Set<string>()
+    const opts: CompanyOption[] = []
+    for (const c of companies) {
+      if (c.type === 'user') continue
+      if (!c.id || seen.has(c.id)) continue
+      seen.add(c.id)
+      opts.push({ id: c.id, label: c.company_id ? `${c.company_id} - ${c.name}` : c.name })
+    }
+    return opts.sort((a, b) => a.label.localeCompare(b.label))
+  }, [companies])
+
+  const openAssign = (g: ContainerGroup) => {
+    const preset = g.clients
+      .map(cl => companyOptions.find(o => o.id === cl.empresaId))
+      .filter((o): o is CompanyOption => !!o)
+    setSelected(preset)
+    setAssignGroup(g)
+  }
+
+  const handleSaveAssign = async () => {
+    if (!assignGroup?.cargoId) return
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/cargo-management/${assignGroup.cargoId}/clients`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clients: selected.map(s => ({ companyId: s.id })) }),
+      })
+      if (!res.ok) throw new Error(`Error ${res.status}`)
+      showSnackbar('Clientes del contenedor actualizados', 'success')
+      setAssignGroup(null)
+      onSaved()
+    } catch (e) {
+      showSnackbar('No se pudieron guardar los clientes', 'error')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -365,17 +438,52 @@ function ContainerGroupedView({ groups, loading }: { groups: ContainerGroup[]; l
         <Grid container spacing={2}>
           {filtered.map(g => (
             <Grid item xs={12} sm={6} lg={4} key={g.containerNumber}>
-              <AdminContainerCard group={g} />
+              <AdminContainerCard group={g} isAdmin={isAdmin} onAssign={openAssign} />
             </Grid>
           ))}
         </Grid>
       ) : (
         <Card><CardContent className="p-6">
           <Typography variant="body2" className="text-medium-gray text-center">
-            {groups.length === 0 ? 'No hay contenedores con carga de clientes' : 'Ningún contenedor coincide con la búsqueda'}
+            {groups.length === 0 ? 'No hay contenedores registrados' : 'Ningún contenedor coincide con la búsqueda'}
           </Typography>
         </CardContent></Card>
       )}
+
+      {/* Dialog: asignar clientes al contenedor */}
+      <Dialog open={!!assignGroup} onClose={() => setAssignGroup(null)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          Clientes del contenedor
+          {assignGroup && (
+            <Typography variant="body2" sx={{ color: '#78716C', fontFamily: 'monospace', mt: 0.5 }}>
+              {assignGroup.containerNumber}
+            </Typography>
+          )}
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ color: '#6B7280', mb: 2, mt: 1 }}>
+            Selecciona una o varias empresas cuya carga va dentro de este contenedor.
+          </Typography>
+          <Autocomplete
+            multiple
+            options={companyOptions}
+            value={selected}
+            onChange={(_, v) => setSelected(v)}
+            getOptionLabel={(o) => o.label}
+            isOptionEqualToValue={(o, v) => o.id === v.id}
+            renderInput={(params) => (
+              <TextField {...params} label="Empresas / clientes" placeholder="Buscar empresa..." />
+            )}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAssignGroup(null)}>Cancelar</Button>
+          <Button onClick={handleSaveAssign} variant="contained" disabled={saving}
+            className="bg-brand-primary hover:bg-brand-secondary">
+            {saving ? 'Guardando…' : 'Guardar'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   )
 }
@@ -1956,7 +2064,14 @@ export default function AdminCargaPage() {
 
       {/* Tab 0: Contenedores agrupados por cliente */}
       {mainTab === 0 && (
-        <ContainerGroupedView groups={containerGroups} loading={isLoadingEnvios} />
+        <ContainerGroupedView
+          groups={containerGroups}
+          loading={isLoadingEnvios}
+          isAdmin={isAdmin}
+          companies={companies}
+          onSaved={fetchCargoMgmt}
+          showSnackbar={showSnackbar}
+        />
       )}
 
       {/* Tab 1: Detalle de envíos (FCL / LCL / Contenedores) */}

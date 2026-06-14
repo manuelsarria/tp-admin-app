@@ -32,6 +32,13 @@ export async function GET(request: NextRequest) {
         skip: (page - 1) * pageSize,
         take: pageSize,
         orderBy: sortBy ? { [sortBy]: sortOrder } : { createdAt: sortOrder },
+        include: {
+          clients: {
+            include: {
+              company: { select: { id: true, name: true, company_id: true } },
+            },
+          },
+        },
       }),
       prisma.cargoManagement.count({ where }),
     ])

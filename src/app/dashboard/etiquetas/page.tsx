@@ -220,7 +220,7 @@ export default function EtiquetasPage() {
         if (setting?.value) {
           setLastCode(setting.value)
           const num = parseInt(setting.value.replace('TP-', ''))
-          if (!isNaN(num)) setCode(`CNC-${num + 1}`)
+          if (!isNaN(num)) setCode(`TP-${num + 1}`)
         }
       })
       .catch(() => {})
@@ -231,7 +231,7 @@ export default function EtiquetasPage() {
     setLastCode(newCode)
     // Suggest next
     const num = parseInt(newCode.replace('TP-', ''))
-    if (!isNaN(num)) setCode(`CNC-${num + 1}`)
+    if (!isNaN(num)) setCode(`TP-${num + 1}`)
     // Persist
     await fetch('/api/settings/lastMailboxCode', {
       method: 'PATCH',

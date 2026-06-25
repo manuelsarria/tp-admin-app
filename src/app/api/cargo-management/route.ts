@@ -67,14 +67,14 @@ async function generateReferenceNo(): Promise<string> {
   let nextNumber = 7001 // Starting number if no records exist
 
   if (latestRecord?.referenceNo) {
-    // Extract the number from format CNC-00007001 (strip any non-digit prefix)
+    // Extract the number from format TP-00007001 (strip any non-digit prefix)
     const currentNumber = parseInt(latestRecord.referenceNo.replace(/\D/g, ''), 10)
     if (!Number.isNaN(currentNumber)) {
       nextNumber = currentNumber + 1
     }
   }
 
-  return `CNC-${nextNumber.toString().padStart(8, '0')}`
+  return `TP-${nextNumber.toString().padStart(8, '0')}`
 }
 
 export async function POST(request: NextRequest) {

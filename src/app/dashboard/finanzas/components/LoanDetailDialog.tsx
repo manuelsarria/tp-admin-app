@@ -49,7 +49,11 @@ export default function LoanDetailDialog({
     setLoading(true)
     fetch(`/api/finanzas/loans/${loanId}`)
       .then(r => (r.ok ? r.json() : Promise.reject(new Error('No se pudo cargar el préstamo'))))
-      .then((d: Loan) => { setLoan(d); setError(null) })
+      // The API answers { data: {...} }; accept a bare object too.
+      .then((d: Loan | { data: Loan }) => {
+        setLoan((d && (d as { data: Loan }).data) || (d as Loan))
+        setError(null)
+      })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false))
   }, [loanId])

@@ -7,7 +7,6 @@ import {
 } from '@mui/material'
 import { Lock, LockOpen, AccountBalanceWallet, Add, Visibility, VisibilityOff } from '@mui/icons-material'
 import DashboardTab from './components/DashboardTab'
-import RubrosTab from './components/RubrosTab'
 import OperacionesTab from './components/OperacionesTab'
 import RegistroTab from './components/RegistroTab'
 import PrestamosTab from './components/PrestamosTab'
@@ -77,7 +76,6 @@ export default function FinanzasPage() {
 
   const tabs = [
     <DashboardTab key="dash" year={year} onQuickAdd={() => setDialogOpen(true)} />,
-    <RubrosTab key="rub" year={year} />,
     <OperacionesTab key="ope" onChanged={() => setRefreshKey(k => k + 1)} />,
     <RegistroTab key="reg" onChanged={() => setRefreshKey(k => k + 1)} />,
     <PrestamosTab key="pre" onChanged={() => setRefreshKey(k => k + 1)} />,
@@ -126,10 +124,11 @@ export default function FinanzasPage() {
 
       {/* Tabs */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs value={tab} onChange={(_e, v) => setTab(v)} variant="scrollable" scrollButtons="auto"
+        {/* scrollButtons must stay visible: with 8 tabs the last ones fall off a
+            laptop width, and "auto" hid Préstamos behind an arrow nobody saw. */}
+        <Tabs value={tab} onChange={(_e, v) => setTab(v)} variant="scrollable" scrollButtons allowScrollButtonsMobile
           sx={{ '& .MuiTab-root': { textTransform: 'none', fontWeight: 600 }, '& .Mui-selected': { color: '#0A0A0A !important' }, '& .MuiTabs-indicator': { bgcolor: '#FACC15', height: 3 } }}>
           <Tab label="Resumen" />
-          <Tab label="Rubros" />
           <Tab label="Operaciones" />
           <Tab label="Registro Diario" />
           <Tab label="Préstamos" />

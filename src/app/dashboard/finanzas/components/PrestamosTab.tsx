@@ -35,7 +35,12 @@ export default function PrestamosTab({ onChanged }: { onChanged?: () => void }) 
     setLoading(true)
     fetch('/api/finanzas/loans')
       .then(r => (r.ok ? r.json() : Promise.reject(new Error('No se pudieron cargar los préstamos'))))
-      .then((d: Loan[]) => { setLoans(Array.isArray(d) ? d : []); setError(null) })
+      // The API answers { data: [...] }; accept a bare array too.
+      .then((d: Loan[] | { data: Loan[] }) => {
+        const list = Array.isArray(d) ? d : d?.data
+        setLoans(Array.isArray(list) ? list : [])
+        setError(null)
+      })
       .catch(e => { setLoans([]); setError(e.message) })
       .finally(() => setLoading(false))
   }, [])

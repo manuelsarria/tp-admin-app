@@ -1163,3 +1163,103 @@ model WorkShift {
   @@index([workDate])
   @@map("work_shifts")
 }
+
+// =====================================================================
+// PRÉSTAMOS PERSONALES (privado)
+// ---------------------------------------------------------------------
+// A `PersonalLoan` is any debt with a payment plan: personal loans
+// (Yesenia, Carlos), bank loans (auto) and property plans (Finca
+// Emperador). Money actually handed over lives in `PersonalLoanPayment`;
+// the balance is always derived (`totalAmount - downPayment - Σpayments`)
+// so it can never drift out of sync with the payment history.
+// Payments registered from the app also post an EGRESO into
+// `PersonalLedgerEntry` and keep the link in `ledgerEntryId`.
+// =====================================================================
+
+enum LoanKind {
+  PERSONAL
+  BANCARIO
+  PROPIEDAD
+}
+
+enum LoanStatus {
+  ACTIVO
+  PAGADO
+  CANCELADO
+}
+
+enum LoanPaymentKind {
+  CUOTA
+  EXTRAORDINARIO
+  INICIAL
+  AJUSTE
+}
+
+/// A debt with a payment plan. Balance is derived from `payments`.
+model PersonalLoan {
+  id           String     @id @default(cuid())
+  name         String // "Préstamo Yesenia", "Finca Emperador"
+  kind         LoanKind   @default(PERSONAL)
+  status       LoanStatus @default(ACTIVO)
+  counterparty String? // Yesenia, Carlos, banco...
+  reference    String? // nº de préstamo / contrato
+
+  principal   Float // capital sin interés
+  interest    Float @default(0) // interés y cargos
+  totalAmount Float // total a pagar (lo que cierra el plan)
+  downPayment Float @default(0) // abono inicial ya entregado
+
+  installmentAmount Float? // cuota
+  installmentsTotal Int? // nº de cuotas del plan
+  interestRate      Float?
+  startDate         DateTime?
+  firstPaymentDate  DateTime?
+  dueDate           DateTime?
+
+  /// Defaults used when a payment posts its EGRESO into the daily ledger.
+  unit     String?
+  category String?
+
+  notes String?
+
+  payments PersonalLoanPayment[]
+
+  createdById String?
+  updatedById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([kind])
+  @@map("personal_loans")
+}
+
+/// One payment against a loan.
+model PersonalLoanPayment {
+  id     String       @id @default(cuid())
+  loanId String
+  loan   PersonalLoan @relation(fields: [loanId], references: [id], onDelete: Cascade)
+
+  date   DateTime
+  amount Float
+  kind   LoanPaymentKind @default(CUOTA)
+
+  /// Fondo del que salió el dinero (unidad del libro: Salario Personal,
+  /// Dividendos Empresa, Contenedores Valdai...). Es la `unit` del egreso.
+  sourceUnit String?
+
+  method    String?
+  reference String?
+  notes     String?
+
+  /// Set when this payment also posted a movement in the daily journal.
+  ledgerEntryId String?
+
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([loanId])
+  @@index([date])
+  @@map("personal_loan_payments")
+}

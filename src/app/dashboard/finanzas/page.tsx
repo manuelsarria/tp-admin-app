@@ -8,6 +8,7 @@ import {
 import { Lock, LockOpen, AccountBalanceWallet, Add, Visibility, VisibilityOff } from '@mui/icons-material'
 import DashboardTab from './components/DashboardTab'
 import RegistroTab from './components/RegistroTab'
+import PrestamosTab from './components/PrestamosTab'
 import ResumenMensualTab from './components/ResumenMensualTab'
 import PorUnidadTab from './components/PorUnidadTab'
 import AnalisisTab from './components/AnalisisTab'
@@ -75,6 +76,7 @@ export default function FinanzasPage() {
   const tabs = [
     <DashboardTab key="dash" year={year} onQuickAdd={() => setDialogOpen(true)} />,
     <RegistroTab key="reg" onChanged={() => setRefreshKey(k => k + 1)} />,
+    <PrestamosTab key="pre" onChanged={() => setRefreshKey(k => k + 1)} />,
     <ResumenMensualTab key="mes" year={year} />,
     <PorUnidadTab key="uni" year={year} />,
     <AnalisisTab key="ana" year={year} />,
@@ -124,6 +126,7 @@ export default function FinanzasPage() {
           sx={{ '& .MuiTab-root': { textTransform: 'none', fontWeight: 600 }, '& .Mui-selected': { color: '#0A0A0A !important' }, '& .MuiTabs-indicator': { bgcolor: '#FACC15', height: 3 } }}>
           <Tab label="Resumen" />
           <Tab label="Registro Diario" />
+          <Tab label="Préstamos" />
           <Tab label="Mensual" />
           <Tab label="Por Unidad" />
           <Tab label="Análisis" />
@@ -187,7 +190,7 @@ function CreatePinScreen({ onDone, name }: { onDone: () => void; name?: string }
         onKeyDown={e => { if (e.key === 'Enter') submit() }} />
       <Button fullWidth variant="contained" onClick={submit} disabled={saving}
         startIcon={saving ? <CircularProgress size={16} color="inherit" /> : undefined}
-        sx={{ textTransform: 'none', fontWeight: 700, bgcolor: '#0A0A0A', '&:hover': { bgcolor: '#262626' } }}>
+        sx={{ textTransform: 'none', fontWeight: 700, bgcolor: '#0A0A0A', color: '#fff', '&:hover': { bgcolor: '#262626' } }}>
         Crear PIN
       </Button>
     </CenteredCard>
@@ -237,7 +240,7 @@ function UnlockScreen({ onUnlocked, name }: { onUnlocked: () => void; name?: str
       />
       <Button fullWidth variant="contained" onClick={submit} disabled={loading}
         startIcon={loading ? <CircularProgress size={16} color="inherit" /> : <LockOpen />}
-        sx={{ textTransform: 'none', fontWeight: 700, bgcolor: '#0A0A0A', '&:hover': { bgcolor: '#262626' } }}>
+        sx={{ textTransform: 'none', fontWeight: 700, bgcolor: '#0A0A0A', color: '#fff', '&:hover': { bgcolor: '#262626' } }}>
         Desbloquear
       </Button>
     </CenteredCard>

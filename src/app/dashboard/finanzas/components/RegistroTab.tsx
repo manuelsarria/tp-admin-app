@@ -162,7 +162,7 @@ export default function RegistroTab({ onChanged }: { onChanged?: () => void }) {
         <Typography variant="body2" sx={{ color: '#78716C' }}>{rowCount} movimiento{rowCount !== 1 ? 's' : ''}</Typography>
         <Button variant="contained" startIcon={<Add />}
           onClick={() => { setEditing(null); setDialogOpen(true) }}
-          sx={{ textTransform: 'none', fontWeight: 700, bgcolor: '#0A0A0A', '&:hover': { bgcolor: '#262626' } }}>
+          sx={{ textTransform: 'none', fontWeight: 700, bgcolor: '#0A0A0A', color: '#fff', '&:hover': { bgcolor: '#262626' } }}>
           Nuevo
         </Button>
       </Box>

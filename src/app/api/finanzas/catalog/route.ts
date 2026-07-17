@@ -2,19 +2,19 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { requireFinanceAccess, logFinanceAudit } from '@/lib/finance-auth'
-import { DEFAULT_UNITS, DEFAULT_CATEGORIES, DEFAULT_METHODS } from '@/lib/finance'
 
 export const dynamic = 'force-dynamic'
 
 const KINDS = ['unit', 'category', 'method'] as const
-const DEFAULTS: Record<(typeof KINDS)[number], string[]> = {
-  unit: DEFAULT_UNITS,
-  category: DEFAULT_CATEGORIES,
-  method: DEFAULT_METHODS,
-}
 
-// Returns active catalog values grouped by kind. Falls back to sensible
-// defaults when a kind hasn't been seeded yet, so dropdowns are never empty.
+// Returns active catalog values grouped by kind.
+//
+// The table is the only source of truth; it is seeded by the
+// 20260716000001_seed_finance_catalog migration. Do NOT reintroduce a
+// "fall back to DEFAULTS when a kind is empty" branch here: it made adding the
+// first value of a kind wipe every default out of the dropdown, which read as
+// data loss. If a kind comes back empty, the fix is to seed it, not to paper
+// over it at read time.
 export async function GET() {
   const guard = await requireFinanceAccess()
   if (!guard.ok) return guard.response
@@ -28,10 +28,10 @@ export async function GET() {
   for (const r of rows) {
     if (grouped[r.kind]) grouped[r.kind].push({ id: r.id, value: r.value })
   }
-  // raw lists (just values) with defaults fallback, for the dropdowns
+  // raw lists (just values) for the dropdowns
   const values: Record<string, string[]> = {}
   for (const k of KINDS) {
-    values[k] = grouped[k].length > 0 ? grouped[k].map(g => g.value) : DEFAULTS[k]
+    values[k] = grouped[k].map(g => g.value)
   }
 
   return NextResponse.json({ values, items: grouped })

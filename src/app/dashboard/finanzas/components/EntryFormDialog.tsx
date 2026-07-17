@@ -232,7 +232,7 @@ export default function EntryFormDialog({
           disabled={saving}
           variant="contained"
           startIcon={saving ? <CircularProgress size={16} color="inherit" /> : undefined}
-          sx={{ textTransform: 'none', fontWeight: 700, bgcolor: '#0A0A0A', '&:hover': { bgcolor: '#262626' } }}
+          sx={{ textTransform: 'none', fontWeight: 700, bgcolor: '#0A0A0A', color: '#fff', '&:hover': { bgcolor: '#262626' } }}
         >
           {entry?.id ? 'Guardar cambios' : 'Registrar'}
         </Button>

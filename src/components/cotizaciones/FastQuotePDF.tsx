@@ -52,8 +52,8 @@ const fmt = (n?: number | null) =>
 const val = (v?: string | number | null) =>
   v != null && v !== '' ? String(v) : '-'
 
-const DARK_RED = '#8B0000'
-const RED      = '#FACC15'
+const BLACK  = '#1a1a1a'
+const YELLOW = '#FACC15'
 
 const TERMS = [
   'SERVICIO PUERTA A PUERTA, SUJETO A DISPONIBILIDAD.',
@@ -90,19 +90,19 @@ const s = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderWidth: 1,
-    borderColor: RED,
+    borderColor: YELLOW,
     borderRadius: 3,
   },
   quoteNum: {
     fontFamily: 'Helvetica-Bold',
     fontSize: 10,
-    color: RED,
+    color: YELLOW,
     letterSpacing: 1,
   },
 
-  redLine: {
+  accentLine: {
     height: 2,
-    backgroundColor: RED,
+    backgroundColor: YELLOW,
     marginHorizontal: 20,
     marginBottom: 10,
   },
@@ -137,7 +137,7 @@ const s = StyleSheet.create({
   // ── Services table ──
   tableHeader: {
     flexDirection: 'row',
-    backgroundColor: DARK_RED,
+    backgroundColor: BLACK,
     marginHorizontal: 20,
     paddingVertical: 6,
   },
@@ -167,7 +167,7 @@ const s = StyleSheet.create({
   colPrice:  { flex: 1.8, paddingHorizontal: 4, paddingVertical: 5, textAlign: 'right', borderRightWidth: 0.5, borderRightColor: '#ddd' },
   colTotal:  { flex: 1.8, paddingHorizontal: 8, paddingVertical: 5, textAlign: 'right' },
 
-  optionalTag: { color: RED, fontFamily: 'Helvetica-Bold', fontSize: 7 },
+  optionalTag: { color: YELLOW, fontFamily: 'Helvetica-Bold', fontSize: 7 },
 
   // ── Decorative lines ──
   decorLines: { marginHorizontal: 20, marginTop: 8, marginBottom: 8 },
@@ -181,7 +181,7 @@ const s = StyleSheet.create({
   // ── Total box ──
   totalWrapper: { flexDirection: 'row', justifyContent: 'flex-end', marginHorizontal: 20, marginBottom: 10 },
   totalBox: {
-    backgroundColor: DARK_RED,
+    backgroundColor: BLACK,
     paddingHorizontal: 18,
     paddingVertical: 8,
     borderRadius: 3,
@@ -203,7 +203,7 @@ const s = StyleSheet.create({
     marginHorizontal: 20,
     marginTop: 8,
     borderTopWidth: 1,
-    borderTopColor: RED,
+    borderTopColor: YELLOW,
     paddingTop: 6,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -282,7 +282,7 @@ export function FastQuoteDocument({ quote, bannerBase64 }: Props) {
               <View style={{ alignItems: 'flex-end' }}>
                 <Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 13, color: '#FACC15' }}>TP LOGISTICS</Text>
                 <Text style={{ fontSize: 7, color: '#fff', marginTop: 3 }}>www.tplogist.com</Text>
-                <Text style={{ fontSize: 7, color: '#fff' }}>Tel: 6377-7906   Email: import@tplogist.com</Text>
+                <Text style={{ fontSize: 7, color: '#fff' }}>Tel: 6208-9311   Email: import@tplogist.com</Text>
               </View>
             </View>
           )
@@ -298,7 +298,7 @@ export function FastQuoteDocument({ quote, bannerBase64 }: Props) {
         </View>
 
         {/* ── Red separator ── */}
-        <View style={s.redLine} />
+        <View style={s.accentLine} />
 
         {/* ── Client section (2 cols) ── */}
         <View style={s.clientSection}>
@@ -411,7 +411,7 @@ export function FastQuoteDocument({ quote, bannerBase64 }: Props) {
         {/* ── Footer: contacto ── */}
         <View style={s.footer}>
           <Text style={s.footerText}>Importaciones</Text>
-          <Text style={s.footerBold}>(+507) 6377-7906</Text>
+          <Text style={s.footerBold}>(+507) 6208-9311</Text>
           <Text style={s.footerText}>import@tplogist.com</Text>
         </View>
 

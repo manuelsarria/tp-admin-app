@@ -99,7 +99,7 @@ function buildEmailHtml(data: SendPayload): string {
 
     <!-- Footer -->
     <div style="background:#F8FAFC;padding:24px 40px;text-align:center;border-top:1px solid #E5E7EB;">
-      <p style="margin:0;font-size:12px;color:#9CA3AF;">TP Logistics — Panamá | +507 6377-7906</p>
+      <p style="margin:0;font-size:12px;color:#9CA3AF;">TP Logistics — Panamá | +507 6208-9311</p>
       <p style="margin:4px 0 0;font-size:11px;color:#292524;">Este es un boletín informativo semanal sobre el estado de tu carga.</p>
     </div>
   </div>

@@ -161,7 +161,7 @@ export function ConsolidadoPDF({ container, qrBase64, logoBase64 }: Props) {
             )}
             <Text style={{ fontSize: 6.5, color: GRAY, marginTop: 3 }}>155715816-2-2021 DV36</Text>
             <Text style={{ fontSize: 6.5, color: GRAY }}>Panama, Plaza Mundial Local D2</Text>
-            <Text style={{ fontSize: 6.5, color: GRAY }}>Tel: +507 6377-7906</Text>
+            <Text style={{ fontSize: 6.5, color: GRAY }}>Tel: +507 6208-9311</Text>
           </View>
           <View style={s.headerCenter}>
             <Text style={s.titleBig}>CARGO CONSOLIDADO</Text>

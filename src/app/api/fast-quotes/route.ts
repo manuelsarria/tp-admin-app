@@ -15,7 +15,7 @@ async function generateFastQuoteNumber(userName: string, userId: string): Promis
   const initials = getInitials(userName)
   const count = await prisma.fastQuote.count({ where: { createdById: userId } })
   const seq = String(count + 1).padStart(4, '0')
-  return `CNC${initials}${year}${seq}`
+  return `TP${initials}${year}${seq}`
 }
 
 function calcTotal(body: any): number {

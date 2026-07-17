@@ -154,7 +154,7 @@ export function QuoteDocument({ quote, logoBase64, bannerBase64 }: Props) {
               <View style={{ alignItems: 'flex-end' }}>
                 <Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 13, color: '#FACC15' }}>TP LOGISTICS</Text>
                 <Text style={{ fontSize: 7, color: '#fff', marginTop: 3 }}>www.tplogist.com</Text>
-                <Text style={{ fontSize: 7, color: '#fff' }}>Tel: 6377-7906   Email: import@tplogist.com</Text>
+                <Text style={{ fontSize: 7, color: '#fff' }}>Tel: 6208-9311   Email: import@tplogist.com</Text>
               </View>
             </View>
           )

@@ -234,7 +234,7 @@ function LabelPage({
             <Text style={s.companyInfo}>155715816-2-2021</Text>
             <Text style={s.companyInfo}>Calle 5ta y Av. 3ra, Edif. 9570</Text>
             <Text style={s.companyInfo}>France Field, Zona Libre Colón, Panamá</Text>
-            <Text style={s.companyInfo}>+507 6377-7906</Text>
+            <Text style={s.companyInfo}>+507 6208-9311</Text>
           </View>
         </View>
 

@@ -234,7 +234,7 @@ export function WarehouseReceiptPDF({ entry, qrBase64, logoBase64 }: Props) {
             <Text style={s.companyDetail}>155715816-2-2021 DV 36</Text>
             <Text style={s.companyDetail}>Calle 5ta y Av. 3ra, Edif. 9570</Text>
             <Text style={s.companyDetail}>France Field, Zona Libre Colón, Panamá</Text>
-            <Text style={s.companyDetail}>TEL: +507 6377-7906</Text>
+            <Text style={s.companyDetail}>TEL: +507 6208-9311</Text>
           </View>
         </View>
 

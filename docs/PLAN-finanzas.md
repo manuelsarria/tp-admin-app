@@ -120,16 +120,15 @@ Requiere H3. Sin esto, "cuánto deja cada contenedor" no es calculable.
    **Ganancia** / Margen %, y el detalle de movimientos al abrir.
 6. Validar contra los números a mano de H3 (+1,040.00 y +256.94).
 
-## Fase 4 — Contabilidad separada por rubro ⬜
+## Fase 4 — Contabilidad separada por rubro 🚧
 
-Depende de la Fase 1 (catálogo real) y se beneficia de la Fase 3.
-
-1. **Decisión previa**: separar negocio de personal (H2). Dos opciones:
-   - (a) Mover los gastos personales de "Contenedores Valdai" a "Salario
-     Personal" u otra unidad. Requiere que el dueño reclasifique ~16 movimientos.
-   - (b) Agregar un eje `scope` (NEGOCIO/PERSONAL) a cada movimiento, dejando la
-     unidad como está.
-   Sin una de las dos, "cuánto deja Valdai" seguirá contaminado.
+1. ✅ **Decisión (16-jul-2026): eje `scope` NEGOCIO/PERSONAL.** El dueño eligió
+   la opción (b): la unidad queda como está y no se toca el histórico. El
+   backfill de la migración `20260716000002_add_ledger_scope` marca PERSONAL
+   solo lo inequívoco (13 de 23 movimientos de Valdai). Se dejaron
+   deliberadamente como NEGOCIO los 4 ambiguos, para que los reclasifique a
+   mano: `BAC 0720` (500), `couta 15 y 30 de junio` (80.33), `gasolina` (76.28),
+   `freidepot` (39.03). Adivinarlos corrompería el P&L en silencio.
 2. **Resumen por unidad**: una tarjeta por unidad (Shippy, TrackingPTY, CNC,
    Salario Personal, Dividendos Empresa, Contenedores Valdai, …) con Ingresos,
    Egresos y Neto. Reemplaza el resumen global mezclado.

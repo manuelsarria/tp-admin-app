@@ -5,11 +5,18 @@
 
 export type LedgerType = 'INGRESO' | 'EGRESO'
 export type LedgerStatus = 'PAGADO' | 'PENDIENTE' | 'PARCIAL' | 'ANULADO'
+/**
+ * `unit` = which pot the money moved through; `scope` = business vs personal.
+ * The owner pays personal expenses out of business pots, so "cuánto deja
+ * Valdai" is only right when PERSONAL rows are excluded.
+ */
+export type LedgerScope = 'NEGOCIO' | 'PERSONAL'
 
 export interface LedgerRow {
   id: string
   date: string | Date
   unit: string
+  scope?: LedgerScope
   type: LedgerType
   category: string
   subcategory?: string | null
@@ -67,6 +74,12 @@ export const DEFAULT_METHODS = [
 
 export const STATUSES: LedgerStatus[] = ['PAGADO', 'PENDIENTE', 'PARCIAL', 'ANULADO']
 export const TYPES: LedgerType[] = ['INGRESO', 'EGRESO']
+export const SCOPES: LedgerScope[] = ['NEGOCIO', 'PERSONAL']
+
+export const SCOPE_LABEL: Record<LedgerScope, string> = {
+  NEGOCIO: 'Negocio',
+  PERSONAL: 'Personal',
+}
 
 export const STATUS_LABEL: Record<LedgerStatus, string> = {
   PAGADO: 'Pagado',
@@ -108,11 +121,26 @@ function isPending(r: LedgerRow): boolean {
   return r.status === 'PENDIENTE' || r.status === 'PARCIAL'
 }
 
+/** Rows saved before the scope axis existed are business money by default. */
+export function rowScope(r: { scope?: LedgerScope | null }): LedgerScope {
+  return r.scope === 'PERSONAL' ? 'PERSONAL' : 'NEGOCIO'
+}
+
+/** Money is rounded to 2 decimals at the edge of every aggregation. */
+export function round2(n: number): number {
+  return Math.round((Number(n) || 0) * 100) / 100
+}
+
 // --- Summary (Dashboard / Resumen Mensual / Por Unidad) ----------------------
 
 export interface MonthRow {
   key: string
   label: string
+  ingresos: number
+  egresos: number
+  neto: number
+}
+export interface ScopeTotals {
   ingresos: number
   egresos: number
   neto: number
@@ -124,6 +152,13 @@ export interface UnitRow {
   neto: number
   pctIngresos: number // share of total income
   pctEgresos: number // share of total expense
+  /**
+   * Same unit (pot), split by what the money actually was. `negocio` is the
+   * one that answers "cuánto deja esta unidad"; `personal` is the owner's
+   * spend that merely passed through the pot.
+   */
+  negocio: ScopeTotals
+  personal: ScopeTotals
 }
 export interface FinanceSummary {
   kpis: {
@@ -160,20 +195,35 @@ export function buildSummary(rows: LedgerRow[]): FinanceSummary {
     const mk = monthKey(r.date)
     if (!months.has(mk)) months.set(mk, { key: mk, label: monthLabel(mk), ingresos: 0, egresos: 0, neto: 0 })
     const m = months.get(mk)!
-    if (!units.has(r.unit)) units.set(r.unit, { unit: r.unit, ingresos: 0, egresos: 0, neto: 0, pctIngresos: 0, pctEgresos: 0 })
+    if (!units.has(r.unit)) {
+      units.set(r.unit, {
+        unit: r.unit,
+        ingresos: 0,
+        egresos: 0,
+        neto: 0,
+        pctIngresos: 0,
+        pctEgresos: 0,
+        negocio: { ingresos: 0, egresos: 0, neto: 0 },
+        personal: { ingresos: 0, egresos: 0, neto: 0 },
+      })
+    }
     const u = units.get(r.unit)!
+    const s = rowScope(r) === 'PERSONAL' ? u.personal : u.negocio
 
     if (r.type === 'INGRESO') {
       ingresos += amt
       m.ingresos += amt
       u.ingresos += amt
+      s.ingresos += amt
     } else {
       egresos += amt
       m.egresos += amt
       u.egresos += amt
+      s.egresos += amt
     }
     m.neto = m.ingresos - m.egresos
     u.neto = u.ingresos - u.egresos
+    s.neto = s.ingresos - s.egresos
   }
 
   const monthly = Array.from(months.values()).sort((a, b) => a.key.localeCompare(b.key))
@@ -181,6 +231,11 @@ export function buildSummary(rows: LedgerRow[]): FinanceSummary {
   for (const u of byUnit) {
     u.pctIngresos = ingresos > 0 ? u.ingresos / ingresos : 0
     u.pctEgresos = egresos > 0 ? u.egresos / egresos : 0
+    for (const s of [u.negocio, u.personal]) {
+      s.ingresos = round2(s.ingresos)
+      s.egresos = round2(s.egresos)
+      s.neto = round2(s.neto)
+    }
   }
 
   let mejorMes: FinanceSummary['kpis']['mejorMes'] = null

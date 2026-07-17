@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic'
 const entrySchema = z.object({
   date: z.string().or(z.date()),
   unit: z.string().min(1, 'Unidad requerida'),
+  scope: z.enum(['NEGOCIO', 'PERSONAL']).default('NEGOCIO'),
   type: z.enum(['INGRESO', 'EGRESO']),
   category: z.string().min(1, 'Categoría requerida'),
   subcategory: z.string().optional().nullable(),
@@ -29,6 +30,7 @@ const filterSchema = z.object({
   from: z.string().optional(),
   to: z.string().optional(),
   unit: z.string().optional(),
+  scope: z.enum(['NEGOCIO', 'PERSONAL']).optional(),
   type: z.enum(['INGRESO', 'EGRESO']).optional(),
   status: z.enum(['PAGADO', 'PENDIENTE', 'PARCIAL', 'ANULADO']).optional(),
   category: z.string().optional(),
@@ -46,6 +48,7 @@ export async function GET(request: NextRequest) {
 
   const where: any = {}
   if (f.unit) where.unit = f.unit
+  if (f.scope) where.scope = f.scope
   if (f.type) where.type = f.type
   if (f.status) where.status = f.status
   if (f.category) where.category = f.category
@@ -64,7 +67,7 @@ export async function GET(request: NextRequest) {
     ]
   }
 
-  const sortable = ['date', 'amount', 'unit', 'type', 'category', 'status', 'createdAt']
+  const sortable = ['date', 'amount', 'unit', 'scope', 'type', 'category', 'status', 'createdAt']
   const sortBy = sortable.includes(f.sortBy) ? f.sortBy : 'date'
 
   const [records, total] = await Promise.all([
@@ -103,6 +106,7 @@ export async function POST(request: NextRequest) {
     data: {
       date: new Date(d.date),
       unit: d.unit,
+      scope: d.scope,
       type: d.type,
       category: d.category,
       subcategory: d.subcategory ?? null,
@@ -118,7 +122,7 @@ export async function POST(request: NextRequest) {
       updatedById: guard.user.id,
     },
   })
-  await logFinanceAudit({ action: 'create', entityId: created.id, user: guard.user, detail: { unit: d.unit, type: d.type, amount: d.amount } })
+  await logFinanceAudit({ action: 'create', entityId: created.id, user: guard.user, detail: { unit: d.unit, scope: d.scope, type: d.type, amount: d.amount } })
 
   return NextResponse.json({ data: created }, { status: 201 })
 }

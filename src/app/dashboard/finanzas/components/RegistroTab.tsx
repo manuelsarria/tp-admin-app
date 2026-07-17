@@ -8,7 +8,8 @@ import {
 import { DataGrid, type GridColDef } from '@mui/x-data-grid'
 import { Add, Edit, Delete, Search } from '@mui/icons-material'
 import { formatMoney, STATUS_LABEL, DEFAULT_UNITS } from '@/lib/finance'
-import type { Entry, CatalogValues } from './types'
+import type { Entry, CatalogValues, LedgerScope } from './types'
+import { LEDGER_SCOPE_LABEL } from './types'
 import EntryFormDialog from './EntryFormDialog'
 
 const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
@@ -16,6 +17,11 @@ const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
   PENDIENTE: { bg: '#FFFBEB', color: '#B45309' },
   PARCIAL: { bg: '#EFF6FF', color: '#1D4ED8' },
   ANULADO: { bg: '#F5F5F4', color: '#78716C' },
+}
+
+const SCOPE_COLORS: Record<LedgerScope, { bg: string; color: string }> = {
+  NEGOCIO: { bg: '#F5F3FF', color: '#5B21B6' },
+  PERSONAL: { bg: '#FFF7ED', color: '#C2410C' },
 }
 
 export default function RegistroTab({ onChanged }: { onChanged?: () => void }) {
@@ -27,6 +33,7 @@ export default function RegistroTab({ onChanged }: { onChanged?: () => void }) {
   // filters
   const [search, setSearch] = useState('')
   const [unit, setUnit] = useState('')
+  const [scope, setScope] = useState('')
   const [type, setType] = useState('')
   const [status, setStatus] = useState('')
   const [from, setFrom] = useState('')
@@ -50,6 +57,7 @@ export default function RegistroTab({ onChanged }: { onChanged?: () => void }) {
     params.set('pageSize', String(pagination.pageSize))
     if (search) params.set('search', search)
     if (unit) params.set('unit', unit)
+    if (scope) params.set('scope', scope)
     if (type) params.set('type', type)
     if (status) params.set('status', status)
     if (from) params.set('from', from)
@@ -59,7 +67,7 @@ export default function RegistroTab({ onChanged }: { onChanged?: () => void }) {
       .then(d => { setRows(d.data || []); setRowCount(d.meta?.total || 0) })
       .catch(() => { setRows([]); setRowCount(0) })
       .finally(() => setLoading(false))
-  }, [pagination, search, unit, type, status, from, to])
+  }, [pagination, search, unit, scope, type, status, from, to])
 
   useEffect(() => { load() }, [load])
 
@@ -76,11 +84,19 @@ export default function RegistroTab({ onChanged }: { onChanged?: () => void }) {
     },
     { field: 'unit', headerName: 'Unidad', width: 150 },
     {
-      field: 'type', headerName: 'Tipo', width: 100,
-      renderCell: (p) => (
-        <Chip label={p.value === 'INGRESO' ? 'Ingreso' : 'Egreso'} size="small"
-          sx={{ fontWeight: 700, fontSize: '0.66rem', bgcolor: p.value === 'INGRESO' ? '#ECFDF5' : '#FEF2F2', color: p.value === 'INGRESO' ? '#047857' : '#B91C1C' }} />
-      ),
+      // El chip de ámbito vive aquí para no añadir otra columna a una tabla ya ancha.
+      field: 'type', headerName: 'Tipo / Ámbito', width: 180, sortable: true,
+      renderCell: (p) => {
+        const sc = SCOPE_COLORS[(p.row.scope as LedgerScope)] || SCOPE_COLORS.NEGOCIO
+        return (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Chip label={p.value === 'INGRESO' ? 'Ingreso' : 'Egreso'} size="small"
+              sx={{ fontWeight: 700, fontSize: '0.66rem', bgcolor: p.value === 'INGRESO' ? '#ECFDF5' : '#FEF2F2', color: p.value === 'INGRESO' ? '#047857' : '#B91C1C' }} />
+            <Chip label={LEDGER_SCOPE_LABEL[(p.row.scope as LedgerScope)] || LEDGER_SCOPE_LABEL.NEGOCIO} size="small"
+              sx={{ fontWeight: 700, fontSize: '0.66rem', bgcolor: sc.bg, color: sc.color }} />
+          </Box>
+        )
+      },
     },
     { field: 'category', headerName: 'Categoría', width: 150 },
     { field: 'description', headerName: 'Descripción', width: 200, flex: 1 },
@@ -118,7 +134,7 @@ export default function RegistroTab({ onChanged }: { onChanged?: () => void }) {
       <Card sx={{ borderRadius: '16px', border: '1px solid rgba(10,10,10,0.06)' }}>
         <CardContent>
           <Grid container spacing={1.5} alignItems="center">
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={12} sm={6} md={2.5}>
               <TextField fullWidth size="small" placeholder="Buscar..." value={search}
                 onChange={e => { setSearch(e.target.value); setPagination(p => ({ ...p, page: 0 })) }}
                 InputProps={{ startAdornment: <Search sx={{ fontSize: 18, color: '#A8A29E', mr: 0.5 }} /> }} />
@@ -130,7 +146,15 @@ export default function RegistroTab({ onChanged }: { onChanged?: () => void }) {
                 {units.map(u => <MenuItem key={u} value={u}>{u}</MenuItem>)}
               </TextField>
             </Grid>
-            <Grid item xs={6} sm={3} md={2}>
+            <Grid item xs={6} sm={3} md={1.5}>
+              <TextField select fullWidth size="small" label="Ámbito" value={scope}
+                onChange={e => { setScope(e.target.value); setPagination(p => ({ ...p, page: 0 })) }}>
+                <MenuItem value="">Todos</MenuItem>
+                <MenuItem value="NEGOCIO">Negocio</MenuItem>
+                <MenuItem value="PERSONAL">Personal</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid item xs={6} sm={3} md={1.5}>
               <TextField select fullWidth size="small" label="Tipo" value={type}
                 onChange={e => { setType(e.target.value); setPagination(p => ({ ...p, page: 0 })) }}>
                 <MenuItem value="">Todos</MenuItem>
@@ -138,7 +162,7 @@ export default function RegistroTab({ onChanged }: { onChanged?: () => void }) {
                 <MenuItem value="EGRESO">Egreso</MenuItem>
               </TextField>
             </Grid>
-            <Grid item xs={6} sm={3} md={2}>
+            <Grid item xs={6} sm={3} md={1.5}>
               <TextField select fullWidth size="small" label="Estado" value={status}
                 onChange={e => { setStatus(e.target.value); setPagination(p => ({ ...p, page: 0 })) }}>
                 <MenuItem value="">Todos</MenuItem>

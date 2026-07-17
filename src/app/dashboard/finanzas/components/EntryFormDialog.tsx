@@ -6,7 +6,7 @@ import {
   MenuItem, Autocomplete, Alert, Box, ToggleButton, ToggleButtonGroup, CircularProgress,
 } from '@mui/material'
 import { STATUSES, STATUS_LABEL, DEFAULT_UNITS, DEFAULT_CATEGORIES, DEFAULT_METHODS } from '@/lib/finance'
-import type { Entry, CatalogValues } from './types'
+import type { Entry, CatalogValues, LedgerScope } from './types'
 
 function todayISO(): string {
   const d = new Date()
@@ -16,6 +16,7 @@ function todayISO(): string {
 interface FormState {
   date: string
   unit: string
+  scope: LedgerScope
   type: 'INGRESO' | 'EGRESO'
   category: string
   subcategory: string
@@ -31,6 +32,7 @@ interface FormState {
 const emptyForm = (catalog: CatalogValues): FormState => ({
   date: todayISO(),
   unit: catalog.unit[0] || DEFAULT_UNITS[0],
+  scope: 'NEGOCIO',
   type: 'EGRESO',
   category: '',
   subcategory: '',
@@ -74,6 +76,7 @@ export default function EntryFormDialog({
           setForm({
             date: entry.date ? entry.date.slice(0, 10) : todayISO(),
             unit: entry.unit,
+            scope: entry.scope || 'NEGOCIO',
             type: entry.type,
             category: entry.category,
             subcategory: entry.subcategory || '',
@@ -107,6 +110,7 @@ export default function EntryFormDialog({
       const payload = {
         date: form.date,
         unit: form.unit,
+        scope: form.scope,
         type: form.type,
         category: form.category.trim(),
         subcategory: form.subcategory || null,
@@ -159,6 +163,25 @@ export default function EntryFormDialog({
             </ToggleButton>
             <ToggleButton value="EGRESO" sx={{ fontWeight: 700, '&.Mui-selected': { bgcolor: '#FEF2F2', color: '#B91C1C' } }}>
               Egreso
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
+
+        {/* Ámbito: negocio vs. personal. `unit` dice de qué fondo salió el dinero;
+            esto dice si el movimiento fue del negocio o personal. */}
+        <Box sx={{ mb: 2 }}>
+          <ToggleButtonGroup
+            value={form.scope}
+            exclusive
+            fullWidth
+            onChange={(_e, v) => v && set('scope', v)}
+            size="small"
+          >
+            <ToggleButton value="NEGOCIO" sx={{ fontWeight: 700, '&.Mui-selected': { bgcolor: '#F5F3FF', color: '#5B21B6' } }}>
+              Negocio
+            </ToggleButton>
+            <ToggleButton value="PERSONAL" sx={{ fontWeight: 700, '&.Mui-selected': { bgcolor: '#FFF7ED', color: '#C2410C' } }}>
+              Personal
             </ToggleButton>
           </ToggleButtonGroup>
         </Box>

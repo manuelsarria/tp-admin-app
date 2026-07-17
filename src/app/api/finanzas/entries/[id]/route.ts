@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic'
 const updateSchema = z.object({
   date: z.string().or(z.date()).optional(),
   unit: z.string().min(1).optional(),
+  scope: z.enum(['NEGOCIO', 'PERSONAL']).optional(),
   type: z.enum(['INGRESO', 'EGRESO']).optional(),
   category: z.string().min(1).optional(),
   subcategory: z.string().optional().nullable(),
@@ -46,7 +47,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   const d = parsed.data
 
   const data: any = { updatedById: guard.user.id }
-  for (const k of ['unit', 'type', 'category', 'subcategory', 'method', 'status', 'counterparty', 'reference', 'description', 'amount', 'receiptUrl', 'notes'] as const) {
+  for (const k of ['unit', 'scope', 'type', 'category', 'subcategory', 'method', 'status', 'counterparty', 'reference', 'description', 'amount', 'receiptUrl', 'notes'] as const) {
     if (d[k] !== undefined) data[k] = d[k]
   }
   if (d.date !== undefined) data.date = new Date(d.date)

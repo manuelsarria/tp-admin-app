@@ -1,8 +1,21 @@
+/**
+ * `unit` says WHICH pot the money moved through; `scope` says whether it was a
+ * business movement or a personal one (the owner pays personal expenses out of
+ * business pots).
+ */
+export type LedgerScope = 'NEGOCIO' | 'PERSONAL'
+
+export const LEDGER_SCOPE_LABEL: Record<LedgerScope, string> = {
+  NEGOCIO: 'Negocio',
+  PERSONAL: 'Personal',
+}
+
 // Shape of a ledger entry as returned by /api/finanzas/entries.
 export interface Entry {
   id: string
   date: string
   unit: string
+  scope: LedgerScope
   type: 'INGRESO' | 'EGRESO'
   category: string
   subcategory: string | null

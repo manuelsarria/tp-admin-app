@@ -929,11 +929,22 @@ enum LedgerStatus {
   ANULADO
 }
 
+/// Separates business money from personal money. `unit` says WHICH pot the
+/// money moved through (Shippy, Contenedores Valdai...); `scope` says whether
+/// it was a business movement or a personal one. Both are needed: the owner
+/// pays personal expenses out of business pots, so "cuánto deja Valdai" is
+/// wrong unless the personal spend is excluded.
+enum LedgerScope {
+  NEGOCIO
+  PERSONAL
+}
+
 /// Master daily journal — one row per money movement (income or expense).
 model PersonalLedgerEntry {
   id           String       @id @default(cuid())
   date         DateTime // fecha del movimiento
   unit         String // Unidad: Shippy, TrackingPTY, CNC, Salario Personal, Dividendos Empresa, Contenedores Valdai, Ventas Adicionales...
+  scope        LedgerScope  @default(NEGOCIO) // Negocio / Personal
   type         LedgerType // Ingreso / Egreso
   category     String // Categoría (Venta servicio, Flete, Comida, Salario, Dividendos...)
   subcategory  String?
@@ -953,6 +964,7 @@ model PersonalLedgerEntry {
 
   @@index([date])
   @@index([unit])
+  @@index([scope])
   @@index([type])
   @@index([status])
   @@index([category])

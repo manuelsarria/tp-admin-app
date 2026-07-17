@@ -16,6 +16,8 @@ export interface Entry {
   date: string
   unit: string
   scope: LedgerScope
+  /** False cuando el `scope` es una suposición del backfill que nadie confirmó. */
+  scopeReviewed?: boolean
   type: 'INGRESO' | 'EGRESO'
   category: string
   subcategory: string | null

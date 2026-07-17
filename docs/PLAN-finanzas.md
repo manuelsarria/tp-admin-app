@@ -103,9 +103,12 @@ Supuestos que hay que validar:
   movimientos de 2024-2026 distorsionaría los reportes mensuales existentes.
   Solo los pagos nuevos desde la app postean al diario.
 
-## Fase 3 — Operaciones / Contenedores Valdai ⬜
+## Fase 3 — Operaciones / Contenedores Valdai 🚧
 
 Requiere H3. Sin esto, "cuánto deja cada contenedor" no es calculable.
+El P&L de una operación cuenta solo `status=PAGADO` y `scope=NEGOCIO`: el gasto
+personal que pasó por la bolsa del negocio nunca debe caer en el P&L de un
+contenedor.
 
 1. Modelo `PersonalOperation`: nombre, código de contenedor, ETA, estado
    (ABIERTA/CERRADA), notas.

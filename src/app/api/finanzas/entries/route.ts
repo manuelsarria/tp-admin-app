@@ -9,6 +9,9 @@ const entrySchema = z.object({
   date: z.string().or(z.date()),
   unit: z.string().min(1, 'Unidad requerida'),
   scope: z.enum(['NEGOCIO', 'PERSONAL']).default('NEGOCIO'),
+  // Cualquier movimiento guardado desde el formulario está revisado por
+  // definición: alguien eligió el ámbito a mano.
+  scopeReviewed: z.boolean().optional(),
   type: z.enum(['INGRESO', 'EGRESO']),
   category: z.string().min(1, 'Categoría requerida'),
   subcategory: z.string().optional().nullable(),
@@ -19,6 +22,7 @@ const entrySchema = z.object({
   description: z.string().optional().nullable(),
   amount: z.coerce.number().nonnegative('El monto no puede ser negativo'),
   receiptUrl: z.string().optional().nullable(),
+  operationId: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
 })
 
@@ -35,6 +39,11 @@ const filterSchema = z.object({
   status: z.enum(['PAGADO', 'PENDIENTE', 'PARCIAL', 'ANULADO']).optional(),
   category: z.string().optional(),
   search: z.string().optional(),
+  // ?pendientes=1 → solo los movimientos cuyo ámbito nadie confirmó.
+  pendientes: z
+    .enum(['1', 'true', '0', 'false'])
+    .optional()
+    .transform(v => (v === undefined ? undefined : v === '1' || v === 'true')),
 })
 
 export async function GET(request: NextRequest) {
@@ -52,6 +61,8 @@ export async function GET(request: NextRequest) {
   if (f.type) where.type = f.type
   if (f.status) where.status = f.status
   if (f.category) where.category = f.category
+  // pendientes=1 → sin revisar; pendientes=0 → solo los ya confirmados.
+  if (f.pendientes !== undefined) where.scopeReviewed = !f.pendientes
   if (f.from || f.to) {
     where.date = {}
     if (f.from) where.date.gte = new Date(f.from)
@@ -107,6 +118,8 @@ export async function POST(request: NextRequest) {
       date: new Date(d.date),
       unit: d.unit,
       scope: d.scope,
+      // Viene del formulario: el ámbito lo eligió una persona, no una regla.
+      scopeReviewed: d.scopeReviewed ?? true,
       type: d.type,
       category: d.category,
       subcategory: d.subcategory ?? null,
@@ -117,6 +130,7 @@ export async function POST(request: NextRequest) {
       description: d.description ?? null,
       amount: d.amount,
       receiptUrl: d.receiptUrl ?? null,
+      operationId: d.operationId ?? null,
       notes: d.notes ?? null,
       createdById: guard.user.id,
       updatedById: guard.user.id,

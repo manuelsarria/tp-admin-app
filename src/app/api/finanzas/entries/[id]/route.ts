@@ -9,6 +9,7 @@ const updateSchema = z.object({
   date: z.string().or(z.date()).optional(),
   unit: z.string().min(1).optional(),
   scope: z.enum(['NEGOCIO', 'PERSONAL']).optional(),
+  scopeReviewed: z.boolean().optional(),
   type: z.enum(['INGRESO', 'EGRESO']).optional(),
   category: z.string().min(1).optional(),
   subcategory: z.string().optional().nullable(),
@@ -19,6 +20,7 @@ const updateSchema = z.object({
   description: z.string().optional().nullable(),
   amount: z.coerce.number().nonnegative().optional(),
   receiptUrl: z.string().optional().nullable(),
+  operationId: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
 })
 
@@ -47,10 +49,13 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   const d = parsed.data
 
   const data: any = { updatedById: guard.user.id }
-  for (const k of ['unit', 'scope', 'type', 'category', 'subcategory', 'method', 'status', 'counterparty', 'reference', 'description', 'amount', 'receiptUrl', 'notes'] as const) {
+  for (const k of ['unit', 'scope', 'scopeReviewed', 'type', 'category', 'subcategory', 'method', 'status', 'counterparty', 'reference', 'description', 'amount', 'receiptUrl', 'operationId', 'notes'] as const) {
     if (d[k] !== undefined) data[k] = d[k]
   }
   if (d.date !== undefined) data.date = new Date(d.date)
+  // Si el payload trae un `scope` explícito, alguien lo eligió a mano: queda
+  // revisado, salvo que el propio payload diga lo contrario.
+  if (d.scope !== undefined && d.scopeReviewed === undefined) data.scopeReviewed = true
 
   try {
     const updated = await prisma.personalLedgerEntry.update({ where: { id: params.id }, data })

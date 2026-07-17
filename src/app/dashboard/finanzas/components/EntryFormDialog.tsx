@@ -24,6 +24,7 @@ interface FormState {
   status: 'PAGADO' | 'PENDIENTE' | 'PARCIAL' | 'ANULADO'
   counterparty: string
   reference: string
+  operationId: string
   description: string
   amount: string
   notes: string
@@ -40,6 +41,7 @@ const emptyForm = (catalog: CatalogValues): FormState => ({
   status: 'PAGADO',
   counterparty: '',
   reference: '',
+  operationId: '',
   description: '',
   amount: '',
   notes: '',
@@ -57,6 +59,7 @@ export default function EntryFormDialog({
     unit: DEFAULT_UNITS, category: DEFAULT_CATEGORIES, method: DEFAULT_METHODS,
   })
   const [form, setForm] = useState<FormState>(emptyForm(catalog))
+  const [operations, setOperations] = useState<{ id: string; name: string; containerNumber: string | null }[]>([])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const amountRef = useRef<HTMLInputElement>(null)
@@ -66,6 +69,10 @@ export default function EntryFormDialog({
     if (!open) return
     setError(null)
     let alive = true
+    fetch('/api/finanzas/operations?status=ABIERTA')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (alive && Array.isArray(d?.data)) setOperations(d.data) })
+      .catch(() => {})
     fetch('/api/finanzas/catalog')
       .then(r => (r.ok ? r.json() : null))
       .then(data => {
@@ -84,6 +91,7 @@ export default function EntryFormDialog({
             status: entry.status,
             counterparty: entry.counterparty || '',
             reference: entry.reference || '',
+            operationId: (entry as any).operationId || '',
             description: entry.description || '',
             amount: String(entry.amount ?? ''),
             notes: entry.notes || '',
@@ -118,6 +126,7 @@ export default function EntryFormDialog({
         status: form.status,
         counterparty: form.counterparty || null,
         reference: form.reference || null,
+        operationId: form.operationId || null,
         description: form.description || null,
         amount: amt,
         notes: form.notes || null,
@@ -238,6 +247,20 @@ export default function EntryFormDialog({
             <TextField label="Referencia / Contenedor" fullWidth size="small"
               value={form.reference} onChange={e => set('reference', e.target.value)} />
           </Grid>
+          {operations.length > 0 && (
+            <Grid item xs={12}>
+              <TextField select label="Operación / Contenedor" fullWidth size="small"
+                value={form.operationId} onChange={e => set('operationId', e.target.value)}
+                helperText="Enlaza el movimiento a una operación para que cuente en su ganancia.">
+                <MenuItem value="">— Ninguna —</MenuItem>
+                {operations.map(o => (
+                  <MenuItem key={o.id} value={o.id}>
+                    {o.name}{o.containerNumber ? ` · ${o.containerNumber}` : ''}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+          )}
           <Grid item xs={12}>
             <TextField label="Descripción" fullWidth size="small"
               value={form.description} onChange={e => set('description', e.target.value)} />

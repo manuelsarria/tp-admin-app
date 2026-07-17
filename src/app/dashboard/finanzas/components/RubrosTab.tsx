@@ -20,6 +20,7 @@ import {
 } from '@mui/material';
 import { TrendingUp, TrendingDown, FilterAlt } from '@mui/icons-material';
 import { formatMoney } from '@/lib/finance';
+import PendientesAlert from './PendientesAlert';
 
 /* ------------------------------------------------------------------ */
 /* Tokens                                                              */
@@ -175,6 +176,8 @@ function normalizeSpending(raw: unknown): SpendingRow[] {
 export default function RubrosTab({ year }: { year: number }) {
   // El dueño pide la foto del negocio: por defecto filtramos a NEGOCIO.
   const [scope, setScope] = useState<Scope>('NEGOCIO');
+  // Se incrementa al clasificar pendientes: estos totales acaban de cambiar.
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -233,7 +236,8 @@ export default function RubrosTab({ year }: { year: number }) {
         if (!signal.cancelled) setLoading(false);
       }
     },
-    [year, scope],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [year, scope, refreshKey],
   );
 
   useEffect(() => {
@@ -248,6 +252,10 @@ export default function RubrosTab({ year }: { year: number }) {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      {/* Arriba del todo: si hay movimientos sin clasificar, las cifras de
+          abajo están contando gastos personales como si fueran del negocio. */}
+      <PendientesAlert year={year} onChanged={() => setRefreshKey((k) => k + 1)} />
+
       <ScopeHeader year={year} scope={scope} onScope={setScope} />
 
       {error && (

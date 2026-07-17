@@ -11,6 +11,7 @@ import { formatMoney, STATUS_LABEL, DEFAULT_UNITS } from '@/lib/finance'
 import type { Entry, CatalogValues, LedgerScope } from './types'
 import { LEDGER_SCOPE_LABEL } from './types'
 import EntryFormDialog from './EntryFormDialog'
+import PendientesAlert from './PendientesAlert'
 
 const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
   PAGADO: { bg: '#ECFDF5', color: '#047857' },
@@ -130,6 +131,8 @@ export default function RegistroTab({ onChanged }: { onChanged?: () => void }) {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <PendientesAlert onChanged={() => { load(); onChanged?.() }} />
+
       {/* Filters */}
       <Card sx={{ borderRadius: '16px', border: '1px solid rgba(10,10,10,0.06)' }}>
         <CardContent>

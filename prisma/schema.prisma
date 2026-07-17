@@ -941,21 +941,32 @@ enum LedgerScope {
 
 /// Master daily journal — one row per money movement (income or expense).
 model PersonalLedgerEntry {
-  id           String       @id @default(cuid())
-  date         DateTime // fecha del movimiento
-  unit         String // Unidad: Shippy, TrackingPTY, CNC, Salario Personal, Dividendos Empresa, Contenedores Valdai, Ventas Adicionales...
-  scope        LedgerScope  @default(NEGOCIO) // Negocio / Personal
-  type         LedgerType // Ingreso / Egreso
-  category     String // Categoría (Venta servicio, Flete, Comida, Salario, Dividendos...)
-  subcategory  String?
-  method       String? // Método: Efectivo, Transferencia, ACH, Yappy, Tarjeta, Cheque, Otro
-  status       LedgerStatus @default(PAGADO)
-  counterparty String? // Cliente / Proveedor
-  reference    String? // Referencia / Contenedor
-  description  String?
-  amount       Float // monto (positivo; el signo lo da `type`)
-  receiptUrl   String? // comprobante
-  notes        String?
+  id            String             @id @default(cuid())
+  date          DateTime // fecha del movimiento
+  unit          String // Unidad: Shippy, TrackingPTY, CNC, Salario Personal, Dividendos Empresa, Contenedores Valdai, Ventas Adicionales...
+  scope         LedgerScope        @default(NEGOCIO) // Negocio / Personal
+  /// False when `scope` is a guess nobody confirmed yet. The 2026 backfill
+  /// could classify most rows by rule, but things like "gasolina" or
+  /// "GASTOS MANUEL" are genuinely ambiguous — they default to NEGOCIO and get
+  /// flagged here so the owner can settle them, instead of silently skewing
+  /// the P&L. Anything saved from the form is reviewed by definition.
+  scopeReviewed Boolean            @default(true)
+  type          LedgerType // Ingreso / Egreso
+  category      String // Categoría (Venta servicio, Flete, Comida, Salario, Dividendos...)
+  subcategory   String?
+  method        String? // Método: Efectivo, Transferencia, ACH, Yappy, Tarjeta, Cheque, Otro
+  status        LedgerStatus       @default(PAGADO)
+  counterparty  String? // Cliente / Proveedor
+  reference     String? // Referencia / Contenedor
+  description   String?
+  amount        Float // monto (positivo; el signo lo da `type`)
+  /// Job this movement belongs to. Optional: personal spend and overhead
+  /// belong to no operation.
+  operationId   String?
+  operation     PersonalOperation? @relation(fields: [operationId], references: [id], onDelete: SetNull)
+
+  receiptUrl String? // comprobante
+  notes      String?
 
   createdById String?
   updatedById String?
@@ -965,6 +976,7 @@ model PersonalLedgerEntry {
   @@index([date])
   @@index([unit])
   @@index([scope])
+  @@index([operationId])
   @@index([type])
   @@index([status])
   @@index([category])
@@ -1274,4 +1286,48 @@ model PersonalLoanPayment {
   @@index([loanId])
   @@index([date])
   @@map("personal_loan_payments")
+}
+
+// =====================================================================
+// OPERACIONES (contenedores Valdai y similares)
+// ---------------------------------------------------------------------
+// A `PersonalOperation` is one money-making job — typically a container.
+// It exists because the free-text `reference` field could not group a job's
+// income with its costs: the same container was written
+// "Contenedor [9507100400]: ETA [29/JUNIO]  COLCHON" on the income and
+// "...[29/JUNIO] COLCHON" (one space) on the expense, and the colchones job
+// was called "2 contenedores colchones 1 triciclos" on one side and
+// "3 contenedores 2 colchones 1 triciclos" on the other. Grouping by that
+// string splits one job in two and reports a fake profit.
+//
+// `reference` is deliberately kept as-is on every entry: it is the owner's
+// original note and the audit trail for how a row got linked here.
+// =====================================================================
+
+enum OperationStatus {
+  ABIERTA
+  CERRADA
+}
+
+/// One revenue-generating job; P&L is derived from its linked entries.
+model PersonalOperation {
+  id              String          @id @default(cuid())
+  name            String // "Contenedor 9507100400 — Colchones"
+  containerNumber String? // 9507100400
+  unit            String? // unidad del libro a la que pertenece (Contenedores Valdai...)
+  status          OperationStatus @default(ABIERTA)
+  eta             DateTime?
+  startDate       DateTime?
+  closedAt        DateTime?
+  notes           String?
+
+  entries PersonalLedgerEntry[]
+
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([containerNumber])
+  @@map("personal_operations")
 }

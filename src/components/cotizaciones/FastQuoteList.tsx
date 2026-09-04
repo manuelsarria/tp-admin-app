@@ -15,13 +15,25 @@ import {
 } from '@mui/icons-material'
 
 // ── Status config ─────────────────────────────────────────────────────────────
-const STATUS_CONFIG: Record<string, { label: string; color: 'default' | 'warning' | 'info' | 'success' | 'error' }> = {
-  DRAFT:     { label: 'Borrador',  color: 'default' },
-  SENT:      { label: 'Enviada',   color: 'info' },
-  APPROVED:  { label: 'Aprobada',  color: 'success' },
-  REJECTED:  { label: 'Rechazada', color: 'error' },
-  CANCELLED: { label: 'Cancelada', color: 'default' },
+type StatusStyle = { label: string; fg: string; bg: string; border: string }
+
+const STATUS_CONFIG: Record<string, StatusStyle> = {
+  DRAFT:     { label: 'Borrador',  fg: '#B45309', bg: '#FEF3C7', border: '#FCD34D' },
+  SENT:      { label: 'Enviada',   fg: '#1D4ED8', bg: '#DBEAFE', border: '#93C5FD' },
+  APPROVED:  { label: 'Aprobada',  fg: '#15803D', bg: '#DCFCE7', border: '#86EFAC' },
+  REJECTED:  { label: 'Rechazada', fg: '#B91C1C', bg: '#FEE2E2', border: '#FCA5A5' },
+  CANCELLED: { label: 'Cancelada', fg: '#4B5563', bg: '#F3F4F6', border: '#D1D5DB' },
 }
+
+const FALLBACK_STATUS: Omit<StatusStyle, 'label'> = { fg: '#4B5563', bg: '#F3F4F6', border: '#D1D5DB' }
+
+const statusChipSx = (s?: StatusStyle) => ({
+  fontWeight: 700,
+  fontSize: '0.72rem',
+  color: s?.fg ?? FALLBACK_STATUS.fg,
+  backgroundColor: s?.bg ?? FALLBACK_STATUS.bg,
+  border: `1px solid ${s?.border ?? FALLBACK_STATUS.border}`,
+})
 
 const STATUS_TRANSITIONS: Record<string, string[]> = {
   DRAFT:     ['SENT', 'CANCELLED'],
@@ -127,7 +139,7 @@ export function FastQuoteList() {
       {/* ── Stats ── */}
       <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
         {[
-          { label: 'Borradores', count: counts.DRAFT,    icon: <HourglassEmpty sx={{ fontSize: 20 }} />, color: '#6B7280', bg: '#F9FAFB' },
+          { label: 'Borradores', count: counts.DRAFT,    icon: <HourglassEmpty sx={{ fontSize: 20 }} />, color: '#B45309', bg: '#FFFBEB' },
           { label: 'Enviadas',   count: counts.SENT,     icon: <SendOutlined   sx={{ fontSize: 20 }} />, color: '#3B82F6', bg: '#EFF6FF' },
           { label: 'Aprobadas',  count: counts.APPROVED, icon: <CheckCircle    sx={{ fontSize: 20 }} />, color: '#16A34A', bg: '#F0FDF4' },
           { label: 'Rechazadas', count: counts.REJECTED, icon: <Cancel         sx={{ fontSize: 20 }} />, color: '#DC2626', bg: '#FEF2F2' },
@@ -192,7 +204,7 @@ export function FastQuoteList() {
             </TableHead>
             <TableBody>
               {filtered.map(q => {
-                const sc = STATUS_CONFIG[q.status] ?? { label: q.status, color: 'default' }
+                const sc = STATUS_CONFIG[q.status] ?? { label: q.status, ...FALLBACK_STATUS }
                 const expiry = getExpiryDate(q.createdAt, q.validezTarifa)
                 const expiryInfo = getExpiryInfo(q.createdAt, q.validezTarifa)
                 const isActiveQuote = q.status === 'SENT' || q.status === 'DRAFT'
@@ -240,7 +252,7 @@ export function FastQuoteList() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Chip label={sc.label} color={sc.color} size="small" sx={{ fontWeight: 600, fontSize: '0.72rem' }} />
+                      <Chip label={sc.label} size="small" sx={statusChipSx(sc)} />
                     </TableCell>
                     <TableCell onClick={e => e.stopPropagation()}>
                       <Tooltip title="Acciones">
@@ -275,7 +287,7 @@ export function FastQuoteList() {
             <Box sx={{ px: 2, py: 0.5 }}><Typography variant="caption" sx={{ color: '#9CA3AF', fontWeight: 600 }}>CAMBIAR ESTATUS</Typography></Box>
             {STATUS_TRANSITIONS[activeQuote.status]?.map(s => (
               <MenuItem key={s} onClick={() => changeStatus(s)} sx={{ fontSize: '0.875rem', py: 1 }}>
-                <Chip label={STATUS_CONFIG[s]?.label} color={STATUS_CONFIG[s]?.color} size="small" sx={{ mr: 1, fontWeight: 600, fontSize: '0.72rem' }} />
+                <Chip label={STATUS_CONFIG[s]?.label} size="small" sx={{ mr: 1, ...statusChipSx(STATUS_CONFIG[s]) }} />
                 Marcar como {STATUS_CONFIG[s]?.label}
               </MenuItem>
             ))}

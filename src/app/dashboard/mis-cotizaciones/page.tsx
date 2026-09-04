@@ -11,13 +11,25 @@ import {
   ThumbUp, ThumbDown, InfoOutlined,
 } from '@mui/icons-material'
 
-const STATUS_CONFIG: Record<string, { label: string; color: 'default' | 'warning' | 'info' | 'success' | 'error' }> = {
-  DRAFT:     { label: 'Borrador',  color: 'default' },
-  SENT:      { label: 'Enviada',   color: 'info' },
-  APPROVED:  { label: 'Aprobada',  color: 'success' },
-  REJECTED:  { label: 'Rechazada', color: 'error' },
-  CANCELLED: { label: 'Cancelada', color: 'default' },
+type StatusStyle = { label: string; fg: string; bg: string; border: string }
+
+const STATUS_CONFIG: Record<string, StatusStyle> = {
+  DRAFT:     { label: 'Borrador',  fg: '#B45309', bg: '#FEF3C7', border: '#FCD34D' },
+  SENT:      { label: 'Enviada',   fg: '#1D4ED8', bg: '#DBEAFE', border: '#93C5FD' },
+  APPROVED:  { label: 'Aprobada',  fg: '#15803D', bg: '#DCFCE7', border: '#86EFAC' },
+  REJECTED:  { label: 'Rechazada', fg: '#B91C1C', bg: '#FEE2E2', border: '#FCA5A5' },
+  CANCELLED: { label: 'Cancelada', fg: '#4B5563', bg: '#F3F4F6', border: '#D1D5DB' },
 }
+
+const FALLBACK_STATUS: Omit<StatusStyle, 'label'> = { fg: '#4B5563', bg: '#F3F4F6', border: '#D1D5DB' }
+
+const statusChipSx = (s?: StatusStyle) => ({
+  fontWeight: 700,
+  fontSize: '0.72rem',
+  color: s?.fg ?? FALLBACK_STATUS.fg,
+  backgroundColor: s?.bg ?? FALLBACK_STATUS.bg,
+  border: `1px solid ${s?.border ?? FALLBACK_STATUS.border}`,
+})
 
 const fmt = (n: number) =>
   `$ ${n.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
@@ -161,7 +173,7 @@ export default function MisCotizacionesPage() {
             </TableHead>
             <TableBody>
               {items.map(q => {
-                const sc = STATUS_CONFIG[q.status] ?? { label: q.status, color: 'default' }
+                const sc = STATUS_CONFIG[q.status] ?? { label: q.status, ...FALLBACK_STATUS }
                 const typeLabel = q._type === 'fast_quote' ? 'Fast Quote' : (q.quoteType || 'Quote')
                 return (
                   <TableRow key={`${q._type}-${q.id}`} sx={{ '&:hover': { bgcolor: 'rgba(10, 10, 10, 0.05)' } }}>
@@ -180,7 +192,7 @@ export default function MisCotizacionesPage() {
                     <TableCell sx={{ fontSize: '0.8rem', color: '#6B7280' }}>{formatDate(q.createdAt)}</TableCell>
                     <TableCell>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <Chip label={sc.label} color={sc.color} size="small" sx={{ fontWeight: 600, fontSize: '0.72rem' }} />
+                        <Chip label={sc.label} size="small" sx={statusChipSx(sc)} />
                         {q.status === 'REJECTED' && q.rejectionReason && (
                           <Tooltip title={q.rejectionReason} arrow>
                             <InfoOutlined sx={{ fontSize: 16, color: '#DC2626', cursor: 'help' }} />

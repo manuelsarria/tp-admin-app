@@ -4,17 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-options'
-
-async function generateMblNumber(): Promise<string> {
-  const now = new Date()
-  const yy = now.getFullYear().toString().slice(-2)
-  const mm = String(now.getMonth() + 1).padStart(2, '0')
-  const prefix = `MBLCH${yy}${mm}`
-  const count = await prisma.lclContainer.count({
-    where: { mblNumber: { startsWith: `MBLCH${yy}` } },
-  })
-  return `${prefix}${String(count + 1).padStart(4, '0')}`
-}
+import { nextMblNumber, createWithBlNumber } from '@/lib/blNumber'
 
 export async function GET(request: NextRequest) {
   try {
@@ -26,8 +16,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = request.nextUrl
     const search = searchParams.get('search') || ''
     const status = searchParams.get('status') || ''
+    const origin = searchParams.get('origin') || ''
 
     const where: any = {}
+    if (origin) where.origin = origin
 
     if (search) {
       where.OR = [
@@ -57,9 +49,10 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     })
 
-    // Stats
+    // Stats (respetan el filtro de origen)
     const statsRaw = await prisma.lclContainer.groupBy({
       by: ['status'],
+      where: origin ? { origin: origin as any } : undefined,
       _count: { id: true },
     })
 
@@ -88,24 +81,27 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const mblNumber = await generateMblNumber()
+    const origin: 'CHINA' | 'PANAMA' = body.origin === 'PANAMA' ? 'PANAMA' : 'CHINA'
 
-    const container = await prisma.lclContainer.create({
+    const container = await createWithBlNumber(async () => prisma.lclContainer.create({
       data: {
-        mblNumber,
+        mblNumber: await nextMblNumber(origin),
+        origin,
         containerNumber: body.containerNumber || null,
         seal: body.seal || null,
         vessel: body.vessel || null,
         voyage: body.voyage || null,
         portOfLoading: body.portOfLoading || 'QINGDAO',
         portOfDischarge: body.portOfDischarge || 'BALBOA',
+        shipperName: body.shipperName || null,
+        shipperAddress: body.shipperAddress || null,
         etd: body.etd ? new Date(body.etd) : null,
         eta: body.eta ? new Date(body.eta) : null,
         closingDate: body.closingDate ? new Date(body.closingDate) : null,
         status: 'OPEN',
         notes: body.notes || null,
       },
-    })
+    }))
 
     return NextResponse.json(container, { status: 201 })
   } catch (error) {

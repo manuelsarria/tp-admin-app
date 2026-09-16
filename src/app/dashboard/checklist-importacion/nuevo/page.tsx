@@ -72,7 +72,7 @@ export default function NuevoChecklistPage() {
       <Box sx={{ mb: 4 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
           <AssignmentTurnedIn sx={{ color: '#FACC15', fontSize: 30 }} />
-          <Typography variant="h5" sx={{ fontWeight: 700, color: '#FAFAF9' }}>Nuevo Checklist de Importacion</Typography>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: '#0A0A0A' }}>Nuevo Checklist de Importacion</Typography>
         </Box>
       </Box>
 
@@ -82,7 +82,7 @@ export default function NuevoChecklistPage() {
         <Grid item xs={12} lg={5}>
           <Card sx={{ mb: 3, borderRadius: 3, border: '1px solid #E5E7EB', boxShadow: 'none' }}>
             <CardContent sx={{ p: 3 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: '#FAFAF9' }}>Informacion</Typography>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: '#0A0A0A' }}>Informacion</Typography>
               <Grid container spacing={2}>
                 <Grid item xs={12}>
                   <TextField label="Titulo del Checklist *" value={title} onChange={e => setTitle(e.target.value)} fullWidth size="small"
@@ -111,7 +111,7 @@ export default function NuevoChecklistPage() {
         <Grid item xs={12} lg={7}>
           <Card sx={{ borderRadius: 3, border: '1px solid #E5E7EB', boxShadow: 'none' }}>
             <CardContent sx={{ p: 3 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: '#FAFAF9' }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: '#0A0A0A' }}>
                 Pasos ({steps.length})
               </Typography>
 

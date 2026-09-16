@@ -49,7 +49,7 @@ export default function ChecklistImportacionPage() {
       <Box sx={{ mb: 4 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
           <AssignmentTurnedIn sx={{ color: '#FACC15', fontSize: 30 }} />
-          <Typography variant="h5" sx={{ fontWeight: 700, color: '#FAFAF9' }}>Checklist de Importacion</Typography>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: '#0A0A0A' }}>Checklist de Importacion</Typography>
         </Box>
         <Typography variant="body2" sx={{ color: '#6B7280' }}>
           Lista de pasos para cada importacion desde China. Marca tu avance y no olvides nada.

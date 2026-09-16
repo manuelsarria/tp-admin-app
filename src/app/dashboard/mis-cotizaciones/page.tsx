@@ -125,7 +125,7 @@ export default function MisCotizacionesPage() {
       <Box sx={{ mb: 4 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
           <RequestQuote sx={{ color: '#FACC15', fontSize: 30 }} />
-          <Typography variant="h5" sx={{ fontWeight: 700, color: '#FAFAF9' }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: '#0A0A0A' }}>
             Mis Cotizaciones
           </Typography>
         </Box>
@@ -177,7 +177,7 @@ export default function MisCotizacionesPage() {
                 const typeLabel = q._type === 'fast_quote' ? 'Fast Quote' : (q.quoteType || 'Quote')
                 return (
                   <TableRow key={`${q._type}-${q.id}`} sx={{ '&:hover': { bgcolor: 'rgba(10, 10, 10, 0.05)' } }}>
-                    <TableCell sx={{ fontFamily: 'monospace', fontWeight: 600, fontSize: '0.8rem', color: '#FACC15' }}>
+                    <TableCell sx={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '0.8rem', color: '#0A0A0A' }}>
                       {q.quoteNumber}
                     </TableCell>
                     <TableCell>

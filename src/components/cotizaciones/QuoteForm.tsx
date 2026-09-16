@@ -251,7 +251,7 @@ export function QuoteForm({ initial }: Props) {
           {/* Quote header */}
           <Card sx={{ mb: 3, borderRadius: 3, border: '1px solid #E5E7EB', boxShadow: 'none' }}>
             <CardContent sx={{ p: 2.5 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: '#FAFAF9' }}>Encabezado de la Cotización</Typography>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: '#0A0A0A' }}>Encabezado de la Cotización</Typography>
               <Grid container spacing={2}>
                 <Grid item xs={6}><TF label="Tipo de Servicio" value={tipoServicio} onChange={setTipoServicio} /></Grid>
                 <Grid item xs={6}><TF label="Línea Naviera" value={lineaNaviera} onChange={setLineaNaviera} /></Grid>
@@ -267,7 +267,7 @@ export function QuoteForm({ initial }: Props) {
           {/* Client & shipment */}
           <Card sx={{ mb: 3, borderRadius: 3, border: '1px solid #E5E7EB', boxShadow: 'none' }}>
             <CardContent sx={{ p: 2.5 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: '#FAFAF9' }}>Cliente</Typography>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: '#0A0A0A' }}>Cliente</Typography>
               <Grid container spacing={2}>
                 <Grid item xs={12}>
                   <UserAssignmentSelector
@@ -287,7 +287,7 @@ export function QuoteForm({ initial }: Props) {
           {/* Addresses */}
           <Card sx={{ borderRadius: 3, border: '1px solid #E5E7EB', boxShadow: 'none' }}>
             <CardContent sx={{ p: 2.5 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: '#FAFAF9' }}>Direcciones</Typography>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: '#0A0A0A' }}>Direcciones</Typography>
               <Grid container spacing={2}>
                 <Grid item xs={6}><TF label="Dirección de Recogida" value={direccionRecogida} onChange={setDireccionRecogida} /></Grid>
                 <Grid item xs={6}><TF label="Dirección de Entrega" value={direccionEntrega} onChange={setDireccionEntrega} /></Grid>
@@ -303,7 +303,7 @@ export function QuoteForm({ initial }: Props) {
           {/* Shipment info */}
           <Card sx={{ mb: 3, borderRadius: 3, border: '1px solid #E5E7EB', boxShadow: 'none' }}>
             <CardContent sx={{ p: 2.5 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: '#FAFAF9' }}>Información de Embarque</Typography>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: '#0A0A0A' }}>Información de Embarque</Typography>
               <Grid container spacing={2}>
                 <Grid item xs={6}><TF label="Peso Bruto" value={pesoBruto} onChange={setPesoBruto} type="number" /></Grid>
                 <Grid item xs={6}><TF label="Volumen (Ej: 6.5 CBM)" value={volumen} onChange={setVolumen} /></Grid>
@@ -336,7 +336,7 @@ export function QuoteForm({ initial }: Props) {
           {/* Comments */}
           <Card sx={{ borderRadius: 3, border: '1px solid #E5E7EB', boxShadow: 'none' }}>
             <CardContent sx={{ p: 2.5 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: '#FAFAF9' }}>Comentarios</Typography>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: '#0A0A0A' }}>Comentarios</Typography>
               <TextField
                 value={comentarios}
                 onChange={e => setComentarios(e.target.value)}
@@ -356,7 +356,7 @@ export function QuoteForm({ initial }: Props) {
           <Card sx={{ borderRadius: 3, border: '1px solid #E5E7EB', boxShadow: 'none' }}>
             <CardContent sx={{ p: 2.5 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#FAFAF9' }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#0A0A0A' }}>
                   Detalles de Cotización — Líneas de Servicio
                 </Typography>
                 <Button size="small" startIcon={<Add />} onClick={addLine}

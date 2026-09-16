@@ -3,18 +3,9 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
+import { sanitizeStamps } from '@/lib/hblStamps'
+import { nextHblNumber, createWithBlNumber } from '@/lib/blNumber'
 import { authOptions } from '@/lib/auth-options'
-
-async function generateHblNumber(): Promise<string> {
-  const now = new Date()
-  const yy = now.getFullYear().toString().slice(-2)
-  const mm = String(now.getMonth() + 1).padStart(2, '0')
-  const prefix = `HBLCH${yy}${mm}`
-  const count = await prisma.lclBooking.count({
-    where: { hblNumber: { startsWith: `HBLCH${yy}` } },
-  })
-  return `${prefix}${String(count + 1).padStart(4, '0')}`
-}
 
 export async function GET(request: NextRequest) {
   try {
@@ -30,8 +21,10 @@ export async function GET(request: NextRequest) {
     const unassigned = searchParams.get('unassigned') === 'true'
     const month = searchParams.get('month') || ''
     const year = searchParams.get('year') || ''
+    const origin = searchParams.get('origin') || ''
 
     const where: any = {}
+    if (origin) where.origin = origin
 
     if (search) {
       where.OR = [
@@ -61,9 +54,10 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     })
 
-    // Stats
+    // Stats (respetan el filtro de origen)
     const statsRaw = await prisma.lclBooking.groupBy({
       by: ['status'],
+      where: origin ? { origin: origin as any } : undefined,
       _count: { id: true },
     })
 
@@ -97,11 +91,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'shipperName and clientName are required' }, { status: 400 })
     }
 
-    const hblNumber = await generateHblNumber()
+    const origin: 'CHINA' | 'PANAMA' = body.origin === 'PANAMA' ? 'PANAMA' : 'CHINA'
 
-    const booking = await prisma.lclBooking.create({
+    // En Panamá el HBL nace asignado a un MBL: no existe HBL de Panamá suelto.
+    if (origin === 'PANAMA' && !body.lclContainerId) {
+      return NextResponse.json({ error: 'Debe seleccionar un MBL para el HBL de Panamá' }, { status: 400 })
+    }
+
+    const cargoItems: any[] = Array.isArray(body.cargoItems) ? body.cargoItems : []
+
+    // El número se pide DENTRO del reintento: si dos HBL llegan juntos, el que
+    // pierde vuelve a pedirlo y toma el siguiente en vez de fallar.
+    const booking = await createWithBlNumber(async () => prisma.lclBooking.create({
       data: {
-        hblNumber,
+        hblNumber: await nextHblNumber(origin),
         warehouseEntryId: body.warehouseEntryId || null,
         shipperName: body.shipperName,
         shipperAddress: body.shipperAddress || null,
@@ -109,8 +112,16 @@ export async function POST(request: NextRequest) {
         clientType: body.clientType || null,
         clientName: body.clientName,
         clientAddress: body.clientAddress || null,
+        clientRuc: body.clientRuc || null,
+        clientDv: body.clientDv || null,
+        clientEmail: body.clientEmail || null,
         notifyParty: body.notifyParty || null,
+        notifyAddress: body.notifyAddress || null,
+        notifyRuc: body.notifyRuc || null,
+        notifyDv: body.notifyDv || null,
+        notifyEmail: body.notifyEmail || null,
         notifyPhone: body.notifyPhone || null,
+        forwardingAgent: body.forwardingAgent || null,
         portOfLoading: body.portOfLoading || 'QINGDAO',
         portOfDischarge: body.portOfDischarge || 'BALBOA',
         placeOfReceipt: body.placeOfReceipt || null,
@@ -131,13 +142,34 @@ export async function POST(request: NextRequest) {
         freightDesc: body.freightDesc || null,
         exportReference: body.exportReference || null,
         documentNumber: body.documentNumber || null,
-        status: 'PENDING',
+        status: origin === 'PANAMA' ? 'ASSIGNED' : 'PENDING',
+        origin,
+        lclContainerId: body.lclContainerId || null,
         coordinatorId: session.user.id || null,
         coordinatorName: session.user.name || null,
         notes: body.notes || null,
         blDate: body.blDate ? new Date(body.blDate) : null,
+        omitQr: !!body.omitQr,
+        groupedCargo: !!body.groupedCargo,
+        stamps: sanitizeStamps(body.stamps) as any,
+        cargoItems: cargoItems.length
+          ? {
+              create: cargoItems.map((it: any, i: number) => ({
+                hsCode: it.hsCode || null,
+                description: it.description || '',
+                // parseInt('2 cajas') da NaN y Prisma rechaza la fila entera;
+                // se cae a los valores neutros en vez de reventar el HBL.
+                packages: Number.isFinite(parseInt(it.packages)) ? parseInt(it.packages) : 1,
+                packageType: it.packageType || null,
+                grossWeightKg: Number.isFinite(parseFloat(it.grossWeightKg)) ? parseFloat(it.grossWeightKg) : null,
+                cbm: Number.isFinite(parseFloat(it.cbm)) ? parseFloat(it.cbm) : null,
+                marks: it.marks || null,
+                position: i,
+              })),
+            }
+          : undefined,
       },
-    })
+    }))
 
     // Link WarehouseEntry if provided
     if (body.warehouseEntryId) {

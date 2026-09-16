@@ -21,6 +21,13 @@ export async function GET(
         bookings: {
           orderBy: { createdAt: 'asc' },
         },
+        documents: {
+          select: {
+            id: true, kind: true, originalName: true, mimeType: true, size: true,
+            notes: true, createdAt: true, uploadedBy: { select: { id: true, name: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+        },
       },
     })
 
@@ -53,6 +60,8 @@ export async function PUT(
         ...(body.voyage !== undefined && { voyage: body.voyage || null }),
         ...(body.portOfLoading !== undefined && { portOfLoading: body.portOfLoading }),
         ...(body.portOfDischarge !== undefined && { portOfDischarge: body.portOfDischarge }),
+        ...(body.shipperName !== undefined && { shipperName: body.shipperName || null }),
+        ...(body.shipperAddress !== undefined && { shipperAddress: body.shipperAddress || null }),
         ...(body.etd !== undefined && { etd: body.etd ? new Date(body.etd) : null }),
         ...(body.eta !== undefined && { eta: body.eta ? new Date(body.eta) : null }),
         ...(body.closingDate !== undefined && { closingDate: body.closingDate ? new Date(body.closingDate) : null }),

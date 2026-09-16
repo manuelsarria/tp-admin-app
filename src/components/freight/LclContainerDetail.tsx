@@ -28,11 +28,13 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TextField,
   Typography,
   Alert,
   Paper,
   Divider,
   Tooltip,
+  FormControlLabel,
 } from '@mui/material'
 import {
   ArrowBack,
@@ -40,6 +42,10 @@ import {
   Lock,
   Add,
   Remove,
+  CloudUpload,
+  Description,
+  DeleteOutline,
+  ViewInAr,
 } from '@mui/icons-material'
 
 interface LclBooking {
@@ -64,6 +70,8 @@ interface LclContainer {
   voyage: string | null
   portOfLoading: string
   portOfDischarge: string
+  shipperName: string | null
+  shipperAddress: string | null
   etd: string | null
   eta: string | null
   closingDate: string | null
@@ -72,6 +80,8 @@ interface LclContainer {
   createdAt: string
   bookings: LclBooking[]
 }
+
+interface MblDoc { id: string; kind: string; originalName: string; size: number; createdAt: string }
 
 const CONTAINER_CAPACITIES: Record<string, { cbm: number; label: string }> = {
   '20ft': { cbm: 26.5, label: '20ft (26.5 CBM)' },
@@ -110,14 +120,19 @@ const fmtDate = (s: string | null) => s ? new Date(s).toLocaleDateString('es-PA'
 
 interface Props {
   id: string
+  origin?: 'CHINA' | 'PANAMA'
 }
 
-export function LclContainerDetail({ id }: Props) {
+export function LclContainerDetail({ id, origin = 'CHINA' }: Props) {
   const router = useRouter()
+  const isPanama = origin === 'PANAMA'
+  const containersBase = isPanama ? '/dashboard/freight/pa/mbl' : '/dashboard/freight/lcl/containers'
   const [container, setContainer] = useState<LclContainer | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [containerType, setContainerType] = useState('20ft')
+  const [shipper, setShipper] = useState({ name: '', address: '' })
+  const [savingShipper, setSavingShipper] = useState(false)
 
   // Dialogs
   const [closeDialog, setCloseDialog] = useState(false)
@@ -129,6 +144,10 @@ export function LclContainerDetail({ id }: Props) {
   const [selectedBookings, setSelectedBookings] = useState<string[]>([])
   const [loadingAvailable, setLoadingAvailable] = useState(false)
 
+  // Documentos adjuntos al MBL
+  const [mblDocs, setMblDocs] = useState<MblDoc[]>([])
+  const [uploadingMbl, setUploadingMbl] = useState(false)
+
   const load = useCallback(async () => {
     setLoading(true)
     setError('')
@@ -138,6 +157,7 @@ export function LclContainerDetail({ id }: Props) {
       const data = await res.json()
       setContainer(data)
       if (data.containerType) setContainerType(data.containerType)
+      setShipper({ name: data.shipperName || '', address: data.shipperAddress || '' })
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -147,10 +167,58 @@ export function LclContainerDetail({ id }: Props) {
 
   useEffect(() => { load() }, [load])
 
+  const loadMblDocs = useCallback(async () => {
+    const res = await fetch(`/api/documents?lclContainerId=${id}`)
+    if (res.ok) setMblDocs((await res.json()).filter((d: MblDoc) => d.kind === 'MBL'))
+  }, [id])
+
+  useEffect(() => { loadMblDocs() }, [loadMblDocs])
+
+  // Shipper del MBL: se hereda a todos los HBL que se creen bajo el.
+  const saveShipper = async () => {
+    setSavingShipper(true)
+    try {
+      const res = await fetch(`/api/lcl-containers/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shipperName: shipper.name || null, shipperAddress: shipper.address || null }),
+      })
+      if (!res.ok) throw new Error()
+      await load()
+    } catch {
+      setError('No se pudo guardar el shipper.')
+    } finally {
+      setSavingShipper(false)
+    }
+  }
+
+  const uploadMbl = async (file: File) => {
+    setUploadingMbl(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      fd.append('kind', 'MBL')
+      fd.append('lclContainerId', id)
+      const res = await fetch('/api/documents', { method: 'POST', body: fd })
+      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error || 'Error') }
+      await loadMblDocs()
+    } catch (e: any) {
+      alert(e.message || 'Error al subir el MBL')
+    } finally {
+      setUploadingMbl(false)
+    }
+  }
+
+  const deleteMblDoc = async (docId: string) => {
+    if (!confirm('¿Eliminar este documento MBL?')) return
+    const res = await fetch(`/api/documents/${docId}`, { method: 'DELETE' })
+    if (res.ok) await loadMblDocs()
+  }
+
   const loadAvailableBookings = async () => {
     setLoadingAvailable(true)
     try {
-      const res = await fetch('/api/lcl-bookings?unassigned=true')
+      const res = await fetch(`/api/lcl-bookings?unassigned=true&origin=${origin}`)
       if (!res.ok) throw new Error()
       const data = await res.json()
       setAvailableBookings(data.bookings || [])
@@ -221,6 +289,8 @@ export function LclContainerDetail({ id }: Props) {
   const totalCbm = container.bookings.reduce((s, b) => s + (b.cbm ?? 0), 0)
   const capacity = CONTAINER_CAPACITIES[containerType]
   const cbmPercent = Math.min((totalCbm / capacity.cbm) * 100, 100)
+  const shipperDirty =
+    shipper.name !== (container.shipperName || '') || shipper.address !== (container.shipperAddress || '')
 
   const canClose = ['OPEN', 'LOADING'].includes(container.status)
   const canConsolidado = ['CLOSED', 'IN_TRANSIT', 'ARRIVED', 'COMPLETED'].includes(container.status)
@@ -229,7 +299,7 @@ export function LclContainerDetail({ id }: Props) {
     <Box>
       {/* Top bar */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, flexWrap: 'wrap' }}>
-        <Button startIcon={<ArrowBack />} onClick={() => router.push('/dashboard/freight/lcl/containers')} variant="outlined" size="small">
+        <Button startIcon={<ArrowBack />} onClick={() => router.push(containersBase)} variant="outlined" size="small">
           Volver
         </Button>
         <Typography variant="h5" fontWeight={700} sx={{ flex: 1 }}>
@@ -276,6 +346,33 @@ export function LclContainerDetail({ id }: Props) {
                 </Grid>
               ))}
             </Grid>
+            {isPanama && (
+              <Box sx={{ mt: 2, pt: 1.5, borderTop: '1px solid #F3F4F6' }}>
+                <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 0.5, color: '#FACC15' }}>
+                  Shipper del MBL
+                </Typography>
+                <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1.5 }}>
+                  Se precarga en cada HBL nuevo de este MBL (editable por HBL).
+                </Typography>
+                <Grid container spacing={1.5} alignItems="flex-start">
+                  <Grid item xs={12} sm={5}>
+                    <TextField label="Shipper Name" fullWidth size="small"
+                      value={shipper.name}
+                      onChange={e => setShipper(p => ({ ...p, name: e.target.value }))} />
+                  </Grid>
+                  <Grid item xs={12} sm={5}>
+                    <TextField label="Shipper Address" fullWidth size="small" multiline minRows={2}
+                      value={shipper.address}
+                      onChange={e => setShipper(p => ({ ...p, address: e.target.value }))} />
+                  </Grid>
+                  <Grid item xs={12} sm={2}>
+                    <Button variant="outlined" size="small" onClick={saveShipper} disabled={savingShipper || !shipperDirty}>
+                      {savingShipper ? 'Guardando…' : 'Guardar'}
+                    </Button>
+                  </Grid>
+                </Grid>
+              </Box>
+            )}
             {container.notes && (
               <Box sx={{ mt: 1.5, pt: 1.5, borderTop: '1px solid #F3F4F6' }}>
                 <Typography variant="caption" color="text.secondary">Notas</Typography>
@@ -331,7 +428,7 @@ export function LclContainerDetail({ id }: Props) {
               sx={{
                 height: 16,
                 borderRadius: 8,
-                bgcolor: '#0A0A0A',
+                bgcolor: '#F1F5F9',
                 '& .MuiLinearProgress-bar': {
                   bgcolor: cbmPercent > 90 ? '#FACC15' : cbmPercent > 70 ? '#F59E0B' : '#10B981',
                   borderRadius: 8,
@@ -426,6 +523,56 @@ export function LclContainerDetail({ id }: Props) {
             </TableBody>
           </Table>
         </TableContainer>
+      </Paper>
+
+      {/* Documentos del MBL */}
+      <Paper sx={{ border: '1px solid #E5E7EB', mt: 3, p: 2.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+          <ViewInAr sx={{ color: '#FACC15' }} />
+          <Typography variant="subtitle1" fontWeight={700}>
+            Documentos del MBL
+          </Typography>
+        </Box>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+          El Master BL escaneado y cualquier otro documento del contenedor.
+        </Typography>
+
+        <Button
+          component="label"
+          variant="outlined"
+          size="small"
+          startIcon={uploadingMbl ? <CircularProgress size={16} /> : <CloudUpload />}
+          disabled={uploadingMbl}
+          sx={{ textTransform: 'none' }}
+        >
+          Subir documento MBL
+          <input type="file" hidden accept="application/pdf,image/*"
+            onChange={e => { const f = e.target.files?.[0]; if (f) uploadMbl(f); e.target.value = '' }} />
+        </Button>
+
+              {mblDocs.length > 0 && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="caption" color="text.secondary">Documento(s) MBL</Typography>
+                  {mblDocs.map(d => (
+                    <Box key={d.id} sx={{ display: 'flex', alignItems: 'center', gap: 1, py: 0.5 }}>
+                      <Description sx={{ fontSize: 18, color: '#6B7280' }} />
+                      <Typography variant="body2" sx={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {d.originalName}
+                      </Typography>
+                      <Tooltip title="Ver / descargar">
+                        <IconButton size="small" href={`/api/documents/${d.id}`} target="_blank">
+                          <PictureAsPdf fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Eliminar">
+                        <IconButton size="small" color="error" onClick={() => deleteMblDoc(d.id)}>
+                          <DeleteOutline fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  ))}
+                </Box>
+        )}
       </Paper>
 
       {/* Close Container Dialog */}

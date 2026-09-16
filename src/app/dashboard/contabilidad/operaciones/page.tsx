@@ -57,7 +57,7 @@ export default function OperacionesPage() {
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
             <LocalShipping sx={{ color: '#FACC15', fontSize: 28 }} />
-            <Typography variant="h5" sx={{ fontWeight: 700, color: '#FAFAF9' }}>Operaciones</Typography>
+            <Typography variant="h5" sx={{ fontWeight: 700, color: '#0A0A0A' }}>Operaciones</Typography>
           </Box>
           <Typography variant="body2" sx={{ color: '#6B7280' }}>
             P&L por contenedor/LCL — igual que tu hoja de Excel

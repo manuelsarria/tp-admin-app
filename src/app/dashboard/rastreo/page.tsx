@@ -140,7 +140,7 @@ function DetailRow({ icon, label, value, highlight }: { icon: string; label: str
       borderLeft: `4px solid ${highlight ? '#FACC15' : '#10B981'}`,
     }}>
       <Typography sx={{ color: '#A8A29E', fontWeight: 600, fontSize: '0.88rem' }}>{icon} {label}</Typography>
-      <Typography sx={{ fontWeight: 700, fontSize: '0.88rem', color: '#FAFAF9' }}>{value}</Typography>
+      <Typography sx={{ fontWeight: 700, fontSize: '0.88rem', color: '#0A0A0A' }}>{value}</Typography>
     </Box>
   )
 }
@@ -181,7 +181,7 @@ export default function RastreoPage() {
     <Box>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
         <LocalShipping sx={{ color: '#FACC15', fontSize: 28 }} />
-        <Typography variant="h5" sx={{ fontWeight: 700, color: '#FAFAF9' }}>Rastreo de Paquete</Typography>
+        <Typography variant="h5" sx={{ fontWeight: 700, color: '#0A0A0A' }}>Rastreo de Paquete</Typography>
       </Box>
       <Typography variant="body2" sx={{ color: '#6B7280', mb: 3 }}>
         Busca por número de tracking, casillero, código adicional o contenedor.
@@ -228,7 +228,7 @@ export default function RastreoPage() {
           {/* Header */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2, mb: 1 }}>
             <Box>
-              <Typography sx={{ fontSize: '1.5rem', fontWeight: 800, color: '#FAFAF9', mb: 0.5 }}>Estado del Paquete</Typography>
+              <Typography sx={{ fontSize: '1.5rem', fontWeight: 800, color: '#0A0A0A', mb: 0.5 }}>Estado del Paquete</Typography>
               <Typography sx={{ color: '#78716C', fontSize: '0.9rem' }}>
                 <strong style={{ color: '#D6D3D1' }}>Tracking:</strong> {result.trackingWarehouse}
               </Typography>
@@ -267,7 +267,7 @@ export default function RastreoPage() {
 
           {/* Details */}
           <Box sx={{ bgcolor: '#F8FAFC', borderRadius: 3, p: 3, display: 'grid', gap: 1.5 }}>
-            <Typography sx={{ fontWeight: 800, fontSize: '1rem', color: '#FAFAF9', mb: 0.5 }}>📋 Detalles</Typography>
+            <Typography sx={{ fontWeight: 800, fontSize: '1rem', color: '#0A0A0A', mb: 0.5 }}>📋 Detalles</Typography>
 
             {result.fclCreatedAt && (
               <DetailRow icon={result.status === 'RECEIVED_IN_WAREHOUSE' ? '📦' : '✅'}

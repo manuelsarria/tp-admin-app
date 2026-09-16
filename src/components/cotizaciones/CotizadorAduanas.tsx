@@ -44,13 +44,13 @@ const parseNum = (v: string) => parseFloat(v) || 0
 interface ResultData {
   confeccion: number
   lineasExtras: number
-  manejoCNC: number
+  manejoTP: number
   fotocopias: number
   formularios: number
   gastosItems: { label: string; value: number }[]
   gastosTotal: number
   subtotalAduanero: number
-  honorariosCNC: number
+  honorariosTP: number
   totalCotizacion: number
 }
 
@@ -61,7 +61,7 @@ export function CotizadorAduanas() {
   const [numFormularios, setNumFormularios]     = useState('1')
   const [includeFotocopias, setIncludeFotocopias] = useState(false)
   const [gastosCheck, setGastosCheck]           = useState<string[]>([])
-  const [honorariosCNC, setHonorariosCNC]       = useState('')
+  const [honorariosTP, setHonorariosTP]       = useState('')
   const [result, setResult]                     = useState<ResultData | null>(null)
   const [copied, setCopied]                     = useState(false)
 
@@ -72,24 +72,24 @@ export function CotizadorAduanas() {
     const cif        = parseNum(valorCIF)
     const lineas     = Math.max(1, parseInt(totalLineas) || 1)
     const formularios = Math.max(0, parseInt(numFormularios) || 0)
-    const honorarios = parseNum(honorariosCNC)
+    const honorarios = parseNum(honorariosTP)
 
     const confeccion    = calcConfeccion(cif)
     const lineasExtras  = Math.max(0, lineas - 1) * 3
-    const manejoCNC     = esCasillero ? 50 : 0
+    const manejoTP     = esCasillero ? 50 : 0
     const fotocopias    = includeFotocopias ? 25 : 0
     const formTotal     = formularios * 8
 
     const gastosItems = GASTOS_OPCIONALES.filter(g => gastosCheck.includes(g.id))
     const gastosTotal = gastosItems.reduce((s, g) => s + g.value, 0)
 
-    const subtotalAduanero = confeccion + lineasExtras + manejoCNC + fotocopias + formTotal + gastosTotal
+    const subtotalAduanero = confeccion + lineasExtras + manejoTP + fotocopias + formTotal + gastosTotal
     const totalCotizacion  = subtotalAduanero + honorarios
 
     setResult({
-      confeccion, lineasExtras, manejoCNC, fotocopias,
+      confeccion, lineasExtras, manejoTP, fotocopias,
       formularios: formTotal, gastosItems, gastosTotal,
-      subtotalAduanero, honorariosCNC: honorarios, totalCotizacion,
+      subtotalAduanero, honorariosTP: honorarios, totalCotizacion,
     })
   }
 
@@ -109,8 +109,8 @@ export function CotizadorAduanas() {
 
     if (result.lineasExtras > 0)
       lines.push(`• Líneas extras (${extras} × $3.00): ${fmt(result.lineasExtras)}`)
-    if (result.manejoCNC > 0)
-      lines.push(`• Manejo Admin. y Consultoría (casillero): ${fmt(result.manejoCNC)}`)
+    if (result.manejoTP > 0)
+      lines.push(`• Manejo Admin. y Consultoría (casillero): ${fmt(result.manejoTP)}`)
 
     if (result.fotocopias > 0)
       lines.push(`• Fotocopias: ${fmt(result.fotocopias)}`)
@@ -126,7 +126,7 @@ export function CotizadorAduanas() {
     lines.push(
       '',
       `Subtotal honorarios aduaneros: ${fmt(result.subtotalAduanero)}`,
-      `Honorarios TP Logistics:       ${fmt(result.honorariosCNC)}`,
+      `Honorarios TP Logistics:       ${fmt(result.honorariosTP)}`,
       '',
       `💰 TOTAL HONORARIOS: ${fmt(result.totalCotizacion)}`,
       '',
@@ -162,7 +162,7 @@ export function CotizadorAduanas() {
       <Grid item xs={12} md={6}>
         <Card sx={{ borderRadius: 3, border: '1px solid #E5E7EB', boxShadow: 'none' }}>
           <CardContent sx={{ p: 3 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, mb: 3, color: '#FAFAF9' }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, mb: 3, color: '#0A0A0A' }}>
               Datos del Trámite
             </Typography>
 
@@ -272,7 +272,7 @@ export function CotizadorAduanas() {
             </Box>
 
             {/* Gastos adicionales */}
-            <Typography variant="body2" sx={{ fontWeight: 700, color: '#FAFAF9', mb: 1.5 }}>
+            <Typography variant="body2" sx={{ fontWeight: 700, color: '#0A0A0A', mb: 1.5 }}>
               Gastos Adicionales <Typography component="span" variant="caption" sx={{ color: '#9CA3AF', fontWeight: 400 }}>(seleccionar los que apliquen)</Typography>
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
@@ -299,17 +299,17 @@ export function CotizadorAduanas() {
               })}
             </Box>
 
-            {/* Honorarios CNC */}
+            {/* Honorarios TP */}
             <TextField
               label="Honorarios TP Logistics"
               fullWidth
-              value={honorariosCNC}
-              onChange={e => setHonorariosCNC(e.target.value)}
+              value={honorariosTP}
+              onChange={e => setHonorariosTP(e.target.value)}
               InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }}
               sx={{ mb: 3 }}
               type="number"
               inputProps={{ min: 0, step: '0.01' }}
-              helperText="Monto de CNC que se suma al total del aduanero para cotizar al cliente"
+              helperText="Monto de TP que se suma al total del aduanero para cotizar al cliente"
             />
 
             <Button
@@ -340,7 +340,7 @@ export function CotizadorAduanas() {
         {result ? (
           <Card sx={{ borderRadius: 3, border: '1px solid #E5E7EB', boxShadow: 'none' }}>
             <CardContent sx={{ p: 3 }}>
-              <Typography variant="h6" sx={{ fontWeight: 700, mb: 3, color: '#FAFAF9' }}>
+              <Typography variant="h6" sx={{ fontWeight: 700, mb: 3, color: '#0A0A0A' }}>
                 Resultado
               </Typography>
 
@@ -351,8 +351,8 @@ export function CotizadorAduanas() {
                   ...(result.lineasExtras > 0
                     ? [{ label: `Líneas extras (${parseInt(totalLineas) - 1} × $3.00)`, value: result.lineasExtras }]
                     : []),
-                  ...(result.manejoCNC > 0
-                    ? [{ label: 'Manejo Admin. y Consultoría', value: result.manejoCNC }]
+                  ...(result.manejoTP > 0
+                    ? [{ label: 'Manejo Admin. y Consultoría', value: result.manejoTP }]
                     : []),
                   ...(result.fotocopias > 0
                     ? [{ label: 'Fotocopias', value: result.fotocopias }]
@@ -381,7 +381,7 @@ export function CotizadorAduanas() {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.6 }}>
                   <Typography variant="body2" sx={{ color: '#6B7280' }}>Honorarios TP Logistics</Typography>
                   <Typography variant="body2" sx={{ fontWeight: 700, color: '#FACC15' }}>
-                    + {fmt(result.honorariosCNC)}
+                    + {fmt(result.honorariosTP)}
                   </Typography>
                 </Box>
               </Box>
@@ -411,7 +411,7 @@ export function CotizadorAduanas() {
               {/* Mensaje */}
               <Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 700, color: '#FAFAF9' }}>
+                  <Typography variant="body2" sx={{ fontWeight: 700, color: '#0A0A0A' }}>
                     Mensaje para el Cliente
                   </Typography>
                   <Button

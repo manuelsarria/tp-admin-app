@@ -155,7 +155,7 @@ export default function BoletinPage() {
     <Box>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
         <Email sx={{ color: '#FACC15', fontSize: 28 }} />
-        <Typography variant="h5" sx={{ fontWeight: 700, color: '#FAFAF9' }}>Boletín Semanal de Contenedores</Typography>
+        <Typography variant="h5" sx={{ fontWeight: 700, color: '#0A0A0A' }}>Boletín Semanal de Contenedores</Typography>
       </Box>
       <Typography variant="body2" sx={{ color: '#6B7280', mb: 3 }}>
         Envía actualizaciones semanales a los clientes sobre el estado de sus contenedores LCL.
@@ -191,8 +191,8 @@ export default function BoletinPage() {
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2, mb: 2 }}>
                     <Box>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
-                        <DirectionsBoat sx={{ color: '#FAFAF9', fontSize: 22 }} />
-                        <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', color: '#FAFAF9' }}>
+                        <DirectionsBoat sx={{ color: '#FACC15', fontSize: 22 }} />
+                        <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', color: '#0A0A0A' }}>
                           {c.containerNumber || c.mblNumber}
                         </Typography>
                         <Chip label={STATUS_LABELS[c.status] || c.status} size="small" sx={{

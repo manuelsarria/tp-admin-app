@@ -6,13 +6,14 @@ import {
   Box, Typography, Card, CardContent, Chip, IconButton, Button,
   Menu, MenuItem, Tooltip, CircularProgress, TextField, InputAdornment,
   Select, FormControl, InputLabel, Table, TableHead, TableRow,
-  TableCell, TableBody, Paper,
+  TableCell, TableBody, Paper, Badge,
 } from '@mui/material'
 import {
   Add, MoreVert, PictureAsPdf, Edit, Delete, Search,
   CheckCircle, Cancel, SendOutlined, HourglassEmpty,
-  AccessTime, WarningAmber,
+  AccessTime, WarningAmber, StickyNote2,
 } from '@mui/icons-material'
+import { NotasSeguimientoDialog } from '@/components/cotizaciones/NotasSeguimiento'
 
 // ── Status config ─────────────────────────────────────────────────────────────
 type StatusStyle = { label: string; fg: string; bg: string; border: string }
@@ -70,6 +71,9 @@ export function QuoteList() {
   const [filterType, setFilterType]     = useState('ALL')
   const [menuAnchor, setMenuAnchor]     = useState<null | HTMLElement>(null)
   const [activeQuote, setActiveQuote]   = useState<any>(null)
+  // Seguimiento: cuántas notas tiene cada cotización y cuál hilo está abierto
+  const [notesCounts, setNotesCounts]   = useState<Record<string, number>>({})
+  const [notesQuote, setNotesQuote]     = useState<any>(null)
 
   const loadQuotes = async () => {
     setLoading(true)
@@ -84,7 +88,18 @@ export function QuoteList() {
     }
   }
 
-  useEffect(() => { loadQuotes() }, [])
+  // Los contadores salen de una sola consulta agrupada, no de pedir el hilo
+  // de cada fila.
+  const loadNotesCounts = async () => {
+    try {
+      const res = await fetch('/api/quote-notes/counts?entity=QUOTE', { cache: 'no-store' })
+      setNotesCounts(res.ok ? await res.json() : {})
+    } catch {
+      setNotesCounts({})
+    }
+  }
+
+  useEffect(() => { loadQuotes(); loadNotesCounts() }, [])
 
   const openMenu = (e: React.MouseEvent<HTMLElement>, quote: any) => {
     setMenuAnchor(e.currentTarget)
@@ -208,7 +223,7 @@ export function QuoteList() {
           <Table>
             <TableHead>
               <TableRow sx={{ bgcolor: '#F8FAFC' }}>
-                {['# Quote', 'Tipo', 'Cliente', 'Asignado a', 'Ruta', 'Creada', 'Vencimiento', 'Total', 'Estatus', ''].map(h => (
+                {['# Quote', 'Tipo', 'Cliente', 'Asignado a', 'Ruta', 'Creada', 'Vencimiento', 'Total', 'Estatus', 'Notas', ''].map(h => (
                   <TableCell key={h} sx={{ fontWeight: 700, fontSize: '0.78rem', color: '#374151', borderBottom: '1px solid #E5E7EB' }}>{h}</TableCell>
                 ))}
               </TableRow>
@@ -220,7 +235,7 @@ export function QuoteList() {
                 const isActiveQuote = q.status === 'SENT' || q.status === 'DRAFT'
                 return (
                   <TableRow key={q.id} sx={{ '&:hover': { bgcolor: 'rgba(10, 10, 10, 0.05)' } }}>
-                    <TableCell sx={{ fontFamily: 'monospace', fontWeight: 600, fontSize: '0.8rem', color: '#FACC15' }}>
+                    <TableCell sx={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '0.8rem', color: '#0A0A0A' }}>
                       {q.quoteNumber}
                     </TableCell>
                     <TableCell>
@@ -259,6 +274,16 @@ export function QuoteList() {
                       <Chip label={sc.label} size="small" sx={statusChipSx(sc)} />
                     </TableCell>
                     <TableCell onClick={e => e.stopPropagation()}>
+                      <Tooltip title={notesCounts[q.id] ? `${notesCounts[q.id]} nota(s) de seguimiento` : 'Agregar nota de seguimiento'}>
+                        <IconButton size="small" onClick={() => setNotesQuote(q)}>
+                          <Badge badgeContent={notesCounts[q.id] || 0} color="primary"
+                            sx={{ '& .MuiBadge-badge': { fontSize: '0.6rem', height: 16, minWidth: 16 } }}>
+                            <StickyNote2 fontSize="small" sx={{ color: notesCounts[q.id] ? '#CA8A04' : '#9CA3AF' }} />
+                          </Badge>
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                    <TableCell onClick={e => e.stopPropagation()}>
                       <Tooltip title="Acciones">
                         <IconButton size="small" onClick={e => openMenu(e, q)}>
                           <MoreVert fontSize="small" />
@@ -286,6 +311,10 @@ export function QuoteList() {
           <PictureAsPdf sx={{ mr: 1.5, fontSize: 18, color: '#FACC15' }} /> Descargar PDF
         </MenuItem>
 
+        <MenuItem onClick={() => { setNotesQuote(activeQuote); closeMenu() }} sx={{ fontSize: '0.875rem', py: 1.25 }}>
+          <StickyNote2 sx={{ mr: 1.5, fontSize: 18, color: '#CA8A04' }} /> Notas de seguimiento
+        </MenuItem>
+
         {activeQuote && STATUS_TRANSITIONS[activeQuote.status]?.length > 0 && (
           <Box>
             <Box sx={{ px: 2, py: 0.5 }}><Typography variant="caption" sx={{ color: '#9CA3AF', fontWeight: 600 }}>CAMBIAR ESTATUS</Typography></Box>
@@ -304,6 +333,15 @@ export function QuoteList() {
           </MenuItem>
         </Box>
       </Menu>
+
+      <NotasSeguimientoDialog
+        open={Boolean(notesQuote)}
+        onClose={() => setNotesQuote(null)}
+        entity="QUOTE"
+        entityId={notesQuote?.id ?? null}
+        titulo={notesQuote ? `${notesQuote.quoteNumber} — ${notesQuote.cliente}` : undefined}
+        onCountChange={(id, count) => setNotesCounts(prev => ({ ...prev, [id]: count }))}
+      />
     </Box>
   )
 }

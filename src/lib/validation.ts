@@ -234,3 +234,56 @@ export type FclShipmentFilterInput = z.infer<typeof fclShipmentFilterSchema>
 export type CreateLclShipmentInput = z.infer<typeof createLclShipmentSchema>
 export type UpdateLclShipmentInput = z.infer<typeof updateLclShipmentSchema>
 export type LclShipmentFilterInput = z.infer<typeof lclShipmentFilterSchema>
+
+// ============================================
+// SEGURO DE CARGA
+// ============================================
+
+const insuranceQuoteBase = z.object({
+  cliente: z.string().min(1, 'El cliente es requerido').max(160),
+  referencia: z.string().max(120).optional().nullable(),
+  descripcionCarga: z.string().max(500).optional().nullable(),
+
+  valorComercial: z.coerce.number().min(0).default(0),
+  valorFlete: z.coerce.number().min(0).default(0),
+  valorTributos: z.coerce.number().min(0).default(0),
+  gastosAdicionalesPct: z.coerce.number().min(0).max(100).default(0),
+  lucroSesantePct: z.coerce.number().min(0).max(100).default(0),
+
+  clienteType: z.enum(['regular', 'agente', 'custom']).default('regular'),
+  /// Solo se usan cuando clienteType es 'custom'; si no, mandan los presets.
+  customLabel: z.string().max(80).optional().nullable(),
+  customRate: z.coerce.number().min(0).max(100).optional(),
+  customMinimo: z.coerce.number().min(0).optional(),
+
+  comentarios: z.string().max(2000).optional().nullable(),
+  status: z.enum(['DRAFT', 'SENT', 'APPROVED', 'REJECTED', 'CANCELLED']).optional(),
+  rejectionReason: z.string().max(500).optional().nullable(),
+})
+
+/**
+ * Con clienteType 'custom' la tasa y el mínimo los define quien cotiza. Si no
+ * vienen, `resolveRate` devuelve 0 y 0: la cotización se guardaba con una prima
+ * de $0 y el PDF salía con "Tasa aplicada 0%".
+ */
+function exigirTasaPersonalizada(
+  d: { clienteType?: string; customRate?: number; customMinimo?: number },
+  ctx: z.RefinementCtx,
+) {
+  if (d.clienteType !== 'custom') return
+  if (d.customRate == null) {
+    ctx.addIssue({ code: 'custom', path: ['customRate'], message: 'Indica la tasa personalizada' })
+  }
+  if (d.customMinimo == null) {
+    ctx.addIssue({ code: 'custom', path: ['customMinimo'], message: 'Indica la prima mínima personalizada' })
+  }
+}
+
+export const insuranceQuoteSchema = insuranceQuoteBase.superRefine(exigirTasaPersonalizada)
+
+// El update parte del objeto BASE, no del refinado: `.partial()` es de
+// ZodObject y el refinamiento devuelve otra cosa. La misma regla se vuelve a
+// aplicar encima, porque al editar también se puede cambiar a tasa propia.
+export const insuranceQuoteUpdateSchema = insuranceQuoteBase.partial().superRefine(exigirTasaPersonalizada)
+
+export type InsuranceQuoteInput = z.infer<typeof insuranceQuoteSchema>

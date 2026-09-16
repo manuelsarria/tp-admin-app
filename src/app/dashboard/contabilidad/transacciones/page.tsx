@@ -109,7 +109,7 @@ export default function TransaccionesPage() {
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
             <Receipt sx={{ color: '#FACC15', fontSize: 28 }} />
-            <Typography variant="h5" sx={{ fontWeight: 700, color: '#FAFAF9' }}>Libro de Transacciones</Typography>
+            <Typography variant="h5" sx={{ fontWeight: 700, color: '#0A0A0A' }}>Libro de Transacciones</Typography>
           </Box>
           <Typography variant="body2" sx={{ color: '#6B7280' }}>Ingresos y gastos generales del negocio</Typography>
         </Box>

@@ -89,7 +89,12 @@ const STATUS_COLORS: Record<string, 'default' | 'warning' | 'info' | 'primary' |
   COMPLETED: 'success',
 }
 
-export function LclContainerList() {
+/**
+ * Listado de MBL. Ver LclBookingList: mismo componente para China y Panamá.
+ */
+export function LclContainerList({ origin = 'CHINA' }: { origin?: 'CHINA' | 'PANAMA' } = {}) {
+  const isPanama = origin === 'PANAMA'
+  const containersBase = isPanama ? '/dashboard/freight/pa/mbl' : '/dashboard/freight/lcl/containers'
   const router = useRouter()
   const [containers, setContainers] = useState<LclContainer[]>([])
   const [stats, setStats] = useState<Stats>({ OPEN: 0, LOADING: 0, CLOSED: 0, IN_TRANSIT: 0, ARRIVED: 0, COMPLETED: 0 })
@@ -112,6 +117,7 @@ export function LclContainerList() {
       const params = new URLSearchParams()
       if (search) params.set('search', search)
       if (statusFilter) params.set('status', statusFilter)
+      params.set('origin', origin)
       const res = await fetch(`/api/lcl-containers?${params}`)
       if (!res.ok) throw new Error('Error cargando contenedores')
       const data = await res.json()
@@ -122,7 +128,7 @@ export function LclContainerList() {
     } finally {
       setLoading(false)
     }
-  }, [search, statusFilter])
+  }, [search, statusFilter, origin])
 
   useEffect(() => { load() }, [load])
 
@@ -222,7 +228,7 @@ export function LclContainerList() {
             <Button
               variant="contained"
               startIcon={<Add />}
-              onClick={() => router.push('/dashboard/freight/lcl/containers/nueva')}
+              onClick={() => router.push(`${containersBase}/nueva`)}
               sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' } }}
             >
               Nuevo Contenedor
@@ -264,7 +270,7 @@ export function LclContainerList() {
                 const { pkgs, cbm } = getContainerTotals(c)
                 return (
                   <TableRow key={c.id} hover sx={{ cursor: 'pointer' }}
-                    onClick={() => router.push(`/dashboard/freight/lcl/containers/${c.id}`)}
+                    onClick={() => router.push(`${containersBase}/${c.id}`)}
                   >
                     <TableCell>
                       <Typography variant="body2" fontWeight={700} color="#FACC15">{c.mblNumber}</Typography>
@@ -297,7 +303,7 @@ export function LclContainerList() {
 
       {/* Context Menu */}
       <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={closeMenu}>
-        <MenuItem onClick={() => { router.push(`/dashboard/freight/lcl/containers/${selectedId}`); closeMenu() }}>
+        <MenuItem onClick={() => { router.push(`${containersBase}/${selectedId}`); closeMenu() }}>
           <Visibility fontSize="small" sx={{ mr: 1 }} /> Ver Detalle
         </MenuItem>
         {selectedContainer && ['OPEN', 'LOADING'].includes(selectedContainer.status) && (

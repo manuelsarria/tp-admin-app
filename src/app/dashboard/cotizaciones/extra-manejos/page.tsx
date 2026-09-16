@@ -94,7 +94,7 @@ export default function ExtraManejosPage() {
       {/* Header */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
         <Receipt sx={{ color: '#FACC15', fontSize: 28 }} />
-        <Typography variant="h5" sx={{ fontWeight: 700, color: '#FAFAF9' }}>Extra Manejos</Typography>
+        <Typography variant="h5" sx={{ fontWeight: 700, color: '#0A0A0A' }}>Extra Manejos</Typography>
       </Box>
 
       {/* Stats Cards */}
@@ -111,7 +111,7 @@ export default function ExtraManejosPage() {
               </Box>
               <Box>
                 <Typography variant="caption" sx={{ color: '#6B7280', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.68rem' }}>{s.label}</Typography>
-                <Typography variant="h6" sx={{ fontWeight: 800, color: '#FAFAF9', lineHeight: 1.2 }}>{s.value}</Typography>
+                <Typography variant="h6" sx={{ fontWeight: 800, color: '#0A0A0A', lineHeight: 1.2 }}>{s.value}</Typography>
               </Box>
             </CardContent>
           </Card>
@@ -162,7 +162,7 @@ export default function ExtraManejosPage() {
               ) : items.map(item => (
                 <TableRow key={item.id} hover sx={{ '&:hover': { bgcolor: '#FAFAFA' } }}>
                   <TableCell>
-                    <Typography sx={{ fontWeight: 600, fontSize: '0.85rem', color: '#FAFAF9' }}>{item.clienteNombre}</Typography>
+                    <Typography sx={{ fontWeight: 600, fontSize: '0.85rem', color: '#0A0A0A' }}>{item.clienteNombre}</Typography>
                   </TableCell>
                   <TableCell>
                     <Typography sx={{ fontSize: '0.83rem', color: '#A8A29E', maxWidth: 250, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -178,7 +178,7 @@ export default function ExtraManejosPage() {
                     <Typography sx={{ fontSize: '0.82rem', color: '#6B7280' }}>{fmtDate(item.createdAt)}</Typography>
                   </TableCell>
                   <TableCell align="right">
-                    <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: '#FAFAF9' }}>{fmtMoney(item.monto)}</Typography>
+                    <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: '#0A0A0A' }}>{fmtMoney(item.monto)}</Typography>
                   </TableCell>
                   <TableCell align="center">
                     <Chip
@@ -234,7 +234,7 @@ export default function ExtraManejosPage() {
               ].map(([label, value]) => (
                 <Box key={label} sx={{ display: 'flex', justifyContent: 'space-between', py: 1, borderBottom: '1px solid #0A0A0A' }}>
                   <Typography sx={{ color: '#6B7280', fontWeight: 500, fontSize: '0.9rem' }}>{label}</Typography>
-                  <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: '#FAFAF9' }}>{value}</Typography>
+                  <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: '#0A0A0A' }}>{value}</Typography>
                 </Box>
               ))}
             </Box>

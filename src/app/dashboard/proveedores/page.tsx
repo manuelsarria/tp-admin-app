@@ -106,7 +106,7 @@ export default function ProveedoresPage() {
       <Box sx={{ mb: 4 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
           <Contacts sx={{ color: '#FACC15', fontSize: 30 }} />
-          <Typography variant="h5" sx={{ fontWeight: 700, color: '#FAFAF9' }}>Directorio de Proveedores</Typography>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: '#0A0A0A' }}>Directorio de Proveedores</Typography>
         </Box>
         <Typography variant="body2" sx={{ color: '#6B7280' }}>
           Gestiona tus proveedores de China con contactos, calificaciones y notas.

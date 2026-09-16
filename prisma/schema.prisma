@@ -46,6 +46,12 @@ model User {
   // Time clock — daily attendance shifts (entrada/almuerzo/salida).
   workShifts WorkShift[] @relation("WorkShifts")
 
+  // Cotizaciones — notas de seguimiento escritas por este usuario.
+  quoteNotes QuoteNote[] @relation("QuoteNoteAuthor")
+
+  // Freight — documentos (MBL, DCME, HBL) que este usuario subió.
+  uploadedDocuments Document[] @relation("DocumentUploader")
+
   @@index([email])
   @@index([companyId])
   @@map("users")
@@ -499,10 +505,21 @@ model LclBooking {
   clientType    String?
   clientName    String
   clientAddress String?
+  clientRuc     String?
+  clientDv      String?
+  clientEmail   String?
 
   // Notify Party
-  notifyParty String?
-  notifyPhone String?
+  notifyParty   String?
+  notifyAddress String?
+  notifyRuc     String?
+  notifyDv      String?
+  notifyEmail   String?
+  notifyPhone   String?
+
+  // Forwarding Agent / Party to contact for cargo release (texto libre; el
+  // valor por defecto depende del origen, ver lib/hblDefaults).
+  forwardingAgent String?
 
   // Routing
   portOfLoading   String  @default("QINGDAO")
@@ -536,6 +553,18 @@ model LclBooking {
   readyForPickup  Boolean          @default(false)
   pickupWarehouse String? // "PWEST" | "PCENT" | "ZLC"
 
+  /// Con true, el PDF del HBL sale sin el QR de validación. Se usa en los HBL
+  /// de origen China, que solo se presentan en origen y no deben exponer la
+  /// URL de validación.
+  omitQr Boolean @default(false)
+
+  /// Con true, el PDF junta todas las líneas de carga en un solo bloque de
+  /// descripción con los totales (estilo Master BL) en vez de una fila por
+  /// artículo.
+  groupedCargo Boolean @default(false)
+
+  cargoItems LclBookingCargoItem[]
+
   lclContainerId String?
   lclContainer   LclContainer? @relation(fields: [lclContainerId], references: [id])
 
@@ -544,6 +573,13 @@ model LclBooking {
   notes           String?
   blDate          DateTime?
 
+  /// Origen del HBL: CHINA (el flujo de siempre) o PANAMA (formato nuevo).
+  origin CargoOrigin @default(CHINA)
+  /// Sellos aplicados sobre el PDF del HBL: [{ key, anchor, size }]
+  stamps Json?
+
+  documents Document[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -551,6 +587,7 @@ model LclBooking {
   @@index([status])
   @@index([clientId])
   @@index([lclContainerId])
+  @@index([origin])
   @@index([createdAt])
   @@map("lcl_bookings")
 }
@@ -569,12 +606,22 @@ model LclContainer {
   portOfLoading   String @default("QINGDAO")
   portOfDischarge String @default("BALBOA")
 
+  // Shipper del MBL. Todos los HBL bajo este MBL comparten el mismo proveedor
+  // en origen, así que se escribe una vez aquí y el formulario de HBL lo precarga.
+  shipperName    String?
+  shipperAddress String?
+
   etd         DateTime?
   eta         DateTime?
   closingDate DateTime?
 
   status   LclContainerStatus @default(OPEN)
   bookings LclBooking[]
+
+  /// Origen del MBL: CHINA o PANAMA.
+  origin CargoOrigin @default(CHINA)
+
+  documents Document[]
 
   notes     String?
   createdAt DateTime @default(now())
@@ -583,6 +630,7 @@ model LclContainer {
   @@index([mblNumber])
   @@index([status])
   @@index([createdAt])
+  @@index([origin])
   @@map("lcl_containers")
 }
 
@@ -1330,4 +1378,168 @@ model PersonalOperation {
   @@index([status])
   @@index([containerNumber])
   @@map("personal_operations")
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// SEGURO DE CARGA — cotizaciones y seguimiento
+// ════════════════════════════════════════════════════════════════════════════
+
+/// Cotización de seguro de carga emitida.
+///
+/// La tarifa (tasa y prima mínima) se congela al emitir: reimprimir una
+/// cotización vieja da el mismo documento aunque el tarifario haya cambiado.
+model InsuranceQuote {
+  id          String      @id @default(cuid())
+  quoteNumber String      @unique
+  status      QuoteStatus @default(DRAFT)
+
+  cliente          String
+  referencia       String?
+  descripcionCarga String?
+
+  // Valores declarados
+  valorComercial Float @default(0)
+  valorFlete     Float @default(0)
+  valorTributos  Float @default(0)
+
+  gastosAdicionalesPct Float @default(0)
+  lucroSesantePct      Float @default(0)
+
+  // Tarifa aplicada (congelada al emitir)
+  clienteType String @default("regular") // regular | agente | custom
+  rateLabel   String
+  rate        Float
+  minimum     Float
+
+  // Resultado del cálculo
+  base              Float @default(0)
+  gastosAdicionales Float @default(0)
+  lucroSesante      Float @default(0)
+  totalAsegurado    Float @default(0)
+  prima             Float @default(0)
+  valorCobrar       Float @default(0)
+
+  comentarios     String?
+  rejectionReason String?
+
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([quoteNumber])
+  @@index([status])
+  @@index([createdAt])
+  @@map("insurance_quotes")
+}
+
+/// A qué tipo de cotización pertenece una nota de seguimiento.
+enum QuoteNoteEntity {
+  QUOTE
+  FAST_QUOTE
+  INSURANCE_QUOTE
+}
+
+/// Nota de seguimiento de una cotización (quién llamó al cliente y qué dijo).
+///
+/// No apunta con llave foránea a una tabla concreta porque sirve a las tres
+/// clases de cotización; `entity` dice cuál y `entityId` cuál fila.
+model QuoteNote {
+  id       String          @id @default(cuid())
+  entity   QuoteNoteEntity
+  entityId String
+
+  body String
+
+  createdById String?
+  createdBy   User?    @relation("QuoteNoteAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+
+  @@index([entity, entityId, createdAt])
+  @@map("quote_notes")
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// FREIGHT FORWARDING — origen, líneas de carga y documentos
+// ════════════════════════════════════════════════════════════════════════════
+
+/// De dónde sale el embarque. Decide el formato y los valores por defecto del
+/// HBL: los de Panamá llevan otro agente de carga y otro notify.
+enum CargoOrigin {
+  CHINA
+  PANAMA
+}
+
+/// Una línea de carga del HBL.
+///
+/// Antes la mercancía era un solo bloque de texto en `description`, así que un
+/// HBL con tres productos de distinto HS code no se podía declarar bien. Cada
+/// línea lleva su propio código, bultos, peso y volumen.
+model LclBookingCargoItem {
+  id           String     @id @default(cuid())
+  lclBookingId String
+  lclBooking   LclBooking @relation(fields: [lclBookingId], references: [id], onDelete: Cascade)
+
+  hsCode        String?
+  description   String
+  packages      Int     @default(1)
+  packageType   String?
+  grossWeightKg Float?
+  cbm           Float?
+  marks         String?
+
+  position Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([lclBookingId])
+  @@map("lcl_booking_cargo_items")
+}
+
+enum DocumentKind {
+  MBL
+  DCME
+  HBL
+  OTHER
+}
+
+/// Archivo adjunto a un MBL o a un HBL.
+model Document {
+  id           String       @id @default(cuid())
+  kind         DocumentKind @default(OTHER)
+  originalName String
+  storedName   String       @unique // nombre en disco (uuid.ext)
+  mimeType     String
+  size         Int
+
+  uploadedById String?
+  uploadedBy   User?   @relation("DocumentUploader", fields: [uploadedById], references: [id])
+
+  lclContainerId String?
+  lclContainer   LclContainer? @relation(fields: [lclContainerId], references: [id], onDelete: Cascade)
+
+  lclBookingId String?
+  lclBooking   LclBooking? @relation(fields: [lclBookingId], references: [id], onDelete: Cascade)
+
+  notes     String?
+  createdAt DateTime @default(now())
+
+  @@index([lclContainerId])
+  @@index([lclBookingId])
+  @@index([kind])
+  @@map("documents")
+}
+
+/// Correlativo de cada serie de HBL/MBL (una fila por prefijo y año).
+///
+/// Vive aparte de los documentos a propósito: si el correlativo se dedujera de
+/// las filas, borrar el último haría que el siguiente reemitiera ese número.
+model BlCounter {
+  prefix  String @id // HBLCH26, MBLPA26…
+  lastSeq Int    @default(0)
+
+  /// Lo escribe la consulta que reserva el número (SQL crudo), no Prisma.
+  updatedAt DateTime @default(now())
+
+  @@map("bl_counters")
 }

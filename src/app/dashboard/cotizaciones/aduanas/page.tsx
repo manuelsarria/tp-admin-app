@@ -8,7 +8,7 @@ export default function AduanasPage() {
       <Box sx={{ mb: 4 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
           <Gavel sx={{ color: '#FACC15', fontSize: 30 }} />
-          <Typography variant="h5" sx={{ fontWeight: 700, color: '#FAFAF9' }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: '#0A0A0A' }}>
             Cotizador de Honorarios Aduaneros
           </Typography>
         </Box>

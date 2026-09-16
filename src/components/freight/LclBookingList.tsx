@@ -97,7 +97,15 @@ const STATUS_COLORS: Record<string, 'default' | 'warning' | 'info' | 'primary' |
 
 const ALL_STATUSES = ['PENDING', 'IN_WAREHOUSE', 'ASSIGNED', 'SHIPPED', 'ARRIVED', 'DELIVERED']
 
-export function LclBookingList() {
+/**
+ * Listado de HBL. `origin` decide de qué flujo se trata: los HBL de China
+ * viven bajo /freight/lcl y los de Panamá bajo /freight/pa, con el mismo
+ * componente y distinto filtro y rutas.
+ */
+export function LclBookingList({ origin = 'CHINA' }: { origin?: 'CHINA' | 'PANAMA' } = {}) {
+  const isPanama = origin === 'PANAMA'
+  const bookingsBase = isPanama ? '/dashboard/freight/pa/hbl' : '/dashboard/freight/lcl/bookings'
+  const containersBase = isPanama ? '/dashboard/freight/pa/mbl' : '/dashboard/freight/lcl/containers'
   const router = useRouter()
   const [bookings, setBookings] = useState<LclBooking[]>([])
   const [stats, setStats] = useState<Stats>({ PENDING: 0, IN_WAREHOUSE: 0, ASSIGNED: 0, SHIPPED: 0, ARRIVED: 0, DELIVERED: 0 })
@@ -130,6 +138,7 @@ export function LclBookingList() {
       if (monthFilter) params.set('month', monthFilter)
       if (yearFilter) params.set('year', yearFilter)
       if (unassignedOnly) params.set('unassigned', 'true')
+      params.set('origin', origin)
       const res = await fetch(`/api/lcl-bookings?${params}`)
       if (!res.ok) throw new Error('Error cargando bookings')
       const data = await res.json()
@@ -140,7 +149,7 @@ export function LclBookingList() {
     } finally {
       setLoading(false)
     }
-  }, [search, statusFilter, monthFilter, yearFilter, unassignedOnly])
+  }, [search, statusFilter, monthFilter, yearFilter, unassignedOnly, origin])
 
   useEffect(() => { load() }, [load])
 
@@ -280,7 +289,7 @@ export function LclBookingList() {
             <Button
               variant="contained"
               startIcon={<Add />}
-              onClick={() => router.push('/dashboard/freight/lcl/bookings/nueva')}
+              onClick={() => router.push(`${bookingsBase}/nueva`)}
               sx={{ bgcolor: '#FACC15', '&:hover': { bgcolor: '#EAB308' } }}
             >
               Nuevo HBL
@@ -341,7 +350,7 @@ export function LclBookingList() {
                         size="small"
                         color="info"
                         variant="outlined"
-                        onClick={() => router.push(`/dashboard/freight/lcl/containers/${b.lclContainerId}`)}
+                        onClick={() => router.push(`${containersBase}/${b.lclContainerId}`)}
                         sx={{ cursor: 'pointer', fontSize: '0.7rem' }}
                       />
                     ) : (
@@ -384,7 +393,7 @@ export function LclBookingList() {
 
       {/* Context Menu */}
       <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={closeMenu}>
-        <MenuItem onClick={() => { router.push(`/dashboard/freight/lcl/bookings/${selectedId}/editar`); closeMenu() }}>
+        <MenuItem onClick={() => { router.push(`${bookingsBase}/${selectedId}/editar`); closeMenu() }}>
           <Edit fontSize="small" sx={{ mr: 1 }} /> Editar
         </MenuItem>
         <MenuItem onClick={() => { if (selectedId) downloadHBL(selectedId) }}>
@@ -481,7 +490,7 @@ export function LclBookingList() {
           </Box>
           {pickupWarehouse === 'ZLC' && (
             <Alert severity="info" sx={{ mt: 2, fontSize: '0.8rem' }}>
-              <strong>Zona Libre:</strong> El cliente debe presentar el HBL impreso con sello fresco de CNC.
+              <strong>Zona Libre:</strong> El cliente debe presentar el HBL impreso con sello fresco de TP.
             </Alert>
           )}
         </DialogContent>

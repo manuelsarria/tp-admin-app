@@ -6,6 +6,17 @@ import {
   Image,
   StyleSheet,
 } from '@react-pdf/renderer'
+import { defaultForwardingAgent } from '@/lib/hblDefaults'
+
+export interface LclBookingCargoItemForPDF {
+  hsCode?: string | null
+  description: string
+  packages: number
+  packageType?: string | null
+  grossWeightKg?: number | null
+  cbm?: number | null
+  marks?: string | null
+}
 
 export interface LclBookingForPDF {
   id: string
@@ -14,8 +25,17 @@ export interface LclBookingForPDF {
   shipperAddress?: string | null
   clientName: string
   clientAddress?: string | null
+  clientRuc?: string | null
+  clientDv?: string | null
+  clientEmail?: string | null
   notifyParty?: string | null
+  notifyAddress?: string | null
+  notifyRuc?: string | null
+  notifyDv?: string | null
+  notifyEmail?: string | null
   notifyPhone?: string | null
+  forwardingAgent?: string | null
+  origin?: string | null
   portOfLoading: string
   portOfDischarge: string
   placeOfReceipt?: string | null
@@ -38,9 +58,13 @@ export interface LclBookingForPDF {
   documentNumber?: string | null
   blDate?: Date | string | null
   createdAt: Date | string
+  omitQr?: boolean
+  groupedCargo?: boolean
+  cargoItems?: LclBookingCargoItemForPDF[]
   lclContainer?: {
     containerNumber?: string | null
     containerType?: string | null
+    seal?: string | null
     etd?: Date | string | null
   } | null
 }
@@ -53,11 +77,20 @@ interface ApprovalInfo {
   pickupWarehouse?: string | null
 }
 
+export interface StampForPDF {
+  src: string // data URL (base64) de la imagen del sello
+  style: Record<string, any> // estilo de posición absoluta (de anchorToStyle)
+}
+
 interface Props {
   booking: LclBookingForPDF
   logoBase64: string | null
   qrBase64?: string | null
   approval?: ApprovalInfo | null
+  stamps?: StampForPDF[]
+  /// true solo si NotoSansSC se registró; si no, el texto va en la fuente base
+  /// y los caracteres chinos salen como cuadritos — pero el PDF sale.
+  cjkFont?: boolean
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -68,6 +101,53 @@ const fmtDate = (d: Date | string) => {
   const dd = String(date.getDate()).padStart(2, '0')
   const yyyy = date.getFullYear()
   return `${mm}/${dd}/${yyyy}`
+}
+
+// Número entero → palabras en inglés (mayúsculas), estilo BL: "ONE HUNDRED AND
+// TWELVE". Se usa para la línea "SAY ... ONLY" (total de bultos en letras),
+// práctica estándar anti-fraude en los Bills of Lading.
+const ONES = ['', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT',
+  'NINE', 'TEN', 'ELEVEN', 'TWELVE', 'THIRTEEN', 'FOURTEEN', 'FIFTEEN', 'SIXTEEN',
+  'SEVENTEEN', 'EIGHTEEN', 'NINETEEN']
+const TENS = ['', '', 'TWENTY', 'THIRTY', 'FORTY', 'FIFTY', 'SIXTY', 'SEVENTY', 'EIGHTY', 'NINETY']
+const SCALES = ['', ' THOUSAND', ' MILLION', ' BILLION']
+
+const threeDigitsToWords = (n: number): string => {
+  let str = ''
+  const h = Math.floor(n / 100)
+  const rest = n % 100
+  if (h) str += `${ONES[h]} HUNDRED`
+  if (rest) {
+    if (str) str += ' AND '
+    if (rest < 20) str += ONES[rest]
+    else {
+      str += TENS[Math.floor(rest / 10)]
+      if (rest % 10) str += `-${ONES[rest % 10]}`
+    }
+  }
+  return str
+}
+
+const numberToWords = (value: number): string => {
+  let n = Math.floor(Math.abs(value))
+  if (n === 0) return 'ZERO'
+  const groups: number[] = []
+  while (n > 0) { groups.push(n % 1000); n = Math.floor(n / 1000) }
+  let str = ''
+  for (let i = groups.length - 1; i >= 0; i--) {
+    if (groups[i] === 0) continue
+    str += (str ? ' ' : '') + threeDigitsToWords(groups[i]) + SCALES[i]
+  }
+  return str.trim()
+}
+
+// Abreviaturas de tipo de bulto → palabra plural para la línea "SAY ... ONLY".
+const PKG_WORDS: Record<string, string> = {
+  CTNS: 'CARTONS', CTN: 'CARTONS', CARTON: 'CARTONS', CARTONS: 'CARTONS',
+  PKG: 'PACKAGES', PKGS: 'PACKAGES', PACKAGE: 'PACKAGES', PACKAGES: 'PACKAGES',
+  PLT: 'PALLETS', PLTS: 'PALLETS', PALLET: 'PALLETS', PALLETS: 'PALLETS',
+  BOX: 'BOXES', BOXES: 'BOXES', UNIT: 'UNITS', UNITS: 'UNITS',
+  BAG: 'BAGS', BAGS: 'BAGS', ROLL: 'ROLLS', ROLLS: 'ROLLS',
 }
 
 const B  = '1pt solid #000'   // standard cell border
@@ -105,14 +185,24 @@ const s = StyleSheet.create({
   },
 
   // ─ Cell primitives ─
+  // Los LABELS son el formulario pre-impreso (Helvetica). Los VALORES (lo que se
+  // ingresa) van en Courier para el look de máquina de escribir típico de los BL
+  // de logística. Courier es más ancho, por eso los tamaños bajan un poco.
   lbl: { fontSize: 5.5, lineHeight: 1.2, marginBottom: 2 },
-  val: { fontSize: 8, lineHeight: 1.35 },
-  valBold: { fontSize: 8.5, fontFamily: 'Helvetica-Bold', lineHeight: 1.35 },
-  valBig: { fontSize: 11, fontFamily: 'Helvetica-Bold' },
+  val: { fontSize: 7, fontFamily: 'Courier', lineHeight: 1.35 },
+  valBold: { fontSize: 7.5, fontFamily: 'Courier-Bold', lineHeight: 1.35 },
+  valBig: { fontSize: 10, fontFamily: 'Courier-Bold' },
 
   // ─ Cargo table ─
   thCell: { fontSize: 6, fontFamily: 'Helvetica-Bold', padding: '3pt 3pt' },
-  tdCell: { fontSize: 7.5, padding: '3pt 3pt', lineHeight: 1.3 },
+  tdCell: { fontSize: 7, fontFamily: 'Courier', padding: '3pt 3pt', lineHeight: 1.3 },
+
+  // Estilo de texto con glifos CJK. NotoSansSC se registra en tiempo de
+  // ejecución (ver lib/pdf/renderHbl). Ojo: @react-pdf NO cae a Helvetica
+  // cuando la familia no está registrada — lanza "Font family not registered"
+  // y se cae el PDF entero, no solo los caracteres chinos. Por eso el estilo
+  // solo se aplica si la fuente llegó a registrarse (`cjkFont`).
+  cjkText: { fontFamily: 'NotoSansSC' },
 })
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -144,21 +234,103 @@ const Cell = ({
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function HouseBLPDF({ booking, logoBase64, qrBase64, approval }: Props) {
+export function HouseBLPDF({ booking, logoBase64, qrBase64, approval, stamps, cjkFont }: Props) {
+  // Objeto vacío, no undefined: el arreglo de estilos de @react-pdf no lo acepta.
+  const cjk = cjkFont ? s.cjkText : {}
   const date     = fmtDate(booking.blDate || booking.createdAt)
   const isPrepaid = booking.freightTerms !== 'COLLECT'
 
-  const weightLine = booking.grossWeightKg != null
-    ? `${booking.grossWeightKg.toFixed(2)} Kgs`
-    : ''
+  // Build the cargo rows shown in the table. Prefer the explicit per-line
+  // cargoItems when present; otherwise fall back to a single synthetic row
+  // built from the booking-level legacy fields (keeps old HBLs rendering).
+  const cargoRows: LclBookingCargoItemForPDF[] =
+    booking.cargoItems && booking.cargoItems.length > 0
+      ? booking.cargoItems
+      : [{
+          hsCode: booking.hsCode ?? null,
+          description: booking.description ?? '',
+          packages: booking.packages,
+          packageType: booking.packageType,
+          grossWeightKg: booking.grossWeightKg ?? null,
+          cbm: booking.cbm ?? null,
+          marks: null,
+        }]
 
-  const measLine = booking.cbm != null
-    ? `${booking.cbm.toFixed(2)} Cbm`
+  const grouped = !!booking.groupedCargo
+  const sumPackages = cargoRows.reduce((s, r) => s + (Number(r.packages) || 0), 0)
+  const sumWeight   = cargoRows.reduce((s, r) => s + (Number(r.grossWeightKg) || 0), 0)
+  const sumCbm      = cargoRows.reduce((s, r) => s + (Number(r.cbm) || 0), 0)
+  // En modo agrupado mandan los totales que viene del formulario (booking-level);
+  // si no, se derivan sumando las lineas y caen al booking-level como respaldo.
+  const totalPackages = grouped ? (booking.packages || sumPackages) : (sumPackages || booking.packages)
+  const totalWeight   = grouped ? (booking.grossWeightKg ?? sumWeight) : (sumWeight || (booking.grossWeightKg ?? 0))
+  const totalCbm      = grouped ? (booking.cbm ?? sumCbm) : (sumCbm || (booking.cbm ?? 0))
+
+  const weightTotalLine = totalWeight ? `${totalWeight.toFixed(2)} Kgs` : ''
+  const measTotalLine   = totalCbm    ? `${totalCbm.toFixed(2)} Cbm`   : ''
+
+  // Línea "SAY ... ONLY": total de bultos en letras (anti-fraude, estándar BL).
+  // El tipo de bulto se toma de las líneas de carga; si hay varios distintos,
+  // se generaliza a PACKAGES.
+  const pkgTypes = Array.from(
+    new Set(cargoRows.map(r => (r.packageType || booking.packageType || '').trim().toUpperCase()).filter(Boolean))
+  )
+  const rawPkgType = pkgTypes.length === 1 ? pkgTypes[0] : 'PACKAGES'
+  const pkgWord = PKG_WORDS[rawPkgType] || rawPkgType || 'PACKAGES'
+  const sayLine = totalPackages
+    ? `SAY ${numberToWords(totalPackages)} (${totalPackages}) ${pkgWord} ONLY`
     : ''
 
   const containerNumber = booking.lclContainer?.containerNumber || ''
   const containerType = booking.lclContainer?.containerType || ''
   const etd = booking.lclContainer?.etd ? fmtDate(booking.lclContainer.etd) : ''
+
+  // Línea de RUC + DV (formato "RUC: X  DV YY")
+  const rucLine = (ruc?: string | null, dv?: string | null) =>
+    ruc || dv ? `RUC: ${ruc || ''}${dv ? `  DV ${dv}` : ''}` : null
+
+  const consigneeText = [
+    booking.clientName,
+    booking.clientAddress,
+    rucLine(booking.clientRuc, booking.clientDv),
+    booking.clientEmail ? `Email: ${booking.clientEmail}` : null,
+  ].filter(Boolean).join('\n')
+
+  const notifyText = [
+    booking.notifyParty || booking.clientName,
+    booking.notifyAddress,
+    rucLine(booking.notifyRuc, booking.notifyDv),
+    booking.notifyEmail ? `Email: ${booking.notifyEmail}` : null,
+    booking.notifyPhone ? `Tel: ${booking.notifyPhone}` : null,
+  ].filter(Boolean).join('\n')
+
+  const forwardingAgentText = booking.forwardingAgent || defaultForwardingAgent(booking.origin)
+
+  // Marks & Numbers por defecto (cuando no se escriben marcas manuales):
+  // "<contenedor> / <seal> / <tipo>" + tipo de movimiento CFS-CFS (estándar LCL consolidado).
+  const seal = booking.lclContainer?.seal || ''
+  const marksDefault = [
+    [containerNumber, seal, containerType].filter(Boolean).join(' / '),
+    'CFS-CFS',
+  ].filter(Boolean).join('\n')
+
+  // Modo agrupado (estilo Master BL): una sola fila con todas las descripciones
+  // unidas por " / " y unicamente los totales (sin desglose ni CBM por item).
+  const groupedDescription = cargoRows
+    .map(r => (r.description || '').split(/\r?\n/).map(t => t.trim()).filter(Boolean).join(' '))
+    .filter(Boolean)
+    .join(' / ')
+  const displayRows: LclBookingCargoItemForPDF[] = grouped
+    ? [{
+        hsCode: null,
+        description: groupedDescription,
+        packages: totalPackages,
+        packageType: rawPkgType,
+        grossWeightKg: totalWeight || null,
+        cbm: totalCbm || null,
+        marks: booking.marks || marksDefault,
+      }]
+    : cargoRows
 
   return (
     <Document>
@@ -197,26 +369,16 @@ export function HouseBLPDF({ booking, logoBase64, qrBase64, approval }: Props) {
               <View style={{ borderBottom: B, minHeight: 44 }}>
                 <Cell
                   label="3. CONSIGNED TO"
-                  value={[booking.clientName, booking.clientAddress].filter(Boolean).join('\n')}
+                  value={consigneeText}
                 />
               </View>
 
               {/* Cell 4 — Notify Party */}
               <View style={{ minHeight: 38 }}>
-                <Cell label="4. NOTIFY PARTY / INTERMEDIATE CONSIGNEE (Name and address)">
-                  <Text style={[s.val, { marginTop: 2 }]}>
-                    {booking.notifyParty || booking.clientName}
-                  </Text>
-                  {booking.notifyPhone ? (
-                    <Text style={[s.val, { marginTop: 2 }]}>
-                      Contact:{'\n'}Phone: {booking.notifyPhone} / Fax:
-                    </Text>
-                  ) : (
-                    <Text style={[s.val, { marginTop: 2, color: '#666' }]}>
-                      Contact:{'\n'}Phone:  / Fax:
-                    </Text>
-                  )}
-                </Cell>
+                <Cell
+                  label="4. NOTIFY PARTY / INTERMEDIATE CONSIGNEE (Name and address)"
+                  value={notifyText}
+                />
               </View>
 
             </View>
@@ -240,33 +402,24 @@ export function HouseBLPDF({ booking, logoBase64, qrBase64, approval }: Props) {
                 {/* Cell 5a — B/L Number + Date (right 40%, spanning both rows above) */}
                 <View style={{ flex: 40, padding: '3pt 4pt' }}>
                   <Text style={s.lbl}>5a. B/L NUMBER</Text>
-                  <Text style={[s.val, { fontFamily: 'Helvetica-Bold', fontSize: 8.5, marginBottom: 4 }]}>
+                  <Text style={[s.val, { fontFamily: 'Courier-Bold', fontSize: 8, marginBottom: 4 }]}>
                     {booking.hblNumber}
                   </Text>
                   <Text style={s.lbl}>DATE</Text>
-                  <Text style={[s.val, { fontFamily: 'Helvetica-Bold', fontSize: 10 }]}>
+                  <Text style={[s.val, { fontFamily: 'Courier-Bold', fontSize: 9 }]}>
                     {date}
                   </Text>
                 </View>
 
               </View>
 
-              {/* Cell 7 — Forwarding Agent */}
-              <View style={{ borderBottom: B, minHeight: 36 }}>
+              {/* Cell 7 — Forwarding Agent (ocupa el alto restante de la columna,
+                  evita que el texto multilínea se encime con la celda inferior) */}
+              <View style={{ flex: 1, minHeight: 92 }}>
                 <Cell
                   label="7. FORWARDING AGENT (Name and address - references)"
-                  value={'TP LOGISTICS\nCalle 5ta y Av 3ra, Edif 9570, Loc D2\nPanamá, República de Panamá'}
+                  value={forwardingAgentText}
                 />
-              </View>
-
-              {/* Cell 8 — Point of Origin */}
-              <View style={{ borderBottom: B, minHeight: 18 }}>
-                <Cell label="8. POINT (STATE) OF ORIGIN OR FTZ NUMBER" value="" />
-              </View>
-
-              {/* Cell 9 — Domestic Routing (fills remaining height of Cell 4) */}
-              <View style={{ flex: 1, minHeight: 38 }}>
-                <Cell label="9. DOMESTIC ROUTING / EXPORT INSTRUCTION" value="" />
               </View>
 
             </View>
@@ -281,52 +434,54 @@ export function HouseBLPDF({ booking, logoBase64, qrBase64, approval }: Props) {
               <Cell
                 label="13. PLACE OF RECEIPT BY PRE-CARRIER"
                 value={booking.placeOfReceipt || booking.portOfLoading}
-                valStyle={{ fontFamily: 'Helvetica-Bold' }}
+                valStyle={{ fontFamily: 'Courier-Bold' }}
               />
             </View>
           </View>
 
-          {/* ── Row C: Cells 14 + 15 + 10 ── */}
+          {/* ── Row C: Cells 14 (Vessel) + 15 + 10 ── */}
           <View style={{ flexDirection: 'row', borderBottom: B }}>
             <View style={{ flex: 25, borderRight: B, minHeight: 20 }}>
-              <Cell label="14. EXPORTING CARRIER" value={booking.vessel || ''} valStyle={{ fontFamily: 'Helvetica-Bold' }} />
+              <Cell label="14. EXPORTING CARRIER" value={booking.vessel || ''} valStyle={{ fontFamily: 'Courier-Bold' }} />
             </View>
             <View style={{ flex: 40, borderRight: B, minHeight: 20 }}>
-              <Cell label="15. PORT OF LOADING / EXPORT" value={booking.portOfLoading} valStyle={{ fontFamily: 'Helvetica-Bold' }} />
+              <Cell label="15. PORT OF LOADING / EXPORT" value={booking.portOfLoading} valStyle={{ fontFamily: 'Courier-Bold' }} />
             </View>
             <View style={{ flex: 35, minHeight: 20 }}>
               <Cell label="10. LOADING PIER / TERMINAL" value="" />
             </View>
           </View>
 
-          {/* ── Row D: Cells 16 + 17 + 11 + PREPAID/COLLECT ── */}
+          {/* ── Row D: Cells 16 + 17 + 11 + VOYAGE ── */}
           <View style={{ flexDirection: 'row', borderBottom: B }}>
             <View style={{ flex: 25, borderRight: B, minHeight: 20 }}>
-              <Cell label="16. FOREIGN PORT OF UNLOADING" value={booking.portOfDischarge} valStyle={{ fontFamily: 'Helvetica-Bold' }} />
+              <Cell label="16. FOREIGN PORT OF UNLOADING" value={booking.portOfDischarge} valStyle={{ fontFamily: 'Courier-Bold' }} />
             </View>
             <View style={{ flex: 40, borderRight: B, minHeight: 20 }}>
-              <Cell label="17. PLACE OF DELIVERY BY PRE-CARRIER" value={booking.placeOfDelivery || booking.portOfDischarge} valStyle={{ fontFamily: 'Helvetica-Bold' }} />
+              <Cell label="17. PLACE OF DELIVERY BY PRE-CARRIER" value={booking.placeOfDelivery || booking.portOfDischarge} valStyle={{ fontFamily: 'Courier-Bold' }} />
             </View>
             <View style={{ flex: 20, borderRight: B, minHeight: 20 }}>
-              <Cell label="11. TYPE OF MOVE" value="" />
+              <Cell label="11. TYPE OF MOVE" value="CFS-CFS" />
             </View>
-            <View style={{ flex: 15, minHeight: 20, padding: '3pt 4pt', justifyContent: 'center' }}>
-              <Text style={[s.val, { fontFamily: 'Helvetica-Bold', fontSize: 8 }]}>
-                {isPrepaid ? 'PREPAID' : 'COLLECT'}
-              </Text>
+            <View style={{ flex: 15, minHeight: 20 }}>
+              <Cell
+                label="VOYAGE"
+                value={booking.voyage || ''}
+                valStyle={{ fontFamily: 'Courier-Bold', fontSize: 7.5 }}
+              />
             </View>
           </View>
 
           {/* ── Row E: Container Number + Container Type + ETD ── */}
           <View style={{ flexDirection: 'row', borderBottom: B }}>
             <View style={{ flex: 35, borderRight: B, minHeight: 20 }}>
-              <Cell label="CONTAINER NUMBER" value={containerNumber} valStyle={{ fontFamily: 'Helvetica-Bold' }} />
+              <Cell label="CONTAINER NUMBER" value={containerNumber} valStyle={{ fontFamily: 'Courier-Bold' }} />
             </View>
             <View style={{ flex: 30, borderRight: B, minHeight: 20 }}>
-              <Cell label="CONTAINER TYPE" value={containerType} valStyle={{ fontFamily: 'Helvetica-Bold' }} />
+              <Cell label="CONTAINER TYPE" value={containerType} valStyle={{ fontFamily: 'Courier-Bold' }} />
             </View>
             <View style={{ flex: 35, minHeight: 20 }}>
-              <Cell label="FECHA DE ZARPE (ETD)" value={etd} valStyle={{ fontFamily: 'Helvetica-Bold' }} />
+              <Cell label="FECHA DE ZARPE (ETD)" value={etd} valStyle={{ fontFamily: 'Courier-Bold' }} />
             </View>
           </View>
 
@@ -355,40 +510,75 @@ export function HouseBLPDF({ booking, logoBase64, qrBase64, approval }: Props) {
               <Text style={[s.thCell, { color: '#444' }]}>(21)</Text>
             </View>
             <View style={{ flex: 15, padding: '2pt 3pt', alignItems: 'center' }}>
-              <Text style={s.thCell}>MEASURAMENT</Text>
+              <Text style={s.thCell}>MEASUREMENT</Text>
               <Text style={[s.thCell, { color: '#444' }]}>(22)</Text>
             </View>
           </View>
 
-          {/* Cargo content row */}
-          <View style={{ flexDirection: 'row', borderBottom: B, minHeight: 110 }}>
-            {/* Marks */}
-            <View style={{ flex: 20, borderRight: B, padding: '3pt 3pt' }}>
-              <Text style={s.tdCell}>{booking.marks || booking.hblNumber}</Text>
-              {booking.voyage && <Text style={[s.tdCell, { marginTop: 2 }]}>{booking.voyage}</Text>}
-            </View>
-            {/* # Packages */}
-            <View style={{ flex: 12, borderRight: B, padding: '3pt 3pt', alignItems: 'center' }}>
-              <Text style={[s.tdCell, { fontFamily: 'Helvetica-Bold', fontSize: 9 }]}>
-                {booking.packages}
-              </Text>
-            </View>
-            {/* Description */}
-            <View style={{ flex: 38, borderRight: B, padding: '3pt 3pt' }}>
-              <Text style={s.tdCell}>{booking.description || ''}</Text>
-              {booking.hsCode ? (
-                <Text style={[s.tdCell, { marginTop: 3 }]}>{booking.hsCode}</Text>
-              ) : null}
-            </View>
-            {/* Weight */}
-            <View style={{ flex: 15, borderRight: B, padding: '3pt 3pt', alignItems: 'flex-end' }}>
-              <Text style={s.tdCell}>{weightLine}</Text>
-            </View>
-            {/* Measurement */}
-            <View style={{ flex: 15, padding: '3pt 3pt', alignItems: 'flex-end' }}>
-              <Text style={s.tdCell}>{measLine}</Text>
-            </View>
-          </View>
+          {/* Cargo content rows — one per cargo line item. The shared Marks
+              column is rendered as a single tall cell on the first row only. */}
+          {displayRows.map((row, idx) => {
+            const isFirst = idx === 0
+            const isLast  = idx === displayRows.length - 1
+            const rowMarks = row.marks || (isFirst ? (booking.marks || marksDefault) : '')
+            return (
+              <View
+                key={idx}
+                style={{
+                  flexDirection: 'row',
+                  borderBottom: isLast ? B : '0.5pt solid #999',
+                  minHeight: displayRows.length === 1 ? 90 : 26,
+                }}
+              >
+                <View style={{ flex: 20, borderRight: B, padding: '3pt 3pt' }}>
+                  {isFirst ? (
+                    <Text style={[s.tdCell, cjk]}>{rowMarks}</Text>
+                  ) : null}
+                </View>
+                <View style={{ flex: 12, borderRight: B, padding: '3pt 3pt', alignItems: 'center' }}>
+                  <Text style={[s.tdCell, { fontFamily: 'Courier-Bold', fontSize: 8 }]}>
+                    {row.packages || ''}
+                  </Text>
+                  {row.packageType ? (
+                    <Text style={[s.tdCell, { fontSize: 6, color: '#444' }]}>{row.packageType}</Text>
+                  ) : null}
+                </View>
+                <View style={{ flex: 38, borderRight: B, padding: '3pt 3pt' }}>
+                  {/* First line: description + HS code at the end (matches the
+                      sample format: "涤纶围巾  polyster scarf  6214300000"). */}
+                  {(() => {
+                    const descLines = (row.description || '')
+                      .split(/\r?\n/)
+                      .filter(l => l.trim().length > 0)
+                    const first = descLines.shift() || ''
+                    const firstLine = [first, row.hsCode || ''].filter(Boolean).join('    ')
+                    return (
+                      <>
+                        {firstLine ? (
+                          <Text style={[s.tdCell, cjk]}>{firstLine}</Text>
+                        ) : null}
+                        {descLines.map((line, i) => (
+                          <Text key={i} style={[s.tdCell, cjk, { marginTop: 1 }]}>
+                            {line}
+                          </Text>
+                        ))}
+                      </>
+                    )
+                  })()}
+                </View>
+                <View style={{ flex: 15, borderRight: B, padding: '3pt 3pt', alignItems: 'flex-end' }}>
+                  <Text style={s.tdCell}>
+                    {row.grossWeightKg != null ? `${row.grossWeightKg.toFixed(2)} Kgs` : ''}
+                  </Text>
+                </View>
+                <View style={{ flex: 15, padding: '3pt 3pt', alignItems: 'flex-end' }}>
+                  <Text style={s.tdCell}>
+                    {row.cbm != null ? `${row.cbm.toFixed(2)} Cbm` : ''}
+                  </Text>
+                </View>
+              </View>
+            )
+          })}
 
           {/* TOTALS row */}
           <View style={{ flexDirection: 'row', borderBottom: B }}>
@@ -396,16 +586,23 @@ export function HouseBLPDF({ booking, logoBase64, qrBase64, approval }: Props) {
               <Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 7.5 }}>TOTALS:</Text>
             </View>
             <View style={{ flex: 12, borderRight: B, padding: '3pt 3pt', alignItems: 'center' }}>
-              <Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 8 }}>{booking.packages}</Text>
+              <Text style={{ fontFamily: 'Courier-Bold', fontSize: 8 }}>{totalPackages}</Text>
             </View>
             <View style={{ flex: 38, borderRight: B, padding: '3pt 3pt' }} />
             <View style={{ flex: 15, borderRight: B, padding: '3pt 3pt', alignItems: 'flex-end' }}>
-              <Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 7 }}>{weightLine}</Text>
+              <Text style={{ fontFamily: 'Courier-Bold', fontSize: 7 }}>{weightTotalLine}</Text>
             </View>
             <View style={{ flex: 15, padding: '3pt 3pt', alignItems: 'flex-end' }}>
-              <Text style={{ fontFamily: 'Helvetica-Bold', fontSize: 7 }}>{measLine}</Text>
+              <Text style={{ fontFamily: 'Courier-Bold', fontSize: 7 }}>{measTotalLine}</Text>
             </View>
           </View>
+
+          {/* "SAY ... ONLY": total de bultos en letras (estándar BL) */}
+          {sayLine ? (
+            <View style={{ borderBottom: B, padding: '3pt 5pt' }}>
+              <Text style={{ fontFamily: 'Courier-Bold', fontSize: 7.5 }}>{sayLine}</Text>
+            </View>
+          ) : null}
 
           {/* ── Pre-footer legal text ── */}
           <View style={{ borderBottom: B, padding: '3pt 4pt' }}>
@@ -443,15 +640,15 @@ export function HouseBLPDF({ booking, logoBase64, qrBase64, approval }: Props) {
               </View>
               {/* Freight row */}
               <View style={{ flexDirection: 'row', borderBottom: B }}>
-                <Text style={{ flex: 2, fontSize: 7, padding: '2pt 3pt', borderRight: B }}>
+                <Text style={{ flex: 2, fontSize: 7, fontFamily: 'Courier', padding: '2pt 3pt', borderRight: B }}>
                   {booking.freightDesc || 'FLETE MARITIMO'}
                 </Text>
-                <Text style={{ flex: 1, fontSize: 8, fontFamily: 'Helvetica-Bold', padding: '2pt 3pt', borderRight: B, textAlign: 'center' }}>
+                <Text style={{ flex: 1, fontSize: 8, fontFamily: 'Courier-Bold', padding: '2pt 3pt', borderRight: B, textAlign: 'center' }}>
                   {isPrepaid && booking.freightAmount
                     ? `${booking.freightAmount.toFixed(0)}${booking.freightCurrency}`
                     : ''}
                 </Text>
-                <Text style={{ flex: 1, fontSize: 8, fontFamily: 'Helvetica-Bold', padding: '2pt 3pt', textAlign: 'center' }}>
+                <Text style={{ flex: 1, fontSize: 8, fontFamily: 'Courier-Bold', padding: '2pt 3pt', textAlign: 'center' }}>
                   {!isPrepaid && booking.freightAmount
                     ? `${booking.freightAmount.toFixed(0)}${booking.freightCurrency}`
                     : ''}
@@ -469,7 +666,7 @@ export function HouseBLPDF({ booking, logoBase64, qrBase64, approval }: Props) {
               <View style={{ flexDirection: 'row', alignItems: 'flex-end', marginTop: 8, borderTop: B, paddingTop: 4 }}>
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontSize: 6 }}>DATED AT:</Text>
-                  <Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold' }}>{date}</Text>
+                  <Text style={{ fontSize: 9, fontFamily: 'Courier-Bold' }}>{date}</Text>
                   <Text style={{ fontSize: 6, marginTop: 4 }}>SIGNED ON BEHALF OF CARRIER:</Text>
                   <Text style={{ fontSize: 6, marginTop: 4 }}>By:</Text>
                   <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold', marginTop: 1 }}>TP LOGISTICS</Text>
@@ -490,7 +687,7 @@ export function HouseBLPDF({ booking, logoBase64, qrBase64, approval }: Props) {
                 <Text style={{ fontSize: 6 }}>Page 1 of 1</Text>
                 <View style={{ flexDirection: 'row', gap: 4 }}>
                   <Text style={{ fontSize: 6 }}>B/L No.</Text>
-                  <Text style={{ fontSize: 6, fontFamily: 'Helvetica-Bold' }}>{booking.hblNumber}</Text>
+                  <Text style={{ fontSize: 6, fontFamily: 'Courier-Bold' }}>{booking.hblNumber}</Text>
                 </View>
               </View>
             </View>
@@ -516,7 +713,7 @@ export function HouseBLPDF({ booking, logoBase64, qrBase64, approval }: Props) {
                 {approval.authCode}
               </Text>
               <Text style={{ fontSize: 6.5, color: '#333' }}>
-                Autorizado por: <Text style={{ fontFamily: 'Helvetica-Bold' }}>{approval.authorizedBy}</Text>
+                Autorizado por: <Text style={{ fontFamily: 'Courier-Bold' }}>{approval.authorizedBy}</Text>
               </Text>
               {approval.pickupWarehouse && (
                 <Text style={{ fontSize: 6, color: '#666', marginTop: 2 }}>
@@ -533,6 +730,13 @@ export function HouseBLPDF({ booking, logoBase64, qrBase64, approval }: Props) {
             )}
           </View>
         )}
+
+        {/* ══ SELLOS SOBREPUESTOS (módulo Panamá) ══ */}
+        {/* Posicionados de forma absoluta sobre la página; se dibujan al final
+            para quedar "encima" del documento, como un sello físico. */}
+        {(stamps || []).map((st, i) => (
+          <Image key={i} src={st.src} style={{ objectFit: 'contain', ...st.style }} />
+        ))}
 
       </Page>
     </Document>

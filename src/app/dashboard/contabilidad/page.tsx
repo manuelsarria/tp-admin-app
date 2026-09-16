@@ -81,7 +81,7 @@ export default function ContabilidadDashboard() {
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
             <AccountBalance sx={{ color: '#FACC15', fontSize: 30 }} />
-            <Typography variant="h5" sx={{ fontWeight: 700, color: '#FAFAF9' }}>Contabilidad</Typography>
+            <Typography variant="h5" sx={{ fontWeight: 700, color: '#0A0A0A' }}>Contabilidad</Typography>
             <Chip label="Privado" size="small" sx={{ bgcolor: '#FACC15', color: 'white', fontWeight: 700, fontSize: '0.65rem' }} />
           </Box>
           <Typography variant="body2" sx={{ color: '#6B7280' }}>

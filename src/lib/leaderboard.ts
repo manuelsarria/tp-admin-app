@@ -83,6 +83,20 @@ export interface LastSale {
   at: string
 }
 
+/** Cuántos seguros vendió hoy cada persona, para la meta del día. */
+export interface DailyGoalSeller {
+  name: string
+  sold: number
+  met: boolean
+}
+
+export interface DailyGoal {
+  type: string
+  label: string
+  target: number
+  sellers: DailyGoalSeller[]
+}
+
 export interface TpLeaderboardPayload {
   system: 'TP'
   period: Period
@@ -91,6 +105,9 @@ export interface TpLeaderboardPayload {
   totals: TotalsRow
   team: TeamStats
   lastSale: LastSale | null
+  /// Seguros vendidos hoy por persona en TP. La meta la arma el endpoint
+  /// combinado, que junta esto con lo de CNC.
+  segurosHoy: { name: string; sold: number }[]
 }
 
 // ── Core aggregation ──────────────────────────────────────────────────────────
@@ -118,6 +135,26 @@ export async function getTpLeaderboard(period: Period): Promise<TpLeaderboardPay
       saleAmount: true, commissionAmount: true, createdAt: true,
     },
   })
+
+  // Seguros de hoy por persona: la meta diaria es siempre sobre hoy, sin
+  // importar el período que esté mirando la pantalla.
+  const hoyKey = panamaDateKey()
+  const segurosDeHoy = await prisma.commissionSale.findMany({
+    where: {
+      saleType: 'SEGURO',
+      createdAt: {
+        gte: new Date(`${hoyKey}T00:00:00-05:00`),
+        lte: new Date(`${hoyKey}T23:59:59.999-05:00`),
+      },
+    },
+    select: { workerName: true },
+  })
+  const segurosPorPersona = new Map<string, number>()
+  for (const s of segurosDeHoy) {
+    const k = s.workerName?.trim() || 'Sin nombre'
+    segurosPorPersona.set(k, (segurosPorPersona.get(k) ?? 0) + 1)
+  }
+  const segurosHoy = Array.from(segurosPorPersona.entries()).map(([name, sold]) => ({ name, sold }))
 
   const lastSale: LastSale | null = ultima
     ? {
@@ -199,6 +236,7 @@ export async function getTpLeaderboard(period: Period): Promise<TpLeaderboardPay
     totals,
     team,
     lastSale,
+    segurosHoy,
   }
 }
 

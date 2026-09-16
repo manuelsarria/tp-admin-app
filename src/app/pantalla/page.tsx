@@ -94,9 +94,12 @@ type Combined = {
   byType?: TypeRow[]
   lastSale?: LastSale | null
 }
+type DailyGoalSeller = { name: string; sold: number; met: boolean }
+type DailyGoal = { type: string; label: string; target: number; sellers: DailyGoalSeller[] }
 type ApiResponse = {
   period: string
   generatedAt: string
+  dailyGoal?: DailyGoal | null
   systems: { TP: SystemBlock; CNC: SystemBlock }
   combined: Combined
 }
@@ -550,6 +553,116 @@ function TeamStat({
           {value}
         </Typography>
         <Typography sx={{ color: MUTED, fontSize: 'clamp(0.6rem, 1vh, 0.74rem)', fontWeight: 600, whiteSpace: 'nowrap' }}>{label}</Typography>
+      </Box>
+    </Box>
+  )
+}
+
+// ---------- Meta del día ----------
+/**
+ * Un seguro de carga por persona, todos los días.
+ *
+ * Es la única meta fija del equipo, así que va en su propia franja y no
+ * escondida en una tarjeta: quien todavía no la cumplió tiene que verlo de
+ * lejos al levantar la vista.
+ */
+function MetaDelDia({ goal }: { goal: DailyGoal }) {
+  const cumplieron = goal.sellers.filter((s) => s.met).length
+  const total = goal.sellers.length
+  const todos = cumplieron === total
+
+  return (
+    <Box
+      sx={{
+        flex: '0 0 auto',
+        mb: 'clamp(0.4rem, 1vh, 1rem)',
+        bgcolor: SURFACE,
+        border: `1px solid ${todos ? GREEN : BORDER}`,
+        borderRadius: 3,
+        px: 'clamp(0.9rem, 1.4vw, 2rem)',
+        py: 'clamp(0.5rem, 1vh, 1rem)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 'clamp(0.6rem, 1.4vw, 1.8rem)',
+        overflow: 'hidden',
+      }}
+    >
+      <Box sx={{ flex: '0 0 auto' }}>
+        <Typography
+          sx={{
+            color: TEXT,
+            fontFamily: FONT_HEAD,
+            fontWeight: 900,
+            fontSize: 'clamp(0.85rem, 2.1vh, 1.3rem)',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          🛡️ Meta del día · {goal.target} {goal.label.toLowerCase()} por persona
+        </Typography>
+        <Typography
+          sx={{
+            color: todos ? GREEN : MUTED,
+            fontFamily: FONT_HEAD,
+            fontWeight: 700,
+            fontSize: 'clamp(0.7rem, 1.6vh, 1rem)',
+          }}
+        >
+          {todos ? '¡Equipo completo! 🎯' : `${cumplieron} de ${total} cumplieron`}
+        </Typography>
+      </Box>
+
+      <Box
+        sx={{
+          flex: 1,
+          minWidth: 0,
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 'clamp(0.35rem, 0.8vw, 0.9rem)',
+          justifyContent: 'flex-end',
+        }}
+      >
+        {goal.sellers.map((s) => (
+          <Box
+            key={s.name}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.6,
+              px: 'clamp(0.5rem, 0.9vw, 1rem)',
+              py: 'clamp(0.2rem, 0.5vh, 0.5rem)',
+              borderRadius: 2,
+              bgcolor: s.met ? `${GREEN}22` : 'rgba(255,255,255,0.04)',
+              border: `1px solid ${s.met ? GREEN + '66' : BORDER}`,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <Typography sx={{ fontSize: 'clamp(0.8rem, 1.8vh, 1.15rem)', lineHeight: 1 }}>
+              {s.met ? '✅' : '⏳'}
+            </Typography>
+            <Typography
+              sx={{
+                color: s.met ? TEXT : MUTED,
+                fontFamily: FONT_HEAD,
+                fontWeight: 800,
+                fontSize: 'clamp(0.72rem, 1.6vh, 1.05rem)',
+              }}
+            >
+              {s.name.split(' ')[0]}
+            </Typography>
+            {s.sold > 1 && (
+              <Typography
+                sx={{
+                  color: GREEN,
+                  fontFamily: FONT_HEAD,
+                  fontWeight: 800,
+                  fontSize: 'clamp(0.68rem, 1.5vh, 0.95rem)',
+                }}
+              >
+                ×{s.sold}
+              </Typography>
+            )}
+          </Box>
+        ))}
       </Box>
     </Box>
   )
@@ -1492,6 +1605,11 @@ export default function PantallaPage() {
               </>
             )}
           </Box>
+
+          {/* META DEL DÍA — un seguro de carga por persona */}
+          {data.dailyGoal && data.dailyGoal.sellers.length > 0 && (
+            <MetaDelDia goal={data.dailyGoal} />
+          )}
 
           {/* BOTTOM STRIP (~20vh): TP | CNC | Actividad */}
           <Box

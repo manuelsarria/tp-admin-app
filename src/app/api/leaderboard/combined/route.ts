@@ -4,6 +4,7 @@ import {
   isLeaderboardAuthorized as isAuthorized,
   parsePeriod,
   round2,
+  type DailyGoal,
   type LastSale,
   type SellerRow,
   type TotalsRow,
@@ -35,6 +36,7 @@ interface CncPayload {
   totals: TotalsRow
   byType?: TypeRow[]
   lastSale?: Omit<LastSale, 'system'> | null
+  dailyGoal?: DailyGoal
   [key: string]: unknown
 }
 
@@ -136,9 +138,27 @@ export async function GET(request: NextRequest) {
       ? candidatas.reduce((a, b) => (new Date(b.at) > new Date(a.at) ? b : a))
       : null
 
+    // ── Meta del día: un seguro de carga por persona ────────────────────────
+    // La lista de personas sale de CNC, que es donde está marcado quién vende.
+    // A cada una se le suman los seguros que haya hecho hoy en los dos
+    // sistemas, porque la meta es de la persona, no del sistema.
+    const metaCnc = cnc?.dailyGoal
+    const segurosTp = new Map(tp.segurosHoy.map((s) => [s.name.trim().toLowerCase(), s.sold]))
+
+    const dailyGoal: DailyGoal | null = metaCnc
+      ? {
+          ...metaCnc,
+          sellers: metaCnc.sellers.map((v) => {
+            const sold = v.sold + (segurosTp.get(v.name.trim().toLowerCase()) ?? 0)
+            return { name: v.name, sold, met: sold >= metaCnc.target }
+          }),
+        }
+      : null
+
     return NextResponse.json({
       period,
       generatedAt: new Date().toISOString(),
+      dailyGoal,
       systems: {
         TP: tp,
         CNC: cnc,

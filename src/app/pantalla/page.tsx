@@ -76,7 +76,24 @@ type SystemBlock = {
   totals: Totals
   team?: Team
 } | null
-type Combined = { sellers: Seller[]; totals: Totals }
+type TypeRow = { type: string; ventas: number; unidades: number; monto: number; comision: number }
+/** La venta más reciente de los dos sistemas: es lo que dispara la campana. */
+type LastSale = {
+  id: string
+  system: 'TP' | 'CNC'
+  seller: string
+  type: string
+  quantity: number
+  amount: number
+  commission: number
+  at: string
+}
+type Combined = {
+  sellers: Seller[]
+  totals: Totals
+  byType?: TypeRow[]
+  lastSale?: LastSale | null
+}
 type ApiResponse = {
   period: string
   generatedAt: string
@@ -85,6 +102,23 @@ type ApiResponse = {
 }
 
 type Period = 'month' | 'today' | 'all'
+
+/** Cómo se lee cada tipo de venta en el cartel de la campana. */
+const TIPO_LABEL: Record<string, { uno: string; varios: string }> = {
+  FCL: { uno: 'contenedor', varios: 'contenedores' },
+  LCL: { uno: 'embarque LCL', varios: 'embarques LCL' },
+  SEGURO: { uno: 'póliza', varios: 'pólizas' },
+  STORAGE: { uno: 'almacenaje', varios: 'almacenajes' },
+  FREIGHT: { uno: 'flete', varios: 'fletes' },
+  COTIZACION_ALIBABA: { uno: 'cotización Alibaba', varios: 'cotizaciones Alibaba' },
+}
+
+function detalleVenta(last: LastSale): string {
+  const etiqueta = TIPO_LABEL[last.type]
+  const q = last.quantity > 0 ? last.quantity : 1
+  if (!etiqueta) return q > 1 ? `${q} × ${last.type}` : last.type
+  return q > 1 ? `${q} ${etiqueta.varios}` : `1 ${etiqueta.uno}`
+}
 
 const PERIOD_LABELS: Record<Period, string> = {
   month: 'Mes',
@@ -525,9 +559,11 @@ function TeamStat({
 function CelebrationOverlay({
   sellerName,
   amount,
+  detalle,
 }: {
   sellerName?: string
   amount?: number
+  detalle?: string
 }) {
   // A dozen confetti pieces with deterministic-ish randomized positions/timing.
   const pieces = useMemo(
@@ -614,6 +650,20 @@ function CelebrationOverlay({
             }}
           >
             {sellerName}
+          </Typography>
+        )}
+        {detalle && (
+          <Typography
+            sx={{
+              color: TEXT,
+              opacity: 0.85,
+              fontFamily: FONT_HEAD,
+              fontWeight: 700,
+              fontSize: 'clamp(1rem, 2.8vh, 1.9rem)',
+              mt: 0.5,
+            }}
+          >
+            {detalle}
           </Typography>
         )}
         {amount != null && (
@@ -793,6 +843,7 @@ export default function PantallaPage() {
   const [celebration, setCelebration] = useState<{
     sellerName?: string
     amount?: number
+    detalle?: string
     key: number
   } | null>(null)
   const [muted, setMuted] = useState(false)
@@ -800,6 +851,8 @@ export default function PantallaPage() {
   mutedRef.current = muted
   // Previous known total ops count (per period). null = not yet initialized.
   const prevCountRef = useRef<number | null>(null)
+  /// Id de la última venta ya celebrada, para no repetir la campana
+  const prevSaleIdRef = useRef<string | null>(null)
   // The period the baseline belongs to, so a period switch resets the baseline.
   const baselinePeriodRef = useRef<Period>(period)
   const audioCtxRef = useRef<AudioContext | null>(null)
@@ -877,9 +930,9 @@ export default function PantallaPage() {
 
   // Fire a celebration: visual overlay + sound. Auto-dismisses after ~3.6s.
   const triggerCelebration = useCallback(
-    (sellerName?: string, amount?: number) => {
+    (sellerName?: string, amount?: number, detalle?: string) => {
       playCelebrationSound()
-      setCelebration({ sellerName, amount, key: Date.now() })
+      setCelebration({ sellerName, amount, detalle, key: Date.now() })
       if (celebrationTimerRef.current) clearTimeout(celebrationTimerRef.current)
       celebrationTimerRef.current = setTimeout(() => setCelebration(null), 3800)
     },
@@ -1028,20 +1081,40 @@ export default function PantallaPage() {
   }, [authed, loadBoard])
 
   // ---------- Celebration detector ----------
-  // Watch the combined ops count. Celebrate only when the period is unchanged
-  // and the count strictly increased vs. the previously known value. The very
-  // first observed value just initializes the baseline (no celebration). A
-  // period switch resets the baseline so switching numbers never celebrates.
+  // Se dispara con el id de la última venta, no con el conteo: así la campana
+  // felicita a QUIEN acaba de vender y dice QUÉ vendió. Antes se miraba el
+  // total de operaciones y se celebraba a `sellers[0]`, o sea al primero del
+  // ranking, que casi nunca es el que acaba de cerrar.
+  //
+  // `lastSale` viene de todas las ventas y no del período, así que cambiar de
+  // período no lo mueve. Aun así se conserva el conteo como respaldo, por si
+  // un sistema todavía no manda `lastSale`.
   useEffect(() => {
     if (!data) return
+
+    const last = data.combined?.lastSale ?? null
     const newCount = data.combined?.totals?.count ?? 0
     const samePeriod = baselinePeriodRef.current === period
+
     if (!samePeriod) {
-      // Period changed: reset baseline, don't celebrate.
+      // Cambió el período: se reinicia la referencia y no se celebra.
       baselinePeriodRef.current = period
+      prevCountRef.current = newCount
+      prevSaleIdRef.current = last?.id ?? null
+      return
+    }
+
+    if (last) {
+      const prevId = prevSaleIdRef.current
+      // La primera lectura solo fija la referencia: no se celebra al abrir.
+      if (prevId !== null && last.id !== prevId) {
+        triggerCelebration(last.seller, last.amount, detalleVenta(last))
+      }
+      prevSaleIdRef.current = last.id
       prevCountRef.current = newCount
       return
     }
+
     const prev = prevCountRef.current
     if (prev !== null && newCount > prev) {
       const top = data.combined?.sellers?.[0]
@@ -1159,6 +1232,7 @@ export default function PantallaPage() {
           key={celebration.key}
           sellerName={celebration.sellerName}
           amount={celebration.amount}
+          detalle={celebration.detalle}
         />
       )}
 

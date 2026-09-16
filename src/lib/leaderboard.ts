@@ -68,6 +68,21 @@ export interface TeamStats {
   workingNames: string[]
 }
 
+/**
+ * La última venta registrada, para que la pantalla toque la campana por quien
+ * de verdad acaba de vender y no por quien va primero en el ranking.
+ */
+export interface LastSale {
+  id: string
+  system: 'TP' | 'CNC'
+  seller: string
+  type: string
+  quantity: number
+  amount: number
+  commission: number
+  at: string
+}
+
 export interface TpLeaderboardPayload {
   system: 'TP'
   period: Period
@@ -75,6 +90,7 @@ export interface TpLeaderboardPayload {
   sellers: SellerRow[]
   totals: TotalsRow
   team: TeamStats
+  lastSale: LastSale | null
 }
 
 // ── Core aggregation ──────────────────────────────────────────────────────────
@@ -91,6 +107,30 @@ export async function getTpLeaderboard(period: Period): Promise<TpLeaderboardPay
       status: true,
     },
   })
+
+  // Se mira sobre TODAS las ventas y no sobre el período: si el período es
+  // "hoy" y todavía no hay ninguna, igual hace falta saber cuál fue la última
+  // para no sonar la campana por una vieja.
+  const ultima = await prisma.commissionSale.findFirst({
+    orderBy: { createdAt: 'desc' },
+    select: {
+      id: true, workerName: true, saleLabel: true, saleType: true,
+      saleAmount: true, commissionAmount: true, createdAt: true,
+    },
+  })
+
+  const lastSale: LastSale | null = ultima
+    ? {
+        id: ultima.id,
+        system: 'TP',
+        seller: ultima.workerName?.trim() || 'Sin nombre',
+        type: ultima.saleLabel || ultima.saleType,
+        quantity: 1,
+        amount: round2(ultima.saleAmount),
+        commission: round2(ultima.commissionAmount),
+        at: ultima.createdAt.toISOString(),
+      }
+    : null
 
   const map = new Map<
     string,
@@ -158,6 +198,7 @@ export async function getTpLeaderboard(period: Period): Promise<TpLeaderboardPay
     sellers,
     totals,
     team,
+    lastSale,
   }
 }
 

@@ -4,6 +4,7 @@ import {
   isLeaderboardAuthorized as isAuthorized,
   parsePeriod,
   round2,
+  type LastSale,
   type SellerRow,
   type TotalsRow,
 } from '@/lib/leaderboard'
@@ -20,9 +21,20 @@ interface CncSeller {
   paid: number
 }
 
+/** Desglose por tipo que manda CNC: contenedores, pólizas, LCL… */
+interface TypeRow {
+  type: string
+  ventas: number
+  unidades: number
+  monto: number
+  comision: number
+}
+
 interface CncPayload {
   sellers: CncSeller[]
   totals: TotalsRow
+  byType?: TypeRow[]
+  lastSale?: Omit<LastSale, 'system'> | null
   [key: string]: unknown
 }
 
@@ -72,8 +84,10 @@ export async function GET(request: NextRequest) {
     const [tp, cnc] = await Promise.all([getTpLeaderboard(period), fetchCnc(period)])
 
     // ── Build combined sellers list ─────────────────────────────────────────
-    const tpSellers: (SellerRow & { system: 'TP' })[] = tp.sellers.map((s) => ({
+    const tpSellers: (SellerRow & { system: 'TP'; units: number })[] = tp.sellers.map((s) => ({
       ...s,
+      // TP registra una unidad por venta; CNC sí lleva cantidad.
+      units: s.count,
       system: 'TP' as const,
     }))
 
@@ -83,6 +97,7 @@ export async function GET(request: NextRequest) {
           sales: round2(s.sales ?? 0),
           commission: round2(s.commission ?? 0),
           count: s.count ?? 0,
+          units: (s as { units?: number }).units ?? s.count ?? 0,
           pending: round2(s.pending ?? 0),
           paid: round2(s.paid ?? 0),
           system: 'CNC' as const,
@@ -110,6 +125,17 @@ export async function GET(request: NextRequest) {
       count: tp.totals.count + cncTotals.count,
     }
 
+    // ── Última venta de los dos sistemas ────────────────────────────────────
+    // La pantalla toca la campana cuando cambia el id, así felicita a quien
+    // acaba de vender y no a quien va primero en el ranking.
+    const cncLast: LastSale | null = cnc?.lastSale
+      ? { ...cnc.lastSale, system: 'CNC' as const }
+      : null
+    const candidatas = [tp.lastSale, cncLast].filter(Boolean) as LastSale[]
+    const lastSale = candidatas.length > 0
+      ? candidatas.reduce((a, b) => (new Date(b.at) > new Date(a.at) ? b : a))
+      : null
+
     return NextResponse.json({
       period,
       generatedAt: new Date().toISOString(),
@@ -120,6 +146,8 @@ export async function GET(request: NextRequest) {
       combined: {
         sellers: combinedSellers,
         totals: combinedTotals,
+        byType: cnc?.byType ?? [],
+        lastSale,
       },
     })
   } catch (error) {
